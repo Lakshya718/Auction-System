@@ -1,65 +1,32 @@
 import { useState } from "react";
+import API from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const Login = () => {
+  const [form, setForm] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-      if (response.ok) {
-        navigate("/home");
-      } else {
-        alert("Invalid credentials");
-      }
-    } catch (error) {
-      console.error("Login error", error);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await API.post("/auth/login", form);
+      localStorage.setItem("token", res.data.token);
+      navigate("/profile");
+    } catch (err) {
+      alert(err.response?.data?.error || "Login failed");
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-left mb-6">Login</h2>
-        <form onSubmit={handleLogin}>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2 text-left">Email</label>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2 text-left">Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-          >
-            Login
-          </button>
-        </form>
-      <div className="w-100% rounded-full text-center h-5 mt-2">Not having an account?<span className="text-blue-500 font-bold p-1 hover:cursor-pointer"onClick={() => navigate('/signup')}>Signup</span></div>
-      </div>
-    </div>
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 mt-10 border rounded">
+      <h2 className="text-2xl font-bold mb-4">Login</h2>
+      <input type="email" name="email" placeholder="Email" required className="w-full mb-2 p-2 border" onChange={handleChange} />
+      <input type="password" name="password" placeholder="Password" required className="w-full mb-2 p-2 border" onChange={handleChange} />
+      <button type="submit" className="bg-blue-600 text-white p-2 w-full">Login</button>
+    </form>
   );
-}
+};
+
+export default Login;
