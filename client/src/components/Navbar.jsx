@@ -1,24 +1,14 @@
-import { useNavigate } from "react-router-dom";
-export default function Navbar() {
-  const navigate = useNavigate();
-  return (
-      <nav className="flex items-center justify-between px-6 py-4 bg-gray-900 text-white">
-        {/* Left Side - Auction System Name */}
-        <div className="text-xl font-bold hover:cursor-pointer" onClick={() => navigate('/')}>Auction System</div>
-  
-        {/* Middle - Navigation Links */}
-        <div className="flex space-x-6">
-          <a href="#about" className="hover:text-gray-300">About</a>
-          <a href="#events" className="hover:text-gray-300">Events</a>
-          <a href="#register-team" className="hover:text-gray-300">Register as Team</a>
-          <a href="#register-player" className="hover:text-gray-300">Register as Player</a>
-        </div>
-  
-        {/* Right Side - Player Icon */}
-        <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center cursor-pointer">
-          <span className="text-sm"onClick={() => navigate('/admin')}>P</span> {/* Placeholder for Player Icon/Image */}
-        </div>
-      </nav>
-    );
-  }
-  
+import { Link } from "react-router-dom";
+
+const Navbar = () => (
+  <nav className="bg-blue-600 text-white p-4 flex justify-between">
+    <h1 className="font-bold">Team Portal</h1>
+    <div className="space-x-4">
+      <Link to="/register">Register</Link>
+      <Link to="/login">Login</Link>
+      <Link to="/profile">Profile</Link>
+    </div>
+  </nav>
+);
+
+export default Navbar;
