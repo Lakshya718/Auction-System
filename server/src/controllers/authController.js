@@ -18,12 +18,12 @@ export const register = async (req, res) => {
     if (role === 'team_owner') {
       const existingTeam = await Team.findOne({teamName: name});
       if(existingTeam){
-        return res.staus(400).json({
+return res.status(400).json({
           error: "team of this name already exists, login or enter a different team name.",
         });
       }
 
-      const teamLogo = req.file;
+const teamLogo = req.file; // Updated to use req.file
       const imageUrl = "https://t3.ftcdn.net/jpg/05/13/39/96/360_F_513399651_7X6aDPItRkVK4RtrysnGF8A88Gyfes3T.jpg"
       if(teamLogo){
         const cloudResponse = await uploadMedia(profilePhoto.path);

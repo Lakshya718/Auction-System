@@ -7,7 +7,7 @@ const Profile = () => {
   useEffect(() => {
     API.get("/auth/profile")
       .then((res) => setData(res.data))
-      .catch((err) => alert("Please login again."));
+      .catch(() => alert("Please login again."));
   }, []);
 
   if (!data) return <p className="text-center mt-10">Loading...</p>;
