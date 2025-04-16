@@ -16,7 +16,7 @@ export const register = async (req, res) => {
     await user.save();
 
     if (role === 'team_owner') {
-      const existingTeam = await Team.findOne({teamName: name});
+const existingTeam = await Team.findOne({ teamName: name }); // Ensure teamName is set correctly
       if(existingTeam){
 return res.status(400).json({
           error: "team of this name already exists, login or enter a different team name.",
@@ -24,12 +24,14 @@ return res.status(400).json({
       }
 
 const teamLogo = req.file; // Updated to use req.file
-      const imageUrl = "https://t3.ftcdn.net/jpg/05/13/39/96/360_F_513399651_7X6aDPItRkVK4RtrysnGF8A88Gyfes3T.jpg"
+let imageUrl = "https://t3.ftcdn.net/jpg/05/13/39/96/360_F_513399651_7X6aDPItRkVK4RtrysnGF8A88Gyfes3T.jpg"
       if(teamLogo){
-        const cloudResponse = await uploadMedia(profilePhoto.path);
+        const cloudResponse = await uploadMedia(teamLogo.path); // Updated to use teamLogo.path
+        console.log('Upload Response:', cloudResponse); // Logging the response for debugging
         imageUrl = cloudResponse.secure_url;
       }
-      const updatedData = {
+const updatedData = {
+        teamName: name, // Ensure teamName is included
         name: name,
         teamLogo: imageUrl,
         owner: user._id,
