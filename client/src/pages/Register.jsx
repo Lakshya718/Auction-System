@@ -1,5 +1,5 @@
 import { useState } from "react";
-import API from "../../api/axios";
+import API from "../../services/apiEndPoints";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
@@ -37,7 +37,7 @@ const Register = () => {
       <input type="password" name="password" placeholder="Password" required className="w-full mb-2 p-2 border" onChange={handleChange} />
       <select name="role" className="w-full mb-2 p-2 border" onChange={handleChange}>
         <option value="user">User</option>
-        <option value="user">Admin</option>
+        <option value="admin">Admin</option>
         <option value="team_owner">Team Owner</option>
       </select>
       {form.role === "team_owner" && (
