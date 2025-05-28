@@ -3,10 +3,16 @@ import User from '../models/User.js';
 
 export const getTeams = async (req, res) => {
   try {
-    const teams = await Team.find()
+    const { search } = req.query;
+    const filter = {};
+    if (search) {
+      filter.teamName = { $regex: search, $options: 'i' };
+    }
+    const teams = await Team.find(filter)
       .populate('owner', 'name email')
       .populate('players', 'name type status purchasePrice')
-      .sort({ name: 1 });
+      .sort({ teamName: 1 });
+    console.log(`Fetched ${teams.length} teams from database`);
     res.json(teams);
   } catch (error) {
     res.status(400).json({ error: error.message });

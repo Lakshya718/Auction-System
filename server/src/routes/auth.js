@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { register, login, getProfile } from '../controllers/authController.js';
+import { register, login, getProfile, logout } from '../controllers/authController.js';
 import { auth } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -34,6 +34,7 @@ const upload = multer({
 
 router.post('/register', upload.single('teamLogo'), register);
 router.post('/login', login);
+router.post('/logout', logout);
 router.get('/profile', auth, getProfile);
 
 export default router;

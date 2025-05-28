@@ -36,7 +36,8 @@ const teamSchema = new mongoose.Schema({
   remainingBudget: {
     type: Number,
     default: 150000000
-  }
+  },
+
 }, {
   timestamps: true
 });

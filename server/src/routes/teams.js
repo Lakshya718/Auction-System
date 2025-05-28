@@ -4,10 +4,10 @@ import { auth, teamOwnerOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/', auth, getTeams);
+router.get('/all-teams', auth, getTeams);
 router.get('/my-team', auth, teamOwnerOnly, getMyTeam);
 router.get('/:id', auth, getTeam);
-router.patch('/:id', auth, updateTeam);
+router.patch('teams/:id', auth, updateTeam);
 router.get('/:id/players', auth, getTeamPlayers);
 
 export default router;

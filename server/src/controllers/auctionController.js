@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import AuctionDetail from '../models/AuctionDetail.js';
 import Auction from '../models/Auction.js';
 import Player from '../models/Player.js';
@@ -76,6 +77,17 @@ export const getAuctionDetails = async (req, res) => {
   }
 };
 
+export const getAllAuctions = async (req, res) => {
+  try {
+    const auctions = await Auction.find()
+      .populate('participatingTeams', 'teamName')
+      .sort({ auctionDate: -1 });
+    res.json(auctions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch auctions' });
+  }
+};
+
 export const getAuctionDetail = async (req, res) => {
   try {
     const AuctionDetail = await AuctionDetail.findById(req.params.id)
@@ -147,5 +159,67 @@ export const cancelAuctionDetail = async (req, res) => {
     res.json(AuctionDetail);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+export const removeTeamFromAuction = async (req, res) => {
+  try {
+    const { auctionId, teamId } = req.params;
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return res.status(404).json({ error: 'Auction not found' });
+    }
+
+    // Check if team is in participatingTeams
+    const teamIndex = auction.participatingTeams.findIndex(t => t.toString() === teamId);
+    if (teamIndex === -1) {
+      return res.status(404).json({ error: 'Team not found in this auction' });
+    }
+
+    // Remove team from participatingTeams
+    auction.participatingTeams.splice(teamIndex, 1);
+    await auction.save();
+
+    res.json({ success: true, message: 'Team removed from auction successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const registerTeamToAuction = async (req, res) => {
+  try {
+    const auctionId = req.params.id;
+    const user = req.user;
+
+    console.log("Registering team to auction. User:", user);
+    console.log("User team:", user.team);
+
+    if (!user || !user.team) {
+      return res.status(400).json({ error: 'User team information missing' });
+    }
+
+    const auction = await Auction.findById(auctionId);
+
+    if (!auction) {
+      return res.status(404).json({ error: 'Auction not found' });
+    }
+
+    // Check if team is already registered
+    const isRegistered = auction.participatingTeams.some(
+      (teamId) => teamId.toString() === user.team.toString()
+    );
+
+    if (isRegistered) {
+      return res.status(400).json({ error: 'Team already registered in this auction' });
+    }
+
+    // Add team to participatingTeams
+    auction.participatingTeams.push(user.team);
+    await auction.save();
+
+    return res.json({ message: 'Team registered successfully' });
+  } catch (error) {
+    console.error('Error registering team to auction:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };

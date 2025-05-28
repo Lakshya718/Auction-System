@@ -5,6 +5,9 @@ const defaultProfilePhoto = "https://media.istockphoto.com/id/1961226379/vector/
 
 export const createPlayer = async (req, res) => {
   try {
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file);
+
     const {
       playerName, 
       email,
@@ -22,17 +25,17 @@ export const createPlayer = async (req, res) => {
       average,
       strikeRate,
       economy,
-      bio
+      description
     } = req.body;
 
     const existingPlayer = await Player.findOne({email});
     if(existingPlayer){
-      return res.json(400).json({
+      return res.status(400).json({
         error: "player already exists",
       });
     }
     const profileImage = req.file;
-    const profilePhoto = defaultProfilePhoto;
+    let profilePhoto = defaultProfilePhoto;
     if(profileImage){
       const cloudResponse = await uploadMedia(profileImage.path);
       profilePhoto = cloudResponse.secure_url;
@@ -56,7 +59,7 @@ export const createPlayer = async (req, res) => {
         strikeRate: strikeRate,
         economy: economy,
       },
-      description: bio,
+      description: description,
       profilePhoto: profilePhoto,
     }
     const player = new Player(playerData);
@@ -67,13 +70,29 @@ export const createPlayer = async (req, res) => {
       player  
     });    
   } catch (error) {
+    console.error("Error in createPlayer:", error);
     return res.status(500).json({ error: "internal server error" });
   }
 };
 
 export const getAllPlayers = async (req, res) => {
   try {
-    const players = await Player.find({});
+    const { search, sold } = req.query;
+    const filter = {};
+
+    if (search) {
+      filter.playerName = { $regex: search, $options: 'i' }; // case-insensitive search
+    }
+
+    if (sold !== undefined) {
+      if (sold === 'true') {
+        filter.sold = true;
+      } else if (sold === 'false') {
+        filter.sold = false;
+      }
+    }
+
+    const players = await Player.find(filter);
     return res.status(200).json(players);
   } catch (error) {
     return res.status(500).json({ error: "internal server error" });
@@ -113,6 +132,7 @@ export const updatePlayer = async (req, res) => {
       average,
       economy,
       strikeRate,
+      description
     } = req.body;
 
     if (playerName) player.playerName = playerName;
@@ -125,11 +145,12 @@ export const updatePlayer = async (req, res) => {
     if (average !== undefined) player.stats.average = average;
     if (economy !== undefined) player.stats.economy = economy;
     if (strikeRate !== undefined) player.stats.strikeRate = strikeRate;
+    if (description) player.description = description;
     
     const profileImage = req.file;
     if(player.profilePhoto != defaultProfilePhoto && profileImage){
-      const publicId = user.imageUrl.split("/").pop().split(".")[0];
-      deleteMediaFromCloudinary(publicId);
+      const publicId = player.profilePhoto.split("/").pop().split(".")[0];
+      await deleteMediaFromCloudinary(publicId);
 
       const cloudResponse = await uploadMedia(profileImage.path);
       player.profilePhoto = cloudResponse.secure_url;
@@ -160,3 +181,12 @@ export const deletePlayer = async (req, res) => {
     return res.status(500).json({ error: "internal server error" });
   }
 };
+
+// export const getPlayerById = async (id) => {
+//   try {
+//     const player = await Player.findById(id);
+//     return player;
+//   } catch (error) {
+//     throw new Error('Error fetching player by ID: ' + error.message);
+//   }
+// };

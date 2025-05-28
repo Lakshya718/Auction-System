@@ -48,6 +48,10 @@ const auctionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Team',
     }],
+    participatingTeams: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Team',
+    }],
     playerBasePrice: {
         type: Number,
         default: 2000000
