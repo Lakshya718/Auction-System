@@ -56,6 +56,7 @@ const AllTeams = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-4xl bg-white rounded shadow p-6 flex flex-col" style={{ height: '80vh' }}>
         {/* Topbar with search */}
+        <h1 className='p-2 text-center text-white bg-pink-700 mb-3 rounded-sm'>All Teams</h1>
         <div className="flex items-center mb-4 space-x-4 w-full">
           <input
             type="text"
@@ -78,7 +79,7 @@ const AllTeams = () => {
             teams.map((team) => (
               <div
                 key={team._id}
-                className="w-56 max-h-[38vh] hover:cursor-pointer hover:bg-blue-200 bg-white border border-gray-300 rounded shadow p-4 flex flex-col items-center"
+                className="w-56 max-h-[38vh] hover:cursor-pointer hover:border-orange-500  hover:bg-blue-200 bg-white border border-gray-300 rounded shadow p-4 flex flex-col items-center"
                 onClick={()=>handTeamClick(team._id)}
               >
                 <div className="w-28 h-28 mb-3">
