@@ -136,11 +136,11 @@ const AddPlayer = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">Add Player</h2>
+    <div className="max-w-[90vw] mx-auto p-4">
+      {/* <h2 className="text-2xl font-bold mb-6">Add Player</h2> */}
       {error && <p className="text-red-600 mb-4">{error}</p>}
       {success && <p className="text-green-600 mb-4">{success}</p>}
-      <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-4">
+      <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-1 grid grid-cols-3 gap-4">
         <div>
           <label className="block font-semibold">Player Name *</label>
           <input
@@ -268,7 +268,7 @@ const AddPlayer = () => {
             value={formData.description}
             onChange={handleChange}
             className="w-full border border-gray-300 rounded px-3 py-2"
-            rows="3"
+            rows="1"
           />
         </div>
         <div>
@@ -291,7 +291,6 @@ const AddPlayer = () => {
             className="w-full"
           />
         </div>
-        <h3 className="text-lg font-semibold mt-6 mb-2">Stats</h3>
         <div>
           <label className="block font-semibold">Matches</label>
           <input

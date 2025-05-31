@@ -97,13 +97,13 @@ const Profile = () => {
     <div className="max-w-md mx-auto p-4 mt-10 border rounded">
       <h2 className="text-xl font-bold mb-2">User Info</h2>
       <p>
-        <strong>Name:</strong> {data.user.name}
+        <strong>Hey Welcome!</strong> {data.user.name}
       </p>
       <p>
-        <strong>Email:</strong> {data.user.email}
+        <strong>Logged in as </strong> {data.user.email}
       </p>
       <p>
-        <strong>Role:</strong> {data.user.role}
+        <strong>Role-</strong> {data.user.role}
       </p>
 
       {data.team && (
@@ -121,9 +121,7 @@ const Profile = () => {
         <h3 className="font-semibold mb-2">Token Information</h3>
         {tokenInfo.token ? (
           <>
-            <p><strong>Token:</strong> <code className="break-all">{tokenInfo.token}</code></p>
-            <p><strong>Token Matched:</strong> {tokenInfo.matched ? "Success" : "Failed"}</p>
-            <p><strong>Token Expires In:</strong> {tokenInfo.expiresIn > 0 ? `${tokenInfo.expiresIn} seconds` : "Expired"}</p>
+            <p><strong>Login Expires In:</strong> {tokenInfo.expiresIn > 0 ? `${tokenInfo.expiresIn} seconds` : "Expired"}</p>
           </>
         ) : (
           <p>No valid token found.</p>

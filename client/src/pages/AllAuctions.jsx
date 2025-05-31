@@ -156,10 +156,22 @@ const AllAuctions = () => {
                 <h3 className="text-xl font-semibold">{auction.auctionName}</h3>
                 <p>{auction.auctionDescription}</p>
                 <p>
-                  <strong>Start:</strong> {new Date(auction.auctionDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} {auction.auctionStartTime}
+                  <strong>Start:</strong>{" "}
+                  {new Date(auction.auctionDate).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}{" "}
+                  {auction.auctionStartTime}
                 </p>
                 <p>
-                  <strong>End:</strong> {new Date(auction.auctionDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} {auction.auctionEndTime || 'N/A'}
+                  <strong>End:</strong>{" "}
+                  {new Date(auction.auctionDate).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}{" "}
+                  {auction.auctionEndTime || "N/A"}
                 </p>
                 <p>
                   <strong>Place:</strong> Mumbai
@@ -200,9 +212,7 @@ const AllAuctions = () => {
                   </button>
                 )}
                 {role === "admin" && (
-                  <button
-                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                  >
+                  <button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
                     Start Auction
                   </button>
                 )}
@@ -228,7 +238,19 @@ const AllAuctions = () => {
 
   return (
     <div className="flex flex-col items-center p-4 space-y-8">
-      <div className="w-7/12 max-h-[30vh] overflow-y-auto">
+      <div className="w-10/12 h-[100vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          Upcoming Auctions
+        </h2>
+        {loading ? (
+          <p>Loading auctions...</p>
+        ) : error ? (
+          <p className="text-red-600">{error}</p>
+        ) : (
+          renderAuctionList(upcomingAuctions)
+        )}
+      </div>
+      <div className="w-11/12 h-[100vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">
           Running Auctions
         </h2>
@@ -243,19 +265,7 @@ const AllAuctions = () => {
           renderAuctionList(runningAuctions)
         )}
       </div>
-      <div className="w-7/12 max-h-[30vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Upcoming Auctions
-        </h2>
-        {loading ? (
-          <p>Loading auctions...</p>
-        ) : error ? (
-          <p className="text-red-600">{error}</p>
-        ) : (
-          renderAuctionList(upcomingAuctions)
-        )}
-      </div>
-      <div className="w-7/12 max-h-[30vh] overflow-y-auto">
+      <div className="w-11/12 h-[100vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">Past Auctions</h2>
         {loading ? (
           <p>Loading auctions...</p>
