@@ -1,86 +1,52 @@
 import mongoose from "mongoose";
 
-const handlePlayerSchema = new mongoose.Schema({
-    player: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Player',
-        default: null,
-    },
+const bidSchema = new mongoose.Schema({
+  team: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
+  amount: { type: Number, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
+
+const auctionPlayerSchema = new mongoose.Schema({
+  player: { type: mongoose.Schema.Types.ObjectId, ref: "Player", required: true },
+  status: { type: String, enum: ["available", "sold", "unsold"], default: "available" },
+  currentBid: { type: Number, default: 0 },
+  currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
+  biddingHistory: [bidSchema],
+  soldTo: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
+  soldPrice: { type: Number },
+});
+
+const teamBudgetSchema = new mongoose.Schema({
+  team: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
+  remainingBudget: { type: Number, required: true },
+});
+
+const auctionSchema = new mongoose.Schema(
+  {
+    tournamentName: { type: String, required: true, unique: true },
+    description: { type: String },
+    date: { type: Date, required: true },
+    startTime: { type: String, required: true, match: /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/ },
     status: {
-        type: String,
-        enum: ['available', 'sold', 'unsold'],
-        default: 'available',
-    }
-}, {
-    timestamps: true,
-});
-
-const auctionSchema = new mongoose.Schema({
-    auctionName: {
-        type: String,
-        unique: true,
-        required: true,
+      type: String,
+      enum: ["pending", "active", "completed", "cancelled"],
+      default: "pending",
     },
-    auctionDescription: {
-        type: String,
-    },
-    auctionDate: {
-        type: Date,
-        required: true,
-    },
-    auctionStatus: {
-        type: String,
-        enum: ['pending', 'active', 'completed', 'cancelled'],
-        default: 'pending'
-    },
-    auctionStartTime: {
-        type: String,
-        required: true,
-        match: /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/ // Validates "HH:MM AM/PM" format
-    },
-    auctionEndTime: {
-        type: String,
-    },
+    players: [auctionPlayerSchema],
+    retainedPlayers: [
+      {
+        player: { type: mongoose.Schema.Types.ObjectId, ref: "Player", required: true },
+        team: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
+      }
+    ],
+    teams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team" }],
+    teamBudgets: [teamBudgetSchema],
+    maxBudget: { type: Number, required: true },
+    minBidIncrement: { type: Number, default: 500000 }, // ₹5 lakh default
+  },
+  { timestamps: true }
+);
 
-    players: [handlePlayerSchema],
 
-    teams: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Team',
-    }],
-    participatingTeams: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Team',
-    }],
-    playerBasePrice: {
-        type: Number,
-        default: 2000000
-    },
-    teamTotalBudget: {
-        type: Number,
-        required: true,
-        default: 150000000
-    }
-}, {
-    timestamps: true,
-});
-
-auctionSchema.pre("save", function (next) {
-    if (this.auctionStartTime) {
-        const [time, period] = this.auctionStartTime.split(" ");
-        let [hours, minutes] = time.split(":").map(Number);
-        
-        if (period === "PM" && hours !== 12) hours += 12;
-        if (period === "AM" && hours === 12) hours = 0;
-
-        hours = (hours + 12) % 24;
-
-        let newPeriod = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12; 
-
-        this.auctionEndTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${newPeriod}`;
-    }
-    next();
-});
-
-export default mongoose.model('Auction', auctionSchema);
+const Auction = mongoose.model("Auction", auctionSchema);
+export default Auction;
