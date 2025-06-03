@@ -1,79 +1,162 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import AuctionDetail from '../models/AuctionDetail.js';
+import { sendBidToKafka } from '../kafka/producer.js';
+import Auction from '../models/Auction.js';
 import Team from '../models/Team.js';
+import User from '../models/User.js';
+import { isValidObjectId } from 'mongoose';
 
 export const setupSocketHandlers = (io) => {
-  // Authenticate socket connections
   io.use(async (socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) {
+      return next(new Error('Authentication required'));
+    }
     try {
-      const token = socket.handshake.auth.token;
-      if (!token) throw new Error('Authentication required');
-
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.userId);
-      if (!user) throw new Error('User not found');
-
+      if (!user) {
+        return next(new Error('User not found'));
+      }
       socket.user = user;
       next();
     } catch (error) {
-      next(new Error('Authentication failed'));
+      next(new Error('Invalid token'));
     }
   });
 
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.user.name}`);
+    console.log(`New client connected: ${socket.id}, User: ${socket.user.email}`);
 
-    // Join AuctionDetail room
-    socket.on('join-AuctionDetail', async (AuctionDetailId) => {
-      try {
-        const AuctionDetail = await AuctionDetail.findById(AuctionDetailId)
-          .populate('player')
-          .populate('currentHighestBidder');
-        
-        if (!AuctionDetail) throw new Error('AuctionDetail not found');
-        
-        socket.join(AuctionDetailId);
-        socket.emit('AuctionDetail-state', AuctionDetail);
-      } catch (error) {
-        socket.emit('error', error.message);
+    // Join auction room
+    socket.on('join-auction', async ({ auctionId }) => {
+      if (!isValidObjectId(auctionId)) {
+        return socket.emit('error', { message: 'Invalid auction ID' });
       }
+      const auction = await Auction.findById(auctionId);
+      if (!auction) {
+        return socket.emit('error', { message: 'Auction not found' });
+      }
+      socket.join(auctionId);
+      socket.emit('joined-auction', { auctionId, message: `Joined auction ${auction.tournamentName}` });
+    });
+
+    // Join tournament (auction) room for match updates
+    socket.on('join-tournament', async ({ tournamentId }) => {
+      if (!isValidObjectId(tournamentId)) {
+        return socket.emit('error', { message: 'Invalid tournament ID' });
+      }
+      const auction = await Auction.findById(tournamentId);
+      if (!auction) {
+        return socket.emit('error', { message: 'Tournament not found' });
+      }
+      socket.join(tournamentId);
+      socket.emit('joined-tournament', { tournamentId, message: `Joined tournament ${auction.tournamentName}` });
     });
 
     // Place bid
-    socket.on('place-bid', async ({ AuctionDetailId, amount }) => {
+    socket.on('place-bid', async ({ auctionId, playerId, amount, teamId }) => {
       try {
-        const AuctionDetail = await AuctionDetail.findById(AuctionDetailId);
-        if (!AuctionDetail) throw new Error('AuctionDetail not found');
-        if (AuctionDetail.status !== 'active') throw new Error('AuctionDetail is not active');
+        if (!isValidObjectId(auctionId) || !isValidObjectId(playerId) || !isValidObjectId(teamId)) {
+          return socket.emit('error', { message: 'Invalid auction, player, or team ID' });
+        }
 
-        const team = await Team.findOne({ owner: socket.user._id });
-        if (!team) throw new Error('Team not found');
-        if (team.remainingBudget < amount) throw new Error('Insufficient budget');
+        if (socket.user.role !== 'team_owner' || !(await Team.findOne({ _id: teamId, owner: socket.user._id }))) {
+          return socket.emit('error', { message: 'Not authorized to bid for this team' });
+        }
 
-        await AuctionDetail.placeBid(team._id, amount);
-        
-        // Broadcast updated AuctionDetail state
-        io.to(AuctionDetailId).emit('AuctionDetail-state', await AuctionDetail.populate('currentHighestBidder'));
-        
-        // Extend AuctionDetail time
-        clearTimeout(AuctionDetail.timeoutId);
-        AuctionDetail.timeoutId = setTimeout(async () => {
-          await AuctionDetail.complete();
-          io.to(AuctionDetailId).emit('AuctionDetail-completed', AuctionDetail);
-        }, 30000);
+        const auction = await Auction.findById(auctionId);
+        if (!auction || auction.status !== 'active') {
+          return socket.emit('error', { message: 'Auction is not active' });
+        }
+
+        const player = auction.players.find(p => p.player.toString() === playerId);
+        if (!player || player.status !== 'available') {
+          return socket.emit('error', { message: 'Player is not available for bidding' });
+        }
+
+        const teamBudget = auction.teamBudgets.find(b => b.team.toString() === teamId);
+        if (!teamBudget || teamBudget.remainingBudget < amount) {
+          return socket.emit('error', { message: 'Insufficient team budget' });
+        }
+
+        if (amount < player.currentBid + auction.minBidIncrement) {
+          return socket.emit('error', { message: `Bid must be at least ${player.currentBid + auction.minBidIncrement}` });
+        }
+
+        const bidData = {
+          auctionId,
+          playerId,
+          teamId,
+          amount,
+          timestamp: new Date().toISOString()
+        };
+
+        await sendBidToKafka(bidData);
+        io.to(auctionId).emit('bid-placed', {
+          ...bidData,
+          playerName: (await Player.findById(playerId)).playerName,
+          teamName: (await Team.findById(teamId)).name
+        });
+
+        // Audit log
+        console.log(`Bid placed: ${socket.user.email} bid ${amount} for player ${playerId} in auction ${auctionId}`);
       } catch (error) {
-        socket.emit('error', error.message);
+        console.error('Error placing bid:', error);
+        socket.emit('error', { message: error.message || 'Failed to place bid' });
       }
     });
 
-    // Leave AuctionDetail room
-    socket.on('leave-AuctionDetail', (AuctionDetailId) => {
-      socket.leave(AuctionDetailId);
+    // Sell player
+    socket.on('sell-player', async ({ auctionId, playerId, teamId, amount }) => {
+      try {
+        if (socket.user.role !== 'admin') {
+          return socket.emit('error', { message: 'Only admins can sell players' });
+        }
+
+        if (!isValidObjectId(auctionId) || !isValidObjectId(playerId) || !isValidObjectId(teamId)) {
+          return socket.emit('error', { message: 'Invalid auction, player, or team ID' });
+        }
+
+        const auction = await Auction.findById(auctionId);
+        if (!auction || auction.status !== 'active') {
+          return socket.emit('error', { message: 'Auction is not active' });
+        }
+
+        const player = auction.players.find(p => p.player.toString() === playerId);
+        if (!player || player.status !== 'available') {
+          return socket.emit('error', { message: 'Player is not available for sale' });
+        }
+
+        const teamBudget = auction.teamBudgets.find(b => b.team.toString() === teamId);
+        if (!teamBudget || teamBudget.remainingBudget < amount) {
+          return socket.emit('error', { message: 'Insufficient team budget' });
+        }
+
+        player.status = 'sold';
+        player.soldTo = teamId;
+        player.soldPrice = amount;
+        teamBudget.remainingBudget -= amount;
+        await auction.save();
+
+        io.to(auctionId).emit('player-sold', {
+          auctionId,
+          playerId,
+          teamId,
+          amount,
+          playerName: (await Player.findById(playerId)).playerName,
+          teamName: (await Team.findById(teamId)).name
+        });
+
+        // Audit log
+        console.log(`Player sold: ${playerId} to team ${teamId} for ${amount} in auction ${auctionId}`);
+      } catch (error) {
+        console.error('Error selling player:', error);
+        socket.emit('error', { message: error.message || 'Failed to sell player' });
+      }
     });
 
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.user.name}`);
+      console.log(`Client disconnected: ${socket.id}`);
     });
   });
 };

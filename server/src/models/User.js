@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  name: {
+  name: { 
     type: String,
     required: true,
     trim: true
@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true
+    lowercase: true 
   },
   password: {
     type: String,
@@ -20,13 +20,9 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin','user', 'team_owner'],
+    enum: ['admin', 'team_owner'],
     default: 'team_owner'
   },
-  team: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
-  }
 }, {
   timestamps: true
 });
