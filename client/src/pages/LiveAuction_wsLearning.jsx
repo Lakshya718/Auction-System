@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import TeamOwnerPage from "./TeamOwnerPage";
 import { io } from "socket.io-client";
 import toast, { Toaster } from "react-hot-toast";
 

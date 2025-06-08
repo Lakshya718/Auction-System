@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [form, setForm] = useState({
-    name: "", email: "", password: "", role: "user", teamLogo: null,
+    name: "", email: "", password: "", role: "user", teamLogo: null, bio: "",
   });
   const navigate = useNavigate();
 
@@ -41,7 +41,24 @@ const Register = () => {
         <option value="team_owner">Team Owner</option>
       </select>
       {form.role === "team_owner" && (
-        <input type="file" name="teamLogo" accept="image/*" className="w-full mb-2" onChange={handleChange} />
+        <>
+          <input
+            type="text"
+            name="teamName"
+            placeholder="Team Name"
+            required
+            className="w-full mb-2 p-2 border"
+            onChange={handleChange}
+          />
+          <textarea
+            name="bio"
+            placeholder="Team Bio"
+            className="w-full mb-2 p-2 border"
+            value={form.bio}
+            onChange={handleChange}
+          />
+          <input type="file" name="teamLogo" accept="image/*" className="w-full mb-2" onChange={handleChange} />
+        </>
       )}
       <button type="submit" className="bg-blue-600 text-white p-2 w-full">Register</button>
     </form>

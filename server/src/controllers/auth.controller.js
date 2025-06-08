@@ -116,3 +116,12 @@ export const getProfile = async (req, res) => {
     res.status(error.name === 'CastError' ? 400 : 500).json({ error: error.message });
   }
 };
+
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie('token');
+    res.status(200).json({ message: "User Logout Successfully" });
+  } catch (error) {
+    console.log(error);
+  }
+};

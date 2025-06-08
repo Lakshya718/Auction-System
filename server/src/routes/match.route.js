@@ -4,7 +4,7 @@ import { auth, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/', auth, adminOnly, createMatch);
+router.post('/create', auth, adminOnly, createMatch);
 router.get('/:id', auth, getMatch);
 router.patch('/:id', auth, adminOnly, updateMatch);
 
