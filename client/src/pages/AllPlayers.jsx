@@ -19,9 +19,9 @@ const AllPlayers = () => {
       if (search.trim() !== "") {
         params.search = search.trim();
       }
-      const response = await API.get("/players/all", { params });
-      if (Array.isArray(response.data)) {
-        setPlayers(response.data);
+      const response = await API.get("/players/verified", { params });
+      if (Array.isArray(response.data.players)) {
+        setPlayers(response.data.players);
       } else {
         setPlayers([]);
         setError("Invalid data format received from server");
@@ -77,13 +77,13 @@ const AllPlayers = () => {
               onClick={() => handlePlayerClick(player._id)}
             >
               <img
-                src={player.profilePhoto || "/default-profile.png"}
-                alt={player.name}
+                src={player.profilePhoto || "https://media.istockphoto.com/id/1961226379/vector/cricket-player-playing-short-concept.jpg?s=612x612&w=0&k=20&c=CSiQd4qzLY-MB5o_anUOnwjIqxm7pP8aus-Lx74AQus="}
+                alt={player.playerName}
                 className="w-full h-48 object-contain rounded mb-2"
               />
               <h3 className="text-xl font-semibold">{player.playerName}</h3>
               <p>Age: {player.age}</p>
-              <p>Role: {player.role}</p>
+              <p>Role: {player.playerRole}</p>
             </div>
           ))}
         </div>

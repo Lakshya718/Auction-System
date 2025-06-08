@@ -96,7 +96,7 @@ const AddPlayer = () => {
         }
       });
 
-      const response = await API.post('/players/add-player', data, {
+      const response = await API.post('/players/registration-request', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

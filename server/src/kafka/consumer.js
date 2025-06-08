@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { Kafka } from 'kafkajs';
 import mongoose from 'mongoose';
 import Auction from '../models/Auction.js';

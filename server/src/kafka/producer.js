@@ -1,4 +1,4 @@
-import { Kafka } from 'kafkajs';
+import { Kafka, Partitioners } from 'kafkajs';
 
 const kafka = new Kafka({
   clientId: 'bidify-server',
@@ -9,7 +9,7 @@ const kafka = new Kafka({
   }
 });
 
-const producer = kafka.producer();
+const producer = kafka.producer({ createPartitioner: Partitioners.LegacyPartitioner });
 
 export const initKafkaProducer = async () => {
   try {

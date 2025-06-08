@@ -80,7 +80,7 @@ const Profile = () => {
   }, []);
 
   const handleLogout = () => {
-    API.post("/auth/logout")
+    API.get("/auth/logout")
       .then(() => {
         localStorage.clear();  // Clear local storage on logout
         dispatch(clearUser());
@@ -131,6 +131,9 @@ const Profile = () => {
       {/* Buttons based on role */}
       <div className="mt-6 space-y-4">
         {/* Common routes */}
+        <button onClick={()=>navigate('/live-bidding')} className="py-2 px-4 w-full bg-green-500 rounded-lg text-white">
+        Live Bidding
+        </button>
         <button
           onClick={() => navigate("/live-auction")}
           className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -197,6 +200,18 @@ const Profile = () => {
               className="w-full bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
             >
               Create Auction
+            </button>
+            <button
+              onClick={() => navigate("/pending-players")}
+              className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mt-2"
+            >
+              Review Pending Player Requests
+            </button>
+            <button
+              onClick={() => navigate("/matches/create")}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-2"
+            >
+              Create Match
             </button>
           </>
         )}
