@@ -11,7 +11,6 @@ import teamRoutes from "./src/routes/team.route.js";
 import playerRoutes from "./src/routes/player.route.js";
 import auctionRoutes from "./src/routes/auction.route.js";
 import matchRoutes from "./src/routes/match.route.js";
-import liveBiddingRoutes from "./src/routes/liveBidding.route.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 import { setupSocketHandlers } from "./src/utils/socket.js";
 import { initKafkaProducer } from "./src/kafka/producer.js";
@@ -22,12 +21,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:8080",
-      "http://127.0.0.1:8080",
-    ],
+    origin: process.env.CORS_ORIGIN || ["http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -48,6 +42,15 @@ redisClient
   .catch((err) => {
     console.error("Redis connection error:", err);
   });
+
+// Add error event listener to handle runtime errors and prevent app crash
+redisClient.on('error', (err) => {
+  console.error('Redis Client Error', err);
+});
+
+// Socket.io setup
+setupSocketHandlers(io);
+
 // Attach io to app for controller access
 app.set("io", io);
 // Attach Redis client to app for access in controllers/middleware
@@ -62,12 +65,7 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:8080",
-      "http://127.0.0.1:8080",
-    ],
+    origin: ["http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
     credentials: true,
@@ -77,8 +75,6 @@ app.use(
 // Debug middleware
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
   next();
 });
 
@@ -91,10 +87,6 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/players", playerRoutes);
 app.use("/api/auctions", auctionRoutes);
 app.use("/api/matches", matchRoutes);
-app.use("/api/biddings", liveBiddingRoutes);
-
-// Socket.io setup
-setupSocketHandlers(io);
 
 // Error handling middleware
 app.use(errorHandler);

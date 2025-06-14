@@ -269,3 +269,55 @@ export const deletePlayer = async (req, res) => {
     res.status(error.name === 'CastError' ? 400 : 500).json({ error: error.message });
   }
 };
+
+// New controller functions for Redis storage and retrieval
+
+export const storePlayerInRedis = async (req, res) => {
+  try {
+    const redisClient = req.app.get('redisClient');
+    //i want to change some of these values so, to declare as a const is best practise?
+    const { _id, basePrice, playerName, playerRole, currentBid = 0, currentTeam = null, soldStatus = false} = req.body;
+
+    if (!_id) {
+      return res.status(400).json({ error: 'Player _id is required' });
+    }
+
+    const dataToStore = {
+      playerName,
+      basePrice,
+      playerRole,
+      currentBid,
+      currentTeam,
+      soldStatus
+    };
+
+    const key = `current_player`;
+    await redisClient.set(key, JSON.stringify(dataToStore));
+
+    res.status(200).json({ success: true, message: 'Player data stored in Redis', data: dataToStore });
+  } catch (error) {
+    console.error('Error storing player in Redis:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getPlayerFromRedis = async (req, res) => {
+  try {
+    const redisClient = req.app.get('redisClient');
+
+    const key = `current_player`;
+    const playerData = await redisClient.get(key);
+
+   
+
+    if (!playerData) {
+      return res.status(404).json({ error: 'Player not found in Redis' });
+    }
+
+    const player = JSON.parse(playerData);
+    res.status(200).json({ success: true, player });
+  } catch (error) {
+    console.error('Error fetching player from Redis:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

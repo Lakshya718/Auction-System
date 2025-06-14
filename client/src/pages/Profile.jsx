@@ -7,13 +7,13 @@ import { clearUser, setUser } from "../store/userSlice";
 const decodeJWT = (token) => {
   if (!token) return null;
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
     );
     return JSON.parse(jsonPayload);
   } catch {
@@ -23,7 +23,11 @@ const decodeJWT = (token) => {
 
 const Profile = () => {
   const [data, setData] = useState(null);
-  const [tokenInfo, setTokenInfo] = useState({ token: null, expiresIn: null, matched: false });
+  const [tokenInfo, setTokenInfo] = useState({
+    token: null,
+    expiresIn: null,
+    matched: false,
+  });
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
@@ -34,11 +38,13 @@ const Profile = () => {
         .then((res) => {
           setData(res.data);
           // Dispatch setUser with user and team info to Redux store
-          dispatch(setUser({
-            user: res.data.user,
-            role: res.data.user.role,
-            team: res.data.team || null
-          }));
+          dispatch(
+            setUser({
+              user: res.data.user,
+              role: res.data.user.role,
+              team: res.data.team || null,
+            })
+          );
         })
         .catch(() => {
           // Instead of alert, redirect silently to login
@@ -60,7 +66,7 @@ const Profile = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     const decoded = decodeJWT(token);
     if (decoded) {
       const currentTime = Math.floor(Date.now() / 1000);
@@ -68,13 +74,13 @@ const Profile = () => {
       setTokenInfo({
         token,
         expiresIn,
-        matched: true
+        matched: true,
       });
     } else {
       setTokenInfo({
         token: null,
         expiresIn: null,
-        matched: false
+        matched: false,
       });
     }
   }, []);
@@ -82,7 +88,7 @@ const Profile = () => {
   const handleLogout = () => {
     API.get("/auth/logout")
       .then(() => {
-        localStorage.clear();  // Clear local storage on logout
+        localStorage.clear(); // Clear local storage on logout
         dispatch(clearUser());
         navigate("/login");
       })
@@ -121,7 +127,12 @@ const Profile = () => {
         <h3 className="font-semibold mb-2">Token Information</h3>
         {tokenInfo.token ? (
           <>
-            <p><strong>Login Expires In:</strong> {tokenInfo.expiresIn > 0 ? `${tokenInfo.expiresIn} seconds` : "Expired"}</p>
+            <p>
+              <strong>Login Expires In:</strong>{" "}
+              {tokenInfo.expiresIn > 0
+                ? `${tokenInfo.expiresIn} seconds`
+                : "Expired"}
+            </p>
           </>
         ) : (
           <p>No valid token found.</p>
@@ -131,13 +142,7 @@ const Profile = () => {
       {/* Buttons based on role */}
       <div className="mt-6 space-y-4">
         {/* Common routes */}
-        <button onClick={()=>navigate('/live-bidding')} className="py-2 px-4 w-full bg-green-500 rounded-lg text-white">
-        Live Bidding
-        </button>
-        <button
-          onClick={() => navigate("/live-auction")}
-          className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
+        <button className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
           Another Common Router here like Auction (Common)
         </button>
         <button

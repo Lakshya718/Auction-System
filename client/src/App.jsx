@@ -1,7 +1,4 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import store from './store/store.js';
 import AllPlayers from './pages/AllPlayers.jsx';
 import PlayerDetails from './pages/PlayerDetails.jsx';
 import TeamDetails from './pages/TeamDetails.jsx';
@@ -21,153 +18,151 @@ import AuctionDetails from './pages/AuctionDetails.jsx';
 import CreateMatch from './pages/CreateMatch.jsx';
 import MatchDetails from './pages/MatchDetails.jsx';
 import UpdateMatch from './pages/UpdateMatch.jsx';
-import AdminLiveBidding from './pages/AdminLiveBidding.jsx';
+import AuctionBidPage from './pages/AuctionBidPage.jsx';
 
 const App = () => {
   return (
-    <Provider store={store}>
-      <Router>
-        <Navbar/>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/live-bidding"
-              element={
-                <PrivateRoute>
-                  <AdminLiveBidding />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <Profile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/all-auctions"
-              element={
-                <PrivateRoute>
-                  <AllAuctions />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/team-profile"
-              element={
-                <PrivateRoute>
-                  <TeamProfile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/add-player"
-              element={
-                <PrivateRoute>
-                  <AddPlayer />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/all-players"
-              element={
-                <PrivateRoute>
-                  <AllPlayers />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/players/:id"
-              element={
-                <PrivateRoute>
-                  <PlayerDetails />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/teams/:id"
-              element={
-                <PrivateRoute>
-                  <TeamDetails />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/all-teams"
-              element={
-                <PrivateRoute>
-                  <AllTeams />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/create-auction"
-              element={
-                <PrivateRoute>
-                  <CreateAuction />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/pending-players"
-              element={
-                <PrivateRoute>
-                  <PendingPlayerRequests />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/auctions/:id"
-              element={
-                <PrivateRoute>
-                  <AuctionDetails />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/matches/create"
-              element={
-                <PrivateRoute>
-                  <CreateMatch />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/matches/:id"
-              element={
-                <PrivateRoute>
-                  <MatchDetails />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/matches/:id"
-              element={
-                <PrivateRoute>
-                  <UpdateMatch />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-      </Router>
-    </Provider>
+    <Router>
+      <Navbar/>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/auction-bid-page/:auctionId"
+            element={
+              <PrivateRoute>
+                <AuctionBidPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/all-auctions"
+            element={
+              <PrivateRoute>
+                <AllAuctions />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/team-profile"
+            element={
+              <PrivateRoute>
+                <TeamProfile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/add-player"
+            element={
+              <PrivateRoute>
+                <AddPlayer />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/all-players"
+            element={
+              <PrivateRoute>
+                <AllPlayers />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/players/:id"
+            element={
+              <PrivateRoute>
+                <PlayerDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/teams/:id"
+            element={
+              <PrivateRoute>
+                <TeamDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/all-teams"
+            element={
+              <PrivateRoute>
+                <AllTeams />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/create-auction"
+            element={
+              <PrivateRoute>
+                <CreateAuction />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/pending-players"
+            element={
+              <PrivateRoute>
+                <PendingPlayerRequests />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/auctions/:id"
+            element={
+              <PrivateRoute>
+                <AuctionDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/matches/create"
+            element={
+              <PrivateRoute>
+                <CreateMatch />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/matches/:id"
+            element={
+              <PrivateRoute>
+                <MatchDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/matches/:id"
+            element={
+              <PrivateRoute>
+                <UpdateMatch />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+    </Router>
   );
 };
 

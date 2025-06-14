@@ -74,14 +74,8 @@ const AllAuctions = () => {
                 )}
                 {role === "admin" && (
                   <button
-                    onClick={async () => {
-                      try {
-                        await API.post(`auctions/${auction._id}/start`);
-                        alert("Auction started successfully");
-                        await fetchAuctions();
-                      } catch (error) {
-                        alert(error.response?.data?.error || "Failed to start auction");
-                      }
+                    onClick={() => {
+                      navigate(`/auction-bid-page/${auction._id}`);
                     }}
                     className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                   >
@@ -101,6 +95,8 @@ const AllAuctions = () => {
 
   return (
     <div className="flex flex-col items-center p-4 space-y-8">
+      <div><h1>Live Auction</h1><div>
+            Player to Bid now</div></div>
       {loading ? (
         <p>Loading auctions...</p>
       ) : error ? (
