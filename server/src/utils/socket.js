@@ -3,6 +3,7 @@ import { sendBidToKafka } from '../kafka/producer.js';
 import Auction from '../models/Auction.js';
 import Team from '../models/Team.js';
 import User from '../models/User.js';
+import Player from '../models/Player.js';
 import { isValidObjectId } from 'mongoose';
 
 export const setupSocketHandlers = (io) => {
@@ -11,6 +12,7 @@ export const setupSocketHandlers = (io) => {
     if (!token) {
       return next(new Error('Authentication required'));
     }
+    console.log("ye wahi token h");
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.userId);
@@ -157,6 +159,18 @@ export const setupSocketHandlers = (io) => {
 
     socket.on('disconnect', () => {
       console.log(`Client disconnected: ${socket.id}`);
+      // Initialize rooms map if not already
+      if (!io.roomsMap) {
+        io.roomsMap = new Map();
+      }
+      const rooms = io.roomsMap;
+      rooms.forEach((teamOwners, roomId) => {
+        if (teamOwners.has(socket.user.email)) {
+          teamOwners.delete(socket.user.email);
+          io.to(roomId).emit('update-team-owners', Array.from(teamOwners));
+          console.log(`Team owner ${socket.user.email} left room ${roomId}`);
+        }
+      });
     });
   });
 };

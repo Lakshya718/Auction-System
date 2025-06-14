@@ -6,7 +6,9 @@ import {
     getPlayer, 
     updatePlayer, 
     deletePlayer, 
-    createPlayerRequest
+    createPlayerRequest,
+    storePlayerInRedis,
+    getPlayerFromRedis
 } from '../controllers/player.controller.js';
 import { auth, adminOnly } from '../middleware/auth.js';
 import upload from '../utils/multer.js';
@@ -23,5 +25,9 @@ router.get('/verified', auth, getAllVerifiedPlayers); // Renamed to reflect veri
 router.get('/:id', auth, getPlayer);
 router.patch('/:id', auth, adminOnly, upload.single('profilePhoto'), updatePlayer); // Added upload for profile photo
 router.delete('/:id', auth, adminOnly, deletePlayer);
+
+// New routes for Redis player storage and retrieval
+router.post('/redis/player', auth, storePlayerInRedis);
+router.get('/redis/player/:id', auth, getPlayerFromRedis);
 
 export default router;
