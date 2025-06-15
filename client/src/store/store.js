@@ -40,7 +40,8 @@ if (token) {
 
     const teamData = localStorage.getItem('team');
     const team = teamData ? JSON.parse(teamData) : null;
-    store.dispatch(setUser({ user: userData, role: userData.role || null, team }));
+    const storedRole = localStorage.getItem('role');
+    store.dispatch(setUser({ user: userData, role: userData.role || storedRole || null, team }));
 
     // Calculate token expiration time in milliseconds
     const currentTime = Math.floor(Date.now() / 1000);

@@ -288,13 +288,14 @@ export const storePlayerInRedis = async (req, res) => {
       playerRole,
       currentBid,
       currentTeam,
-      soldStatus
+      soldStatus,
     };
 
-    const key = `current_player`;
+    // const key = `current_player`;
+    const key = _id;
     await redisClient.set(key, JSON.stringify(dataToStore));
 
-    res.status(200).json({ success: true, message: 'Player data stored in Redis', data: dataToStore });
+    res.status(200).json({ success: true, message: `Player ${playerName} data stored in Redis`, data: dataToStore });
   } catch (error) {
     console.error('Error storing player in Redis:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -305,10 +306,9 @@ export const getPlayerFromRedis = async (req, res) => {
   try {
     const redisClient = req.app.get('redisClient');
 
-    const key = `current_player`;
+    // const key = `current_player`;
+    const key = req.params.id;
     const playerData = await redisClient.get(key);
-
-   
 
     if (!playerData) {
       return res.status(404).json({ error: 'Player not found in Redis' });

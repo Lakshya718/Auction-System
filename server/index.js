@@ -56,7 +56,7 @@ app.set("io", io);
 // Attach Redis client to app for access in controllers/middleware
 app.set("redisClient", redisClient);
 
-await initKafkaProducer();
+// await initKafkaProducer();
 
 // Middleware
 app.use(express.json());
