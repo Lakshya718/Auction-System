@@ -106,7 +106,7 @@ export const getAuctionById = async (req, res) => {
 
     const auction = await Auction.findById(id)
       .populate('teams', 'name')
-      .populate('players.player', 'playerName basePrice playerRole')
+      .populate('players.player', '_id playerName basePrice playerRole')
       .populate('retainedPlayers.player', 'playerName basePrice playerRole')
       .populate('retainedPlayers.team', 'name');
 

@@ -63,7 +63,8 @@ const AllAuctions = () => {
                 </p>
               </div>
               <div className="space-x-2">
-                {role === "team_owner" && null}
+                {/* onclick of this button a request to admin to enter in the auction room */}
+                {role === "team_owner" && <button className="text-white p-2 px-3 bg-pink-500 hover:cursor-pointer rounded-lg" onClick={()=>navigate(`/auction-bid-page/${auction._id}`)}>Enter Auction</button>}
                 {role === "admin" && (
                   <button
                     onClick={() => navigate(`/auctions/${auction._id}`)}

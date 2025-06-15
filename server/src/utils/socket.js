@@ -40,6 +40,16 @@ export const setupSocketHandlers = (io) => {
       }
       socket.join(auctionId);
       socket.emit('joined-auction', { auctionId, message: `Joined auction ${auction.tournamentName}` });
+      // Emit to all in room including sender that user joined
+      io.to(auctionId).emit('user-joined', { email: socket.user.email });
+    });
+
+    // Listen for send-player event from admin and broadcast player-sent event
+    socket.on('send-player', ({ auctionId, player }) => {
+      if (socket.user.role === 'admin') {
+        io.to(auctionId).emit('player-sent', { player });
+        console.log(`Admin ${socket.user.email} sent player ${player.playerName} in auction ${auctionId}`);
+      }
     });
 
     // Join tournament (auction) room for match updates
