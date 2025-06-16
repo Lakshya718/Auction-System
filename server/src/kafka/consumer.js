@@ -2,9 +2,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { Kafka } from 'kafkajs';
-import mongoose from 'mongoose';
-import Auction from '../models/Auction.js';
+import { redisClient, connectRedis } from '../utils/redisClient.js';
 import { isValidObjectId } from 'mongoose';
+import { setupSocketHandlers } from '../utils/socket.js';
 
 const kafka = new Kafka({
   clientId: 'bidify-consumer',
@@ -17,20 +17,23 @@ const kafka = new Kafka({
 
 const consumer = kafka.consumer({ groupId: 'bidify-group' });
 
-const run = async () => {
-  await mongoose.connect(process.env.MONGODB_URI);
+let io;
+
+const run = async (socketIoInstance) => {
+  io = socketIoInstance;
 
   try {
+    await connectRedis();
     await consumer.connect();
     await consumer.subscribe({ topic: 'bids', fromBeginning: false });
     console.log('Kafka consumer connected');
 
     await consumer.run({
       eachMessage: async ({ message }) => {
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try {
           const bid = JSON.parse(message.value.toString());
+
+          console.log(`Received bid amount: ${bid.amount}`);
 
           if (!isValidObjectId(bid.auctionId) || !isValidObjectId(bid.playerId) || !isValidObjectId(bid.teamId)) {
             throw new Error('Invalid bid data: Invalid IDs');
@@ -40,50 +43,53 @@ const run = async () => {
             throw new Error('Invalid bid amount');
           }
 
-          const auction = await Auction.findById(bid.auctionId).session(session);
-          if (!auction || auction.status !== 'active') {
-            throw new Error('Auction is not active');
+          const redisKey = `auction:${bid.auctionId}:player:${bid.playerId}`;
+          const currentBidData = await redisClient.hGetAll(redisKey);
+
+          const currentBid = currentBidData.currentBid ? parseFloat(currentBidData.currentBid) : 0;
+
+          console.log(`Current bid for player: ${currentBid}`);
+
+          if (bid.amount <= currentBid) {
+            throw new Error('Bid amount must be higher than current bid');
           }
 
-          const player = auction.players.find(p => p.player.toString() === bid.playerId);
-          if (!player || player.status !== 'available') {
-            throw new Error('Player is not available for bidding');
+          // Retrieve existing Redis data for player
+          const existingDataStr = await redisClient.get(bid.playerId);
+          let existingData = {};
+          if (existingDataStr) {
+            try {
+              existingData = JSON.parse(existingDataStr);
+            } catch (err) {
+              console.error('Error parsing existing Redis data:', err);
+            }
           }
 
-          const teamBudget = auction.teamBudgets.find(b => b.team.toString() === bid.teamId);
-          if (!teamBudget || teamBudget.remainingBudget < bid.amount) {
-            throw new Error('Insufficient team budget');
+          // Update currentBid and currentTeam
+          existingData.currentBid = bid.amount;
+          existingData.currentTeam = bid.teamId;
+
+          // Save updated data back to Redis
+          await redisClient.set(bid.playerId, JSON.stringify(existingData));
+
+          // Log Redis transaction details
+          console.log(`Redis transaction - Updated player data for playerId: ${bid.playerId} with currentBid: ${bid.amount} and currentTeam: ${bid.teamId} at ${bid.timestamp}`);
+
+          // Emit socket.io event with updated bid state
+          if (io) {
+            io.to(bid.auctionId).emit('bidUpdate', {
+              auctionId: bid.auctionId,
+              playerId: bid.playerId,
+              currentBid: bid.amount,
+              timestamp: bid.timestamp
+            });
+          // Emit refresh-player-data event after Redis update is completed
+          io.to(bid.auctionId).emit('refresh-player-data', { playerId: bid.playerId });
           }
 
-          if (bid.amount < player.currentBid + auction.minBidIncrement) {
-            throw new Error(`Bid must be at least ${player.currentBid + auction.minBidIncrement}`);
-          }
-
-          await Auction.updateOne(
-            { _id: bid.auctionId, 'players.player': bid.playerId },
-            {
-              $push: {
-                'players.$.biddingHistory': {
-                  team: bid.teamId,
-                  amount: bid.amount,
-                  timestamp: bid.timestamp
-                }
-              },
-              $set: {
-                'players.$.currentBid': bid.amount,
-                'players.$.currentHighestBidder': bid.teamId
-              }
-            },
-            { session }
-          );
-
-          await session.commitTransaction();
-          console.log(`Processed bid: ${JSON.stringify(bid)}`);
+          console.log(`Processed bid in Redis: ${JSON.stringify(bid)}`);
         } catch (error) {
-          await session.abortTransaction();
           console.error('Error processing bid:', error);
-        } finally {
-          session.endSession();
         }
       }
     });
@@ -92,4 +98,4 @@ const run = async () => {
   }
 };
 
-run().catch(console.error);
+export { run };

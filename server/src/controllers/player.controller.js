@@ -276,7 +276,9 @@ export const storePlayerInRedis = async (req, res) => {
   try {
     const redisClient = req.app.get('redisClient');
     //i want to change some of these values so, to declare as a const is best practise?
-    const { _id, basePrice, playerName, playerRole, currentBid = 0, currentTeam = null, soldStatus = false} = req.body;
+    let { _id, basePrice, playerName, playerRole, currentBid = 0, currentTeam = null, soldStatus = false} = req.body;
+
+    currentBid = basePrice;
 
     if (!_id) {
       return res.status(400).json({ error: 'Player _id is required' });
@@ -321,3 +323,23 @@ export const getPlayerFromRedis = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deletePlayerFromRedis = async (req, res) => {
+  try {
+    const redisClient = req.app.get('redisClient');
+    const key = req.params.id;
+
+    const playerData = await redisClient.get(key);
+    if (!playerData) {
+      return res.status(404).json({ error: 'No such player found with this id' });
+    }
+
+    await redisClient.del(key);
+    res.status(200).json({ success: true, message: 'Player data deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting player from Redis:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+

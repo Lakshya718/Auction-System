@@ -9,6 +9,7 @@ import {
   createPlayerRequest,
   storePlayerInRedis,
   getPlayerFromRedis,
+  deletePlayerFromRedis,
 } from "../controllers/player.controller.js";
 import { auth, adminOnly } from "../middleware/auth.js";
 import upload from "../utils/multer.js";
@@ -51,5 +52,6 @@ router.delete("/:id", auth, adminOnly, deletePlayer);
 // New routes for Redis player storage and retrieval
 router.post("/redis/player", auth, storePlayerInRedis);
 router.get("/redis/player/:id", auth, getPlayerFromRedis);
+router.delete("/redis/player/:id",auth, deletePlayerFromRedis);
 
 export default router;

@@ -14,6 +14,7 @@ import matchRoutes from "./src/routes/match.route.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 import { setupSocketHandlers } from "./src/utils/socket.js";
 import { initKafkaProducer } from "./src/kafka/producer.js";
+import { run as runKafkaConsumer } from "./src/kafka/consumer.js";
 
 dotenv.config();
 
@@ -44,8 +45,8 @@ redisClient
   });
 
 // Add error event listener to handle runtime errors and prevent app crash
-redisClient.on('error', (err) => {
-  console.error('Redis Client Error', err);
+redisClient.on("error", (err) => {
+  console.error("Redis Client Error", err);
 });
 
 // Socket.io setup
@@ -56,7 +57,7 @@ app.set("io", io);
 // Attach Redis client to app for access in controllers/middleware
 app.set("redisClient", redisClient);
 
-// await initKafkaProducer();
+await initKafkaProducer();
 
 // Middleware
 app.use(express.json());
@@ -91,15 +92,21 @@ app.use("/api/matches", matchRoutes);
 // Error handling middleware
 app.use(errorHandler);
 
-// Database connection
+// Start Kafka consumer and server after DB connection
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log("Connected to MongoDB");
-    const PORT = process.env.PORT || 5000;
-    httpServer.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
+    try {
+      await runKafkaConsumer(io);
+      const PORT = process.env.PORT || 5000;
+      httpServer.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    } catch (error) {
+      console.error("Error starting Kafka consumer:", error);
+      process.exit(1);
+    }
   })
   .catch((error) => {
     console.error("MongoDB connection error:", error);

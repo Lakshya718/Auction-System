@@ -9,7 +9,8 @@ const AuctionBidPage = () => {
   const [socket, setSocket] = useState(null);
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
-  const [bidAmounts, setBidAmounts] = useState({});
+  const [minBidIncrement, setMinBidIncrement] = useState(500000);
+  // Removed unused bidAmounts and setBidAmounts to fix eslint error
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
   const [teamId, setTeamId] = useState("");
@@ -87,6 +88,30 @@ const AuctionBidPage = () => {
       });
     });
 
+    // Listen for bidUpdate event to update current bid in real-time
+    newSocket.on("bidUpdate", (update) => {
+      setPlayers((prevPlayers) => {
+        return prevPlayers.map((player) => {
+          if (player.player._id === update.playerId) {
+            return {
+              ...player,
+              currentBid: update.currentBid,
+              currentHighestBidder: update.lastBidder,
+            };
+          }
+          return player;
+        });
+      });
+      // If the updated player is the teamOwnerPlayer, update its currentBid as well
+      if (teamOwnerPlayer && teamOwnerPlayer._id === update.playerId) {
+        setTeamOwnerPlayer((prev) => ({
+          ...prev,
+          currentBid: update.currentBid,
+          currentTeam: update.lastBidder,
+        }));
+      }
+    });
+
     newSocket.on("error", (error) => {
       setMessages((msgs) => [...msgs, `Error: ${error.message || error}`]);
     });
@@ -94,6 +119,35 @@ const AuctionBidPage = () => {
     newSocket.on("disconnect", () => {
       setConnected(false);
       setMessages((msgs) => [...msgs, "Disconnected from server"]);
+    });
+
+    // Listen for refresh-player-data event to fetch fresh player data from Redis
+    newSocket.on("refresh-player-data", async ({ playerId }) => {
+      console.log("Received refresh-player-data event for playerId:", playerId);
+      if (!playerId || !token) {
+        console.log("Missing playerId or token, skipping fetch");
+        return;
+      }
+      try {
+        const url = `/players/redis/player/${playerId}`;
+        console.log("Fetching fresh player data from:", url);
+        const response = await API.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data.success && response.data.player) {
+          setTeamOwnerPlayer(response.data.player);
+          setMessages((msgs) => [...msgs, `Player data refreshed for playerId: ${playerId}`]);
+          console.log("Player data updated in state for playerId:", playerId);
+        } else {
+          console.log("Failed to fetch player data or no player data returned");
+        }
+      } catch (error) {
+        setMessages((msgs) => [
+          ...msgs,
+          `Error refreshing player data: ${error.message}`,
+        ]);
+        console.error("Error fetching fresh player data:", error);
+      }
     });
 
     // Listen for user-joined event to show when a team_owner joins
@@ -107,7 +161,7 @@ const AuctionBidPage = () => {
     return () => {
       newSocket.disconnect();
     };
-  }, [auctionId, token]);
+  }, [auctionId, token]); // Removed teamOwnerPlayer to prevent socket reconnect on player state change
 
   // Fetch auction data from backend API
   useEffect(() => {
@@ -121,6 +175,7 @@ const AuctionBidPage = () => {
         );
         setPlayers(filteredPlayers);
         setTeams(response.data.auction.teams || []);
+        setMinBidIncrement(response.data.auction.minBidIncrement || 500000);
         // Set default teamId to first team if available
         if (
           response.data.auction.teams &&
@@ -143,9 +198,9 @@ const AuctionBidPage = () => {
   // On mount, fetch current player from Redis for team_owner to persist view on reload
   useEffect(() => {
     const fetchCurrentPlayer = async () => {
-      if (playerId && (role === "team_owner" || role === "admin") && token) {
+      const playerId = localStorage.getItem('playerId');
+      if (playerId && token) {
         try {
-          console.log("PlayerId is", playerId);
           const url = `/players/redis/player/${playerId}`;
           const response = await API.get(url, {
             headers: { Authorization: `Bearer ${token}` },
@@ -224,51 +279,83 @@ const AuctionBidPage = () => {
     };
   }, [socket, role]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePlayerCacheCleared = (data) => {
+      console.log("player-cache-cleared event received for role:", role, "with playerId:", data.playerId);
+      setMessages((msgs) => [...msgs, `Player cache cleared for id: ${data.playerId}`]);
+      localStorage.removeItem("playerId");
+      setPlayerId(null);
+      setTeamOwnerPlayer(null);
+    };
+
+    socket.on("player-cache-cleared", handlePlayerCacheCleared);
+
+    return () => {
+      socket.off("player-cache-cleared", handlePlayerCacheCleared);
+    };
+  }, [socket, role]);
+  
+  useEffect(() => {
+    const fetchCurrentPlayer = async () => {
+      if (!playerId || !token) {
+        setTeamOwnerPlayer(null);
+        return;
+      }
+      try {
+        const url = `/players/redis/player/${playerId}`;
+        const response = await API.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("after request get ", url);
+        if (response.data.success && response.data.player) {
+          setTeamOwnerPlayer(response.data.player);
+        }
+      } catch (error) {
+        setMessages((msgs) => [
+          ...msgs,
+          `Error fetching current player: ${error.message}`,
+        ]);
+      }
+    };
+    fetchCurrentPlayer();
+  }, [role, token, playerId]);
+
   if (loading) {
     return <p>Loading...</p>;
   }
+
+  const handleDeletePlayerFromRedis = async (idofplayer) => {
+    if (!idofplayer) {
+      setMessages((msgs) => [...msgs, "No player selected to clear cache"]);
+      return;
+    }
+    try {
+      // Proceed to delete if player exists
+      const response = await API.delete(`/players/redis/player/${idofplayer}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("handleDeletePlayer function logs", response);
+      setMessages((msgs) => [...msgs, `Player cache removed for id: ${idofplayer}`]);
+      // Clear localStorage playerId and teamOwnerPlayer state
+      localStorage.removeItem("playerId");
+      setPlayerId(null);
+      setTeamOwnerPlayer(null);
+      // Emit socket event to notify other clients about cache clear
+      if (socket) {
+        socket.emit("player-cache-cleared", { playerId: idofplayer });
+      }
+    } catch (error) {
+      console.log("Error in deleting player from Redis", error);
+      setMessages((msgs) => [...msgs, `Error deleting player cache: ${error.message}`]);
+    }
+  };
 
   return (
     <div className="auction-bid-page p-4">
       <h2>Auction Bidding</h2>
       <p>Status: {connected ? "Connected" : "Disconnected"}</p>
-
-      {/* {role === "admin" && (
-        <div className="players-list border-2 border-red-500 ">
-          <div className="text-3xl text-center">
-            All Player which are available (admin)
-          </div>
-          {players.length === 0 && <p>No players available</p>}
-          {players.map((player) => (
-            <div
-              key={player.player._id}
-              className="flex justify-around player-card border p-2 mb-2"
-            >
-              <h3>{player.player.playerName || "Unnamed Player"}</h3>
-              <p>BasePrice: {player.player.basePrice}</p>
-              <button
-                className="text-white bg-green-500 px-3 p-2 rounded-lg hover:bg-green-600"
-                onClick={() => handleSendPlayer(player.player)}
-              >
-                Send Player
-              </button>
-              {player.biddingHistory && player.biddingHistory.length > 0 && (
-                <div className="bidding-history mt-2">
-                  <h4>Bidding History:</h4>
-                  <ul>
-                    {player.biddingHistory.map((bid, index) => (
-                      <li key={index}>
-                        {bid.teamName || bid.team} bid {bid.amount} at{" "}
-                        {new Date(bid.timestamp).toLocaleTimeString()}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )} */}
 
       {role === "admin" && (
         <div className="players-list border-2 border-red-500 p-4">
@@ -318,38 +405,6 @@ const AuctionBidPage = () => {
         </div>
       )}
 
-      {/* <div className="players-list border-2 border-red-500 ">
-        <h3 className="text-3xl text-center mb-4">Team Owner View</h3>
-        <div className="flex justify-between border-2 border-yellow-600">
-          <div className="w-[20%] h-[100%] border-2 border-red-600 flex items-center justify-center">
-            <div className="h-[90%] w-[90%] border-2 border-red-500 rounded-full"></div>
-          </div>
-          <div className="w-[80%]">
-            {teamOwnerPlayer ? (
-              <div className="player-card border p-2">
-                <h3>{teamOwnerPlayer.playerName || "Unnamed Player"}</h3>
-                <p>BasePrice: {teamOwnerPlayer.basePrice}</p>
-                <p>Current Bid {teamOwnerPlayer.currentBid}</p>
-                <p>Current Team {teamOwnerPlayer.currentTeam}</p>
-                <p>Role: {teamOwnerPlayer.playerRole}</p>
-                {role !== "admin" &&
-                  (teamOwnerPlayer.soldStatus === false ? (
-                    <p className="text-red-600 font-bold">
-                      Player is sold already
-                    </p>
-                  ) : (
-                    <button className="p-2 rounded-lg px-4  bg-blue-500 text-white">
-                      Placebid
-                    </button>
-                  ))}
-              </div>
-            ) : (
-              <p>No player is available in auction right now</p>
-            )}
-          </div>
-        </div>
-      </div> */}
-
       <div className="players-list border-2 border-red-500 p-4">
         <h3 className="text-3xl text-center mb-4">Team Owner View</h3>
 
@@ -371,12 +426,62 @@ const AuctionBidPage = () => {
                 <p>Role: {teamOwnerPlayer.playerRole}</p>
 
                 {role !== "admin" &&
-                  (teamOwnerPlayer.soldStatus === false ? (
+                  (teamOwnerPlayer.soldStatus === true ? (
                     <p className="text-red-600 font-bold">
                       Player is sold already
                     </p>
                   ) : (
-                    <button className="p-2 rounded-lg px-4 bg-blue-500 text-white">
+                    <button
+                      className="p-2 rounded-lg px-4 bg-blue-500 text-white"
+                      onClick={async () => {
+                        try {
+                          // Calculate new bid amount as currentBid + minBidIncrement (assumed 500000 here)
+                          const bidAmount =  teamOwnerPlayer.currentBid + minBidIncrement;
+
+                          // Check if team has sufficient budget before sending bid
+                          // Assuming teams state has team budgets, find current team's remaining budget
+                          const teamBudgetObj = teams.find((team) => team._id === teamId);
+                          const remainingBudget = teamBudgetObj ? teamBudgetObj.remainingBudget : 0;
+
+                          if (remainingBudget < bidAmount) {
+                            setMessages((msgs) => [
+                              ...msgs,
+                              `Insufficient budget to place bid of ${bidAmount}`,
+                            ]);
+                            return;
+                          }
+
+                          const response = await API.post(
+                            "/auctions/bid",
+                            {
+                              auctionId,
+                              playerId: playerId,
+                              teamId: teamId,
+                              amount: bidAmount,
+                            },
+                            {
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
+                          );
+                          if (response.data.success) {
+                            setMessages((msgs) => [
+                              ...msgs,
+                              `Bid placed successfully: ${bidAmount}`,
+                            ]);
+                          } else {
+                            setMessages((msgs) => [
+                              ...msgs,
+                              `Failed to place bid`,
+                            ]);
+                          }
+                        } catch (error) {
+                          setMessages((msgs) => [
+                            ...msgs,
+                            `Error placing bid: ${error.message}`,
+                          ]);
+                        }
+                      }}
+                    >
                       Placebid
                     </button>
                   ))}
@@ -385,6 +490,20 @@ const AuctionBidPage = () => {
               <p>No player is available in auction right now</p>
             )}
           </div>
+{role === 'admin' && (
+  <div className="w-[100%] flex justify-around py-2 items-center">
+    <button
+      className="bg-red-500 px-3 p-2 rounded-sm text-white hover:cursor-pointer hover:bg-red-600"
+      onClick={() => {
+        const id = localStorage.getItem("playerId");
+        handleDeletePlayerFromRedis(id);
+      }}
+    >
+      Clear Player Cache
+              </button>
+              <button className="text-white p-2 px-3 bg-purple-500 hover:bg-purple-600 hover:cursor-pointer rounded-sm">Sold Now</button>
+  </div>
+)}
         </div>
       </div>
 
