@@ -17,6 +17,7 @@ const AuctionBidPage = () => {
   const [token, setToken] = useState("");
   const [teamOwnerPlayer, setTeamOwnerPlayer] = useState(null);
   const [playerId, setPlayerId] = useState(null);
+  const [isSelling, setIsSelling] = useState(false);
   const role = useSelector((state) => state.user.role);
   const initialized = useSelector((state) => state.user.initialized);
 
@@ -358,51 +359,92 @@ const AuctionBidPage = () => {
       <p>Status: {connected ? "Connected" : "Disconnected"}</p>
 
       {role === "admin" && (
-        <div className="players-list border-2 border-red-500 p-4">
-          <div className="text-2xl md:text-3xl text-center mb-4">
-            All Players Available (Admin)
+        <>
+          <div className="players-list border-2 border-red-500 p-4">
+            <div className="text-2xl md:text-3xl text-center mb-4">
+              All Players Available (Admin)
+            </div>
+
+            {players.length === 0 && <p>No players available</p>}
+
+            {players.map((player) => (
+              <div
+                key={player.player._id}
+                className="flex flex-col md:flex-row md:items-center md:justify-around gap-4 player-card border p-4 mb-4"
+              >
+                {/* Player Info */}
+                <div className="text-center md:text-left">
+                  <h3 className="font-semibold">
+                    {player.player.playerName || "Unnamed Player"}
+                  </h3>
+                  <p>BasePrice: {player.player.basePrice}</p>
+                </div>
+
+                {/* Send Button */}
+                <button
+                  className="text-white bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 self-center md:self-auto"
+                  onClick={() => handleSendPlayer(player.player)}
+                >
+                  Send Player
+                </button>
+
+                {/* Bidding History (if available) */}
+                {player.biddingHistory && player.biddingHistory.length > 0 && (
+                  <div className="bidding-history border-t pt-2 md:border-0 md:pt-0">
+                    <h4 className="font-medium">Bidding History:</h4>
+                    <ul className="text-sm list-disc ml-4">
+                      {player.biddingHistory.map((bid, index) => (
+                        <li key={index}>
+                          {bid.teamName || bid.team} bid {bid.amount} at{" "}
+                          {new Date(bid.timestamp).toLocaleTimeString()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
-          {players.length === 0 && <p>No players available</p>}
-
-          {players.map((player) => (
-            <div
-              key={player.player._id}
-              className="flex flex-col md:flex-row md:items-center md:justify-around gap-4 player-card border p-4 mb-4"
+          {/* New Admin Section to delete player from Redis */}
+          <div className="border-2 border-blue-500 p-4 mt-6">
+            <h3 className="text-2xl mb-4">Delete Player from Redis Cache</h3>
+            <input
+              type="text"
+              placeholder="Enter Player ID"
+              value={playerId || ""}
+              onChange={(e) => setPlayerId(e.target.value)}
+              className="border border-gray-400 p-2 rounded w-full mb-4"
+            />
+            <button
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={async () => {
+                if (!playerId) {
+                  setMessages((msgs) => [
+                    ...msgs,
+                    "Please enter a Player ID to delete from Redis",
+                  ]);
+                  return;
+                }
+                try {
+                  await API.delete(`/players/redis/player/${playerId}`);
+                  setMessages((msgs) => [
+                    ...msgs,
+                    `Player with ID ${playerId} deleted from Redis cache`,
+                  ]);
+                  setPlayerId("");
+                } catch (error) {
+                  setMessages((msgs) => [
+                    ...msgs,
+                    `Error deleting player from Redis: ${error.message}`,
+                  ]);
+                }
+              }}
             >
-              {/* Player Info */}
-              <div className="text-center md:text-left">
-                <h3 className="font-semibold">
-                  {player.player.playerName || "Unnamed Player"}
-                </h3>
-                <p>BasePrice: {player.player.basePrice}</p>
-              </div>
-
-              {/* Send Button */}
-              <button
-                className="text-white bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 self-center md:self-auto"
-                onClick={() => handleSendPlayer(player.player)}
-              >
-                Send Player
-              </button>
-
-              {/* Bidding History (if available) */}
-              {player.biddingHistory && player.biddingHistory.length > 0 && (
-                <div className="bidding-history border-t pt-2 md:border-0 md:pt-0">
-                  <h4 className="font-medium">Bidding History:</h4>
-                  <ul className="text-sm list-disc ml-4">
-                    {player.biddingHistory.map((bid, index) => (
-                      <li key={index}>
-                        {bid.teamName || bid.team} bid {bid.amount} at{" "}
-                        {new Date(bid.timestamp).toLocaleTimeString()}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+              Delete Player from Redis
+            </button>
+          </div>
+        </>
       )}
 
       <div className="players-list border-2 border-red-500 p-4">
@@ -433,6 +475,7 @@ const AuctionBidPage = () => {
                   ) : (
                     <button
                       className="p-2 rounded-lg px-4 bg-blue-500 text-white"
+                      disabled={isSelling}
                       onClick={async () => {
                         try {
                           // Calculate new bid amount as currentBid + minBidIncrement (assumed 500000 here)
@@ -491,7 +534,7 @@ const AuctionBidPage = () => {
             )}
           </div>
 {role === 'admin' && (
-  <div className="w-[100%] flex justify-around py-2 items-center">
+  <div className="w-[100%] flex flex-col md:flex-row justify-around py-2 items-center gap-2">
     <button
       className="bg-red-500 px-3 p-2 rounded-sm text-white hover:cursor-pointer hover:bg-red-600"
       onClick={() => {
@@ -500,8 +543,112 @@ const AuctionBidPage = () => {
       }}
     >
       Clear Player Cache
-              </button>
-              <button className="text-white p-2 px-3 bg-purple-500 hover:bg-purple-600 hover:cursor-pointer rounded-sm">Sold Now</button>
+    </button>
+    <select
+      className="p-2 rounded border border-gray-300"
+      value={playerId || ""}
+      onChange={(e) => {
+        const selectedPlayerId = e.target.value;
+        setPlayerId(selectedPlayerId);
+        // Find the selected player to get currentHighestBidder
+        const selectedPlayer = players.find(p => p.player._id === selectedPlayerId);
+        if (selectedPlayer && selectedPlayer.currentHighestBidder) {
+          setTeamId(selectedPlayer.currentHighestBidder);
+        } else {
+          setTeamId("");
+        }
+      }}
+    >
+      <option value="" disabled>
+        Select Player
+      </option>
+      {players.map((player) => (
+        <option key={player.player._id} value={player.player._id}>
+          {player.player.playerName}
+        </option>
+      ))}
+    </select>
+    <select
+      className="p-2 rounded border border-gray-300"
+      value={teamId || ""}
+      disabled
+    >
+      <option value="" disabled>
+        Select Team
+      </option>
+      {teamId && (
+        <option value={teamId}>
+          {teams.find(team => team._id === teamId)?.name || teamId}
+        </option>
+      )}
+    </select>
+    <button
+      className="text-white p-2 px-3 bg-purple-500 hover:bg-purple-600 hover:cursor-pointer rounded-sm"
+      onClick={async () => {
+        if (!auctionId || !playerId || !teamId) {
+          setMessages((msgs) => [
+            ...msgs,
+            "Missing auctionId, playerId, or teamId for selling player",
+          ]);
+          return;
+        }
+        try {
+          const playerResponse = await API.get(`/players/redis/player/${playerId}`);
+          const currentBid = playerResponse.data.player.currentBid;
+          console.log("Selling player with data:", { auctionId, playerId, teamId, currentBid });
+          const response = await API.post(
+            "/auctions/sell-player",
+            {
+              auctionId,
+              playerId,
+              teamId,
+              currentBid,
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (response.data.success) {
+            setMessages((msgs) => [
+              ...msgs,
+              `Player sold successfully`,
+            ]);
+            // Clear the team_owner view state after successful sell
+            setTeamOwnerPlayer(null);
+            setIsSelling(false);
+            // Remove player from Redis cache
+            try {
+              await API.delete(`/players/redis/player/${playerId}`);
+              setMessages((msgs) => [
+                ...msgs,
+                `Player removed from Redis cache`,
+              ]);
+              localStorage.removeItem("playerId");
+              setPlayerId(null);
+            } catch (err) {
+              setMessages((msgs) => [
+                ...msgs,
+                `Error removing player from Redis: ${err.message}`,
+              ]);
+            }
+          } else {
+            setMessages((msgs) => [
+              ...msgs,
+              `Failed to sell player: ${response.data.error || "Unknown error"}`,
+            ]);
+            setIsSelling(false);
+          }
+        } catch (error) {
+          setMessages((msgs) => [
+            ...msgs,
+            `Error selling player: ${error.message}`,
+          ]);
+          setIsSelling(false);
+        }
+      }}
+    >
+      Sold Now
+    </button>
   </div>
 )}
         </div>

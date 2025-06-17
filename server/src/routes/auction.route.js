@@ -1,5 +1,5 @@
 import express from 'express';
-import { createAuction, getAllAuctions, getAuctionById, updateAuctionStatus } from '../controllers/auction.controller.js';
+import { createAuction, getAllAuctions, getAuctionById, updateAuctionStatus, sellPlayer } from '../controllers/auction.controller.js';
 import { auth, adminOnly } from '../middleware/auth.js';
 import { sendBidToKafka } from '../kafka/producer.js';
 
@@ -34,5 +34,9 @@ router.post('/bid', auth, async (req, res) => {
     res.status(500).json({ error: 'Failed to send bid to Kafka' });
   }
 });
+
+// New POST /sell-player route
+router.post('/sell-player', auth, adminOnly, sellPlayer);
+
 
 export default router;
