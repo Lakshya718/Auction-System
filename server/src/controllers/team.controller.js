@@ -4,7 +4,12 @@ import { isValidObjectId } from 'mongoose';
 
 export const getTeams = async (req, res) => {
   try {
-    const teams = await Team.find()
+    const { search } = req.query;
+    let filter = {};
+    if (search && search.trim() !== "") {
+      filter.name = { $regex: search.trim(), $options: "i" };
+    }
+    const teams = await Team.find(filter)
       .populate('owner', 'name email')
       .sort({ name: 1 });
     res.json(teams);

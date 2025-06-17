@@ -10,6 +10,7 @@ import {
   storePlayerInRedis,
   getPlayerFromRedis,
   deletePlayerFromRedis,
+  markPlayerUnsold, // New controller function
 } from "../controllers/player.controller.js";
 import { auth, adminOnly } from "../middleware/auth.js";
 import upload from "../utils/multer.js";
@@ -53,5 +54,14 @@ router.delete("/:id", auth, adminOnly, deletePlayer);
 router.post("/redis/player", auth, storePlayerInRedis);
 router.get("/redis/player/:id", auth, getPlayerFromRedis);
 router.delete("/redis/player/:id",auth, deletePlayerFromRedis);
+
+// New route for marking player unsold
+router.patch(
+  "/mark-unsold/:auctionId/:playerId",
+  auth,
+  adminOnly,
+  markPlayerUnsold
+);
+
 
 export default router;

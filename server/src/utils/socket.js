@@ -6,7 +6,11 @@ import User from '../models/User.js';
 import Player from '../models/Player.js';
 import { isValidObjectId } from 'mongoose';
 
+import { setIoInstance } from './socketInstance.js';
+
 export const setupSocketHandlers = (io) => {
+  setIoInstance(io);
+
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) {
@@ -46,10 +50,10 @@ export const setupSocketHandlers = (io) => {
 
     // Listen for send-player event from admin and broadcast player-sent event
     socket.on('send-player', ({ auctionId, player }) => {
-      if (socket.user.role === 'admin') {
+      // if (socket.user.role === 'admin') {
         io.to(auctionId).emit('player-sent', { player });
         console.log(`Admin ${socket.user.email} sent player ${player.playerName} in auction ${auctionId}`);
-      }
+      // }
     });
 
     // Join tournament (auction) room for match updates

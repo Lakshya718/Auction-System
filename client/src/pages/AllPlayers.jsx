@@ -32,7 +32,7 @@ const AllPlayers = () => {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     fetchPlayers();
   }, [search]);
@@ -46,7 +46,7 @@ const AllPlayers = () => {
     }
     const timeout = setTimeout(() => {
       setSearch(value);
-    }, 100);
+    }, 80);
     setDebounceTimeout(timeout);
   };
 

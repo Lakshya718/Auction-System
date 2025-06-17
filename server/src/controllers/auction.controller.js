@@ -130,11 +130,11 @@ export const getAuctionById = async (req, res) => {
       return res.status(400).json({ error: "Invalid auction ID" });
     }
 
-    const auction = await Auction.findById(id)
-      .populate("teams", "name")
-      .populate("players.player", "_id playerName basePrice playerRole")
-      .populate("retainedPlayers.player", "playerName basePrice playerRole")
-      .populate("retainedPlayers.team", "name");
+const auction = await Auction.findById(id)
+  .populate("teams", "name")
+  .populate("players.player", "_id playerName basePrice playerRole profilePhoto")
+  .populate("retainedPlayers.player", "playerName basePrice playerRole profilePhoto")
+  .populate("retainedPlayers.team", "name");
 
     if (!auction) {
       return res.status(404).json({ error: "Auction not found" });

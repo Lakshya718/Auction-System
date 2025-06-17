@@ -4,7 +4,6 @@ dotenv.config();
 import { Kafka } from "kafkajs";
 import { redisClient, connectRedis } from "../utils/redisClient.js";
 import { isValidObjectId } from "mongoose";
-import { setupSocketHandlers } from "../utils/socket.js";
 
 const kafka = new Kafka({
   clientId: "bidify-consumer",
@@ -62,7 +61,7 @@ const run = async (socketIoInstance) => {
             );
           }
 
-          if (bid.amount < currentBid) {
+          if (bid.amount <= currentBid) {
             throw new Error("Bid amount must be higher than current bid");
           }
 
@@ -75,6 +74,11 @@ const run = async (socketIoInstance) => {
             } catch (err) {
               console.error("Error parsing existing Redis data:", err);
             }
+          }
+
+          // Reject bid if currentTeam is same as bidding team
+          if (existingData.currentTeam && existingData.currentTeam === bid.teamId) {
+            throw new Error("Current team cannot place consecutive bids");
           }
 
           // Update currentBid and currentTeam
@@ -101,6 +105,7 @@ const run = async (socketIoInstance) => {
               auctionId: bid.auctionId,
               playerId: bid.playerId,
               currentBid: bid.amount,
+              currentTeam: bid.teamId, // Use currentTeam as last bidder
               timestamp: bid.timestamp,
             });
             // Emit refresh-player-data event after Redis update is completed
