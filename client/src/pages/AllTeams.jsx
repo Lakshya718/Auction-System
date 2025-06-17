@@ -45,7 +45,7 @@ const AllTeams = () => {
     }
     const timeout = setTimeout(() => {
       setSearch(value);
-    }, 100);
+    }, 80);
     setDebounceTimeout(timeout);
   };
   const handTeamClick = (teamId) => {
