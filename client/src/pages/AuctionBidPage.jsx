@@ -52,6 +52,7 @@ const AuctionBidPage = () => {
   const initialized = useSelector((state) => state.user.initialized);
 
   const [loading, setLoading] = useState(true);
+  const [placeBidDisabled, setPlaceBidDisabled] = useState(false);
 
   useEffect(() => {
     if (role && token && initialized) {
@@ -197,6 +198,7 @@ const AuctionBidPage = () => {
 
     // Listen for player-sold event to refresh admin player list
     newSocket.on("player-sold", async (data) => {
+      console.log("player-sold event received:", data);
       if (roleRef.current === "admin") {
         try {
           const response = await API.get(`/auctions/${auctionId}`);
@@ -217,6 +219,8 @@ const AuctionBidPage = () => {
           ]);
         }
       }
+      console.log("Disabling Placebid button");
+      setPlaceBidDisabled(true);
     });
 
     return () => {
@@ -265,6 +269,8 @@ const AuctionBidPage = () => {
         }
       }
       // Disable placeBid button after player marked unsold
+      console.log("Disabling Placebid button");
+      setPlaceBidDisabled(true);
     };
 
     socket.on("player-unsold", handlePlayerUnsold);
@@ -387,6 +393,8 @@ const AuctionBidPage = () => {
           `Player sent: ${data.player.playerName}`,
         ]);
       }
+      console.log("Enabling Placebid button");
+      setPlaceBidDisabled(false);
     };
 
     socket.on("player-sent", handlePlayerSent);
@@ -548,8 +556,12 @@ const AuctionBidPage = () => {
 
                     {role === "team_owner" && (
                       <button
-                        className="p-2 rounded-lg px-4 bg-blue-500 text-white"
-                        disabled={isSelling}
+                        className={`p-2 rounded-lg px-4 text-white ${
+                          isSelling || placeBidDisabled
+                            ? "bg-gray-500 cursor-not-allowed"
+                            : "bg-blue-500"
+                        }`}
+                        disabled={isSelling || placeBidDisabled}
                         onClick={async () => {
                           try {
                             // Calculate new bid amount as currentBid + minBidIncrement (assumed 500000 here)
