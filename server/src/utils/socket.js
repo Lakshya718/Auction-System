@@ -53,7 +53,61 @@ export const setupSocketHandlers = (io) => {
       // if (socket.user.role === 'admin') {
         io.to(auctionId).emit('player-sent', { player });
         console.log(`Admin ${socket.user.email} sent player ${player.playerName} in auction ${auctionId}`);
+        // Emit enable-placebid-button event to enable the placebid button
+        io.to(auctionId).emit('enable-placebid-button');
       // }
+    });
+
+    // Sell player
+    socket.on('sell-player', async ({ auctionId, playerId, teamId, amount }) => {
+      try {
+        if (socket.user.role !== 'admin') {
+          return socket.emit('error', { message: 'Only admins can sell players' });
+        }
+
+        if (!isValidObjectId(auctionId) || !isValidObjectId(playerId) || !isValidObjectId(teamId)) {
+          return socket.emit('error', { message: 'Invalid auction, player, or team ID' });
+        }
+
+        const auction = await Auction.findById(auctionId);
+        if (!auction || auction.status !== 'active') {
+          return socket.emit('error', { message: 'Auction is not active' });
+        }
+
+        const player = auction.players.find(p => p.player.toString() === playerId);
+        if (!player || player.status !== 'available') {
+          return socket.emit('error', { message: 'Player is not available for sale' });
+        }
+
+        const teamBudget = auction.teamBudgets.find(b => b.team.toString() === teamId);
+        if (!teamBudget || teamBudget.remainingBudget < amount) {
+          return socket.emit('error', { message: 'Insufficient team budget' });
+        }
+
+        player.status = 'sold';
+        player.soldTo = teamId;
+        player.soldPrice = amount;
+        teamBudget.remainingBudget -= amount;
+        await auction.save();
+
+        io.to(auctionId).emit('player-sold', {
+          auctionId,
+          playerId,
+          teamId,
+          amount,
+          playerName: (await Player.findById(playerId)).playerName,
+          teamName: (await Team.findById(teamId)).name
+        });
+
+        // Emit disable-placebid-button event to disable the placebid button
+        io.to(auctionId).emit('disable-placebid-button');
+
+        // Audit log
+        console.log(`Player sold: ${playerId} to team ${teamId} for ${amount} in auction ${auctionId}`);
+      } catch (error) {
+        console.error('Error selling player:', error);
+        socket.emit('error', { message: error.message || 'Failed to sell player' });
+      }
     });
 
     // Join tournament (auction) room for match updates
@@ -119,55 +173,6 @@ export const setupSocketHandlers = (io) => {
       } catch (error) {
         console.error('Error placing bid:', error);
         socket.emit('error', { message: error.message || 'Failed to place bid' });
-      }
-    });
-
-    // Sell player
-    socket.on('sell-player', async ({ auctionId, playerId, teamId, amount }) => {
-      try {
-        if (socket.user.role !== 'admin') {
-          return socket.emit('error', { message: 'Only admins can sell players' });
-        }
-
-        if (!isValidObjectId(auctionId) || !isValidObjectId(playerId) || !isValidObjectId(teamId)) {
-          return socket.emit('error', { message: 'Invalid auction, player, or team ID' });
-        }
-
-        const auction = await Auction.findById(auctionId);
-        if (!auction || auction.status !== 'active') {
-          return socket.emit('error', { message: 'Auction is not active' });
-        }
-
-        const player = auction.players.find(p => p.player.toString() === playerId);
-        if (!player || player.status !== 'available') {
-          return socket.emit('error', { message: 'Player is not available for sale' });
-        }
-
-        const teamBudget = auction.teamBudgets.find(b => b.team.toString() === teamId);
-        if (!teamBudget || teamBudget.remainingBudget < amount) {
-          return socket.emit('error', { message: 'Insufficient team budget' });
-        }
-
-        player.status = 'sold';
-        player.soldTo = teamId;
-        player.soldPrice = amount;
-        teamBudget.remainingBudget -= amount;
-        await auction.save();
-
-        io.to(auctionId).emit('player-sold', {
-          auctionId,
-          playerId,
-          teamId,
-          amount,
-          playerName: (await Player.findById(playerId)).playerName,
-          teamName: (await Team.findById(teamId)).name
-        });
-
-        // Audit log
-        console.log(`Player sold: ${playerId} to team ${teamId} for ${amount} in auction ${auctionId}`);
-      } catch (error) {
-        console.error('Error selling player:', error);
-        socket.emit('error', { message: error.message || 'Failed to sell player' });
       }
     });
 
