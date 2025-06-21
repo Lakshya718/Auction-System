@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API from "../../api/axios";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const PlayerDetails = () => {
   const { id } = useParams();
@@ -19,6 +20,7 @@ const PlayerDetails = () => {
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState("");
   const [updateSuccess, setUpdateSuccess] = useState("");
+  const [previewPhoto, setPreviewPhoto] = useState(null);
 
   useEffect(() => {
     const fetchPlayer = async () => {
@@ -53,6 +55,7 @@ const PlayerDetails = () => {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setProfilePhotoFile(e.target.files[0]);
+      setPreviewPhoto(URL.createObjectURL(e.target.files[0]));
     }
   };
 
@@ -83,6 +86,8 @@ const PlayerDetails = () => {
         setUpdateSuccess("Player updated successfully.");
         setPlayer(response.data.player);
         setEditMode(false);
+        setPreviewPhoto(null);
+        setProfilePhotoFile(null);
       } else {
         setUpdateError("Failed to update player.");
       }
@@ -93,103 +98,45 @@ const PlayerDetails = () => {
     }
   };
 
-  if (loading) return <p>Loading player details...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
-  if (!player) return <p>Player not found.</p>;
+  if (loading) return <LoadingSpinner />;
+  if (error) return <p className="text-red-600 text-center mt-4">{error}</p>;
+  if (!player) return <p className="text-center mt-4">Player not found.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
+    <div className="max-w-3xl mx-auto p-6">
       {!editMode ? (
         <>
-          <h2 className="text-3xl font-bold mb-4">{player.playerName}</h2>
+          <h2 className="text-4xl font-extrabold mb-6 text-center text-blue-800">{player.playerName}</h2>
           <img
             src={player.profilePhoto || "/default-profile.png"}
             alt={player.playerName}
-            className="w-64 h-64 object-cover rounded mb-4"
+            className="w-64 h-64 object-cover rounded-lg mx-auto mb-6"
           />
-          <p><strong>Age:</strong> {player.age}</p>
-          <p><strong>Role:</strong> {player.playerRole}</p>
-          <p><strong>Status:</strong> {player.status}</p>
-          <p><strong>Base Price:</strong> {player.basePrice}</p>
-          <p><strong>Description:</strong> {player.description || "N/A"}</p>
-          <button
-            onClick={() => setEditMode(true)}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Edit
-          </button>
+          <div className="space-y-3 text-lg text-gray-700">
+            <p><strong>Age:</strong> {player.age}</p>
+            <p><strong>Role:</strong> {player.playerRole}</p>
+            <p><strong>Status:</strong> {player.status}</p>
+            <p><strong>Base Price:</strong> {player.basePrice}</p>
+            <p><strong>Description:</strong> {player.description || "N/A"}</p>
+          </div>
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => setEditMode(true)}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+            >
+              Edit
+            </button>
+          </div>
         </>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <h2 className="text-3xl font-bold mb-4">Edit Player: {player.playerName}</h2>
-          <img
-            src={player.profilePhoto || "/default-profile.png"}
-            alt={player.playerName}
-            className="w-64 h-64 object-cover rounded mb-4"
-          />
-          <div>
-            <label className="block font-semibold mb-1" htmlFor="playerName">Player Name</label>
-            <input
-              type="text"
-              id="playerName"
-              name="playerName"
-              value={formData.playerName}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded p-2"
-              required
+        <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto">
+          <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">Edit Player: {player.playerName}</h2>
+          <div className="flex flex-col items-center mb-6">
+            <img
+              src={previewPhoto || player.profilePhoto || "/default-profile.png"}
+              alt={player.playerName}
+              className="w-48 h-48 object-cover rounded-lg mb-4"
             />
-          </div>
-          <div>
-            <label className="block font-semibold mb-1" htmlFor="age">Age</label>
-            <input
-              type="number"
-              id="age"
-              name="age"
-              value={formData.age}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded p-2"
-              min="0"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-semibold mb-1" htmlFor="playerRole">Player Role</label>
-            <input
-              type="text"
-              id="playerRole"
-              name="playerRole"
-              value={formData.playerRole}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded p-2"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-semibold mb-1" htmlFor="basePrice">Base Price</label>
-            <input
-              type="number"
-              id="basePrice"
-              name="basePrice"
-              value={formData.basePrice}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded p-2"
-              min="0"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-semibold mb-1" htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded p-2"
-              rows="4"
-            />
-          </div>
-          <div>
-            <label className="block font-semibold mb-1" htmlFor="profilePhoto">Profile Photo</label>
             <input
               type="file"
               id="profilePhoto"
@@ -199,20 +146,81 @@ const PlayerDetails = () => {
               className="w-full"
             />
           </div>
-          {updateError && <p className="text-red-600">{updateError}</p>}
-          {updateSuccess && <p className="text-green-600">{updateSuccess}</p>}
-          <div className="flex gap-4">
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="playerName">Player Name</label>
+            <input
+              type="text"
+              id="playerName"
+              name="playerName"
+              value={formData.playerName}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="age">Age</label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              value={formData.age}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min="0"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="playerRole">Player Role</label>
+            <input
+              type="text"
+              id="playerRole"
+              name="playerRole"
+              value={formData.playerRole}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="basePrice">Base Price</label>
+            <input
+              type="number"
+              id="basePrice"
+              name="basePrice"
+              value={formData.basePrice}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min="0"
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="4"
+            />
+          </div>
+          {updateError && <p className="text-red-600 text-center">{updateError}</p>}
+          {updateSuccess && <p className="text-green-600 text-center">{updateSuccess}</p>}
+          <div className="flex gap-4 justify-center">
             <button
               type="submit"
               disabled={updating}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
             >
               {updating ? "Updating..." : "Update Player"}
             </button>
             <button
               type="button"
               onClick={() => setEditMode(false)}
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              className="bg-gray-400 text-white px-6 py-3 rounded-lg hover:bg-gray-500 transition"
             >
               Cancel
             </button>
@@ -222,5 +230,4 @@ const PlayerDetails = () => {
     </div>
   );
 };
-
 export default PlayerDetails;

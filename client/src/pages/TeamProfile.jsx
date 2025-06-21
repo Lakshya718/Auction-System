@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../../api/axios';
 
 const TeamProfile = () => {
   const [team, setTeam] = useState(null);
@@ -19,7 +19,7 @@ const TeamProfile = () => {
     const fetchMyTeam = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/my-team');
+        const response = await API.get('/teams/my-team');
         setTeam(response.data);
         setFormData({
           name: response.data.name || '',
@@ -63,7 +63,7 @@ const TeamProfile = () => {
     setUpdateError(null);
     setUpdateSuccess(false);
     try {
-      const response = await axios.patch('/team/' + team._id, formData);
+      const response = await API.patch('teams/' + team._id, formData);
       setTeam(response.data);
       setUpdateSuccess(true);
       setEditMode(false);
@@ -75,42 +75,46 @@ const TeamProfile = () => {
   };
 
   if (loading) {
-    return <div className="p-4">Loading team data...</div>;
+    return <div className="p-4 text-center">Loading team data...</div>;
   }
 
   if (error) {
-    return <div className="p-4 text-red-600">Error: {error}</div>;
+    return <div className="p-4 text-center text-red-600">Error: {error}</div>;
   }
 
   if (!team) {
-    return <div className="p-4">No team data available.</div>;
+    return <div className="p-4 text-center">No team data available.</div>;
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">{team.name}</h2>
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+      <h2 className="text-3xl font-bold mb-6 text-center">{team.name}</h2>
       {team.logo && !editMode && (
-        <img
-          src={team.logo}
-          alt={team.name + ' logo'}
-          className="w-32 h-32 object-contain mb-4"
-        />
+        <div className="flex justify-center mb-6">
+          <img
+            src={team.logo}
+            alt={team.name + ' logo'}
+            className="w-40 h-40 object-contain rounded-lg shadow-md"
+          />
+        </div>
       )}
 
       {!editMode ? (
         <>
-          <p className="mb-6">{team.bio}</p>
-          <button
-            onClick={handleEditToggle}
-            className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Edit Team
-          </button>
+          <p className="mb-6 text-gray-700 text-center">{team.bio}</p>
+          <div className="flex justify-center">
+            <button
+              onClick={handleEditToggle}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Edit Team
+            </button>
+          </div>
         </>
       ) : (
-        <form onSubmit={handleFormSubmit} className="mb-6 max-w-md">
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold" htmlFor="name">Team Name</label>
+        <form onSubmit={handleFormSubmit} className="max-w-md mx-auto space-y-6">
+          <div>
+            <label className="block mb-2 font-semibold text-gray-800" htmlFor="name">Team Name</label>
             <input
               type="text"
               id="name"
@@ -118,38 +122,47 @@ const TeamProfile = () => {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold" htmlFor="logo">Logo URL</label>
+          <div>
+            <label className="block mb-2 font-semibold text-gray-800" htmlFor="logo">Logo URL</label>
             <input
               type="text"
               id="logo"
               name="logo"
               value={formData.logo}
               onChange={handleInputChange}
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
+            {formData.logo && (
+              <div className="mt-4 flex justify-center">
+                <img
+                  src={formData.logo}
+                  alt="Logo Preview"
+                  className="w-32 h-32 object-contain rounded-lg shadow-md"
+                />
+              </div>
+            )}
           </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold" htmlFor="bio">Bio</label>
+          <div>
+            <label className="block mb-2 font-semibold text-gray-800" htmlFor="bio">Bio</label>
             <textarea
               id="bio"
               name="bio"
               value={formData.bio}
               onChange={handleInputChange}
               rows={4}
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
           {updateError && <p className="text-red-600 mb-2">{updateError}</p>}
           {updateSuccess && <p className="text-green-600 mb-2">Team updated successfully!</p>}
-          <div>
+          <div className="flex justify-center space-x-4">
             <button
               type="submit"
               disabled={updateLoading}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mr-2"
+              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
             >
               {updateLoading ? 'Updating...' : 'Save'}
             </button>
@@ -157,7 +170,7 @@ const TeamProfile = () => {
               type="button"
               onClick={handleEditToggle}
               disabled={updateLoading}
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500 transition"
             >
               Cancel
             </button>
@@ -165,21 +178,20 @@ const TeamProfile = () => {
         </form>
       )}
 
-      <h3 className="text-xl font-semibold mb-2">Players</h3>
+      <h3 className="text-2xl font-semibold mt-10 mb-4 text-center">Players</h3>
       {team.players && team.players.length > 0 ? (
-        <ul className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {team.players.map((player) => (
-            <li key={player._id} className="border p-4 rounded shadow-sm">
-              <p><strong>Name:</strong> {player.playerName}</p>
-              <p><strong>Role:</strong> {player.playerRole}</p>
+            <div key={player._id} className="border rounded-lg p-4 shadow-sm hover:shadow-md transition">
+              <p className="font-semibold text-lg">{player.playerName}</p>
+              <p className="text-gray-700">Role: {player.playerRole}</p>
               {player.purchasePrice && (
-                <p><strong>Purchase Price:</strong> ${player.purchasePrice}</p>
+                <p className="text-gray-700">Purchase Price: ${player.purchasePrice}</p>
               )}
-              {/* Display stats if available */}
               {player.stats && (
                 <div className="mt-2">
                   <strong>Stats:</strong>
-                  <ul className="list-disc list-inside">
+                  <ul className="list-disc list-inside text-gray-600">
                     {Object.entries(player.stats).map(([key, value]) => (
                       <li key={key}>
                         {key}: {value}
@@ -188,11 +200,11 @@ const TeamProfile = () => {
                   </ul>
                 </div>
               )}
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : (
-        <p>No players found for this team.</p>
+        <p className="text-center text-gray-500">No players found for this team.</p>
       )}
     </div>
   );

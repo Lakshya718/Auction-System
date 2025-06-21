@@ -42,7 +42,8 @@ const TeamDetails = () => {
         <ul className="list-disc list-inside">
           {team.players.map((player) => (
             <li key={player._id}>
-              {player.name} - {player.type} - Status: {player.status} - Purchase Price: ${player.purchasePrice}
+              Player Name : {player.playerName} and 
+               Purchase Price: ${player.purchasePrice}
             </li>
           ))}
         </ul>

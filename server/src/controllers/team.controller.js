@@ -160,10 +160,10 @@ export const getMyTeam = async (req, res) => {
     const players = [
       ...auctions.flatMap(auction => auction.players
         .filter(p => p.soldTo?.toString() === team._id.toString())
-        .map(p => ({ ...p.player.toObject(), purchasePrice: p.soldPrice }))),
+        .map(p => ({ _id: p.player._id, ...p.player.toObject(), purchasePrice: p.soldPrice }))),
       ...auctions.flatMap(auction => auction.retainedPlayers
         .filter(r => r.team.toString() === team._id.toString())
-        .map(r => r.player))
+        .map(r => ({ _id: r.player._id, ...r.player.toObject() })))
     ];
 
     res.json({ ...team.toObject(), players });

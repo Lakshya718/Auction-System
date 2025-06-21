@@ -130,11 +130,17 @@ export const getAuctionById = async (req, res) => {
       return res.status(400).json({ error: "Invalid auction ID" });
     }
 
-const auction = await Auction.findById(id)
-  .populate("teams", "name")
-  .populate("players.player", "_id playerName basePrice playerRole profilePhoto")
-  .populate("retainedPlayers.player", "playerName basePrice playerRole profilePhoto")
-  .populate("retainedPlayers.team", "name");
+    const auction = await Auction.findById(id)
+      .populate("teams", "name")
+      .populate(
+        "players.player",
+        "_id playerName basePrice playerRole profilePhoto"
+      )
+      .populate(
+        "retainedPlayers.player",
+        "playerName basePrice playerRole profilePhoto"
+      )
+      .populate("retainedPlayers.team", "name");
 
     if (!auction) {
       return res.status(404).json({ error: "Auction not found" });
@@ -195,12 +201,107 @@ export const updateAuctionStatus = async (req, res) => {
   }
 };
 
+export const updateAuction = async (req, res) => {
+  try {
+    const auctionId = req.params.id;
+    const {
+      tournamentName,
+      description,
+      date,
+      startTime,
+      minBidIncrement,
+      maxBudget,
+      status,
+    } = req.body;
+
+    if (!isValidObjectId(auctionId)) {
+      return res.status(400).json({ error: "Invalid auction ID" });
+    }
+
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return res.status(404).json({ error: "Auction not found" });
+    }
+
+    // Update fields if provided
+    if (tournamentName !== undefined) auction.tournamentName = tournamentName;
+    if (description !== undefined) auction.description = description;
+    if (date !== undefined) auction.date = date;
+    if (startTime !== undefined) auction.startTime = startTime;
+    if (minBidIncrement !== undefined) auction.minBidIncrement = minBidIncrement;
+    if (maxBudget !== undefined) auction.maxBudget = maxBudget;
+    if (status !== undefined) auction.status = status;
+
+    await auction.save();
+
+    res.status(200).json({ success: true, auction });
+  } catch (error) {
+    console.error("Error updating auction:", error);
+    res.status(500).json({ error: "Failed to update auction" });
+  }
+};
+
+// export const updateAuctionTeamsPlayers = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { teams, players } = req.body;
+
+//     if (!isValidObjectId(id)) {
+//       return res.status(400).json({ error: "Invalid auction ID" });
+//     }
+
+//     if (!Array.isArray(teams) || !Array.isArray(players)) {
+//       return res.status(400).json({ error: "Teams and players must be arrays" });
+//     }
+
+//     // Validate team and player IDs
+//     const invalidTeamIds = teams.filter((teamId) => !isValidObjectId(teamId));
+//     const invalidPlayerIds = players.filter((playerId) => !isValidObjectId(playerId));
+
+//     if (invalidTeamIds.length > 0 || invalidPlayerIds.length > 0) {
+//       return res.status(400).json({ error: "Invalid team or player IDs" });
+//     }
+
+//     const auction = await Auction.findById(id);
+//     if (!auction) {
+//       return res.status(404).json({ error: "Auction not found" });
+//     }
+
+//     // Update teams and players
+//     auction.teams = teams;
+//     auction.players = players.map((playerId) => ({
+//       player: playerId,
+//       status: "available",
+//       currentBid: 0,
+//     }));
+
+//     // Update teamBudgets for new teams
+//     auction.teamBudgets = teams.map((teamId) => {
+//       const existingBudget = auction.teamBudgets.find((tb) => tb.team.toString() === teamId.toString());
+//       return existingBudget || { team: teamId, remainingBudget: auction.maxBudget };
+//     });
+
+//     await auction.save();
+
+//     res.status(200).json({ success: true, message: "Auction teams and players updated", auction });
+//   } catch (error) {
+//     console.error("Error updating auction teams and players:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
 export const sellPlayer = async (req, res) => {
   try {
     const { auctionId, playerId, teamId, currentBid } = req.body;
 
-    if (!isValidObjectId(auctionId) || !isValidObjectId(playerId) || !isValidObjectId(teamId)) {
-      return res.status(400).json({ error: "Invalid auction, player, or team ID" });
+    if (
+      !isValidObjectId(auctionId) ||
+      !isValidObjectId(playerId) ||
+      !isValidObjectId(teamId)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Invalid auction, player, or team ID" });
     }
 
     const auction = await Auction.findById(auctionId);
@@ -209,20 +310,12 @@ export const sellPlayer = async (req, res) => {
     }
 
     // Find the player in the auction players array
-    const playerEntry = auction.players.find((p) => p.player.toString() === playerId);
+    const playerEntry = auction.players.find(
+      (p) => p.player.toString() === playerId
+    );
     if (!playerEntry) {
       return res.status(404).json({ error: "Player not found in auction" });
     }
-
-    // Validate currentHighestBidder is the teamId
-    // if (!playerEntry.currentHighestBidder || playerEntry.currentHighestBidder.toString() !== teamId) {
-    //   return res.status(400).json({ error: "Current highest bidder does not match the team" });
-    // }
-
-    // Validate currentBid and soldPrice (soldPrice should be set to currentBid)
-    // if (!playerEntry.currentBid || playerEntry.currentBid <= 0) {
-    //   return res.status(400).json({ error: "Invalid current bid" });
-    // }
 
     // Update player entry
     playerEntry.soldTo = teamId;
@@ -230,18 +323,27 @@ export const sellPlayer = async (req, res) => {
     playerEntry.status = "sold";
 
     // Deduct currentBid from team's remaining budget
-    const teamBudgetEntry = auction.teamBudgets.find((tb) => tb.team.toString() === teamId);
+    const teamBudgetEntry = auction.teamBudgets.find(
+      (tb) => tb.team.toString() === teamId
+    );
     if (!teamBudgetEntry) {
       return res.status(404).json({ error: "Team budget not found" });
     }
 
-    // if (teamBudgetEntry.remainingBudget < playerEntry.currentBid) {
-    //   return res.status(400).json({ error: "Insufficient remaining budget for the team" });
-    // }
-
     teamBudgetEntry.remainingBudget -= currentBid;
 
     await auction.save();
+
+    // Add playerId with purchasePrice and timestamp to the team's players array if not already present
+    const team = await Team.findById(teamId);
+    if (team) {
+      team.players.push({
+        player: playerId,
+        purchasePrice: currentBid,
+        timestamp: new Date(),
+      });
+      await team.save();
+    }
 
     // Emit socket event to notify clients about player sold update
     const io = req.app.get("io");
@@ -253,7 +355,13 @@ export const sellPlayer = async (req, res) => {
       });
     }
 
-    res.status(200).json({ success: true, message: "Player sold successfully", player: playerEntry });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Player sold successfully",
+        player: playerEntry,
+      });
   } catch (error) {
     console.error("Error selling player:", error);
     res.status(500).json({ error: "Internal server error" });
