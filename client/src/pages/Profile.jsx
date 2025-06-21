@@ -1,20 +1,20 @@
-import { useEffect, useState, useRef } from "react";
-import API from "../../api/axios";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { clearUser, setUser, updateUser } from "../store/userSlice";
-import Sidebar from "../components/Sidebar";
+import { useEffect, useState, useRef } from 'react';
+import API from '../../api/axios';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { clearUser, setUser, updateUser } from '../store/userSlice';
+import Sidebar from '../components/Sidebar';
 
 const decodeJWT = (token) => {
   if (!token) return null;
   try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
     );
     return JSON.parse(jsonPayload);
   } catch {
@@ -30,7 +30,7 @@ const Profile = () => {
     matched: false,
   });
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState({ name: "", password: "" });
+  const [form, setForm] = useState({ name: '', password: '' });
   const [profilePic, setProfilePic] = useState(null);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = () => {
       setLoading(true);
-      API.get("/auth/profile")
+      API.get('/auth/profile')
         .then((res) => {
           setData(res.data);
           dispatch(
@@ -54,8 +54,8 @@ const Profile = () => {
             })
           );
           setForm({
-            name: res.data.user.name || "",
-            password: "",
+            name: res.data.user.name || '',
+            password: '',
           });
           if (res.data.user.profilePhoto) {
             setProfilePic(res.data.user.profilePhoto);
@@ -66,7 +66,7 @@ const Profile = () => {
         })
         .catch(() => {
           setLoading(false);
-          navigate("/login");
+          navigate('/login');
         });
     };
 
@@ -74,7 +74,7 @@ const Profile = () => {
   }, [navigate, dispatch]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const decoded = decodeJWT(token);
     if (decoded) {
       const currentTime = Math.floor(Date.now() / 1000);
@@ -109,16 +109,16 @@ const Profile = () => {
   const handleLogout = () => {
     setShowLogoutConfirm(false);
     setLoading(true);
-    API.get("/auth/logout")
+    API.get('/auth/logout')
       .then(() => {
         localStorage.clear();
         dispatch(clearUser());
         setLoading(false);
-        navigate("/login");
+        navigate('/login');
       })
       .catch(() => {
         setLoading(false);
-        alert("Logout failed. Please try again.");
+        alert('Logout failed. Please try again.');
       });
   };
 
@@ -130,14 +130,14 @@ const Profile = () => {
     setLoading(true);
     setError(null);
     const formData = new FormData();
-    formData.append("name", form.name);
-    if (form.password) formData.append("password", form.password);
+    formData.append('name', form.name);
+    if (form.password) formData.append('password', form.password);
     if (profilePic && profilePic instanceof File) {
-      formData.append("profilePicture", profilePic);
+      formData.append('profilePicture', profilePic);
     }
 
-    API.put("/auth/profile", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    API.put('/auth/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
       .then((res) => {
         setData(res.data);
@@ -149,7 +149,7 @@ const Profile = () => {
       .catch((err) => {
         setError(
           err.response?.data?.message ||
-            "Failed to update profile. Please try again."
+            'Failed to update profile. Please try again.'
         );
         setLoading(false);
       });
@@ -161,7 +161,7 @@ const Profile = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar role={data?.user?.role || ""} />
+      <Sidebar role={data?.user?.role || ''} />
       <div className="flex-grow max-w-4xl ml-10 p-6 mt-10 bg-white rounded-lg shadow-lg">
         <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-10">
           <div className="flex flex-col items-center w-full md:w-1/3">
@@ -169,7 +169,7 @@ const Profile = () => {
               onClick={() => setShowProfilePopup(!showProfilePopup)}
               className="fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 z-50"
             >
-              {showProfilePopup ? "Hide Profile" : "Edit Profile"}
+              {showProfilePopup ? 'Hide Profile' : 'Edit Profile'}
             </button>
             {showProfilePopup && (
               <div
@@ -242,7 +242,7 @@ const Profile = () => {
             )}
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-300 mb-4">
               {profilePic ? (
-                typeof profilePic === "string" ? (
+                typeof profilePic === 'string' ? (
                   <img
                     src={profilePic}
                     alt="Profile"
@@ -269,10 +269,10 @@ const Profile = () => {
               <h3 className="font-semibold mb-2">Token Information</h3>
               {tokenInfo.token ? (
                 <p>
-                  <strong>Login Expires In:</strong>{" "}
+                  <strong>Login Expires In:</strong>{' '}
                   {tokenInfo.expiresIn > 0
                     ? `${tokenInfo.expiresIn} seconds`
-                    : "Expired"}
+                    : 'Expired'}
                 </p>
               ) : (
                 <p>No valid token found.</p>
@@ -360,23 +360,23 @@ const Profile = () => {
             )}
             <div className="mt-6 space-y-3">
               <button
-                onClick={() => navigate("/all-auctions")}
+                onClick={() => navigate('/all-auctions')}
                 className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
                 All Auctions
               </button>
-              {data.user.role === "user" && (
+              {data.user.role === 'user' && (
                 <button
-                  onClick={() => navigate("/live-auction")}
+                  onClick={() => navigate('/live-auction')}
                   className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
                 >
                   Live Auction (View Only)
                 </button>
               )}
-              {data.user.role === "team_owner" && (
+              {data.user.role === 'team_owner' && (
                 <>
                   <button
-                    onClick={() => navigate("/team-profile")}
+                    onClick={() => navigate('/team-profile')}
                     className="w-full bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
                   >
                     Team Profile
@@ -388,40 +388,40 @@ const Profile = () => {
                   </div>
                 </>
               )}
-              {data.user.role === "admin" && (
+              {data.user.role === 'admin' && (
                 <>
                   <button
-                    onClick={() => navigate("/add-player")}
+                    onClick={() => navigate('/add-player')}
                     className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                   >
                     Add Player
                   </button>
                   <button
-                    onClick={() => navigate("/all-players")}
+                    onClick={() => navigate('/all-players')}
                     className="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
                   >
                     All Players
                   </button>
                   <button
-                    onClick={() => navigate("/all-teams")}
+                    onClick={() => navigate('/all-teams')}
                     className="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
                   >
                     All Teams
                   </button>
                   <button
-                    onClick={() => navigate("/create-auction")}
+                    onClick={() => navigate('/create-auction')}
                     className="w-full bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
                   >
                     Create Auction
                   </button>
                   <button
-                    onClick={() => navigate("/pending-players")}
+                    onClick={() => navigate('/pending-players')}
                     className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mt-2"
                   >
                     Review Pending Player Requests
                   </button>
                   <button
-                    onClick={() => navigate("/matches/create")}
+                    onClick={() => navigate('/matches/create')}
                     className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-2"
                   >
                     Create Match

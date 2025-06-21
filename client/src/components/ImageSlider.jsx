@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-//later on we will import the slides by making a differnent file that handles different 
+//later on we will import the slides by making a differnent file that handles different
 //slides arrays and then we import these arrays and pass as props
 const slides = [
   {
@@ -118,7 +118,9 @@ const Carousel = () => {
         }}
       >
         <div className="absolute bottom-20 left-20 max-w-lg">
-          <h1 className="text-5xl font-extrabold mb-4">{slides[currentIndex].title}</h1>
+          <h1 className="text-5xl font-extrabold mb-4">
+            {slides[currentIndex].title}
+          </h1>
           <p className="text-lg">{slides[currentIndex].description}</p>
           {/* Navigation buttons */}
           <div className="flex space-x-4 mt-6">

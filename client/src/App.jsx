@@ -24,7 +24,7 @@ import ImageSlider from './components/ImageSlider.jsx';
 const App = () => {
   return (
     <Router>
-      {/* <Navbar/> */}
+      <Navbar/>
         <Routes>
           <Route
             path="/login"
