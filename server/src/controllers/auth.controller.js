@@ -125,3 +125,42 @@ export const logout = async (req, res) => {
     console.log(error);
   }
 };
+
+export const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { name, password } = req.body;
+
+    if (name) user.name = name;
+    if (password) user.password = password;
+
+    if (req.file) {
+      // Upload new profile picture to cloudinary
+      const cloudResponse = await uploadMedia(req.file.path);
+      if (user.profilePhoto) {
+        // Delete old profile picture from cloudinary
+        await deleteMediaFromCloudinary(user.profilePhoto);
+      }
+      user.profilePhoto = cloudResponse.secure_url;
+    }
+
+    await user.save();
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePhoto: user.profilePhoto,
+      },
+    });
+  } catch (error) {
+    console.error('Update Profile Error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};

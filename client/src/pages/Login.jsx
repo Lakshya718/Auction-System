@@ -3,6 +3,7 @@ import API from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/userSlice";
+import Carousel from "../components/ImageSlider"; // Import the Carousel component
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -10,7 +11,8 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,18 +41,58 @@ const Login = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 mt-10 border rounded">
-      <h2 className="text-2xl font-bold mb-4">Login</h2>
-      <input type="email" name="email" placeholder="Email" required className="w-full mb-2 p-2 border" onChange={handleChange} disabled={isLoading} />
-      <input type="password" name="password" placeholder="Password" required className="w-full mb-2 p-2 border" onChange={handleChange} disabled={isLoading} />
-      <button
-        type="submit"
-        className={`${isLoading ? "bg-gray-400" : "bg-blue-600"} text-white p-2 w-full`}
-        disabled={isLoading}
-      >
-        {isLoading ? "Loading..." : "Login"}
-      </button>
-    </form>
+    <div className="flex flex-col md:flex-row h-[80vh] border-2 border-pink-900 p-2">
+      <div className="w-full md:w-1/2 h-1/2 overflow-hidden md:h-[100%] border-green-500 border-2">
+        <Carousel />
+      </div>
+      <div className="w-full p-4 md:w-1/2 h-1/2 md:h-full border-green-500 border-2 flex justify-center items-center">
+        <form
+          onSubmit={handleSubmit}
+          className="p-3 md:h-[40vh] md:w-[35vw] h-[100%] w-[80%] rounded border-2 border-teal-500"
+        >
+          <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+          <div className="flex flex-col space-y-4">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              required
+              className="bg-purple-600 text-white px-8 py-3 uppercase tracking-widest"
+              style={{
+                clipPath: "polygon(2% 0%, 100% 0%, 98% 100%, 0% 100%)",
+              }}
+              onChange={handleChange}
+              disabled={isLoading}
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+              className="bg-purple-600 text-white px-8 py-3 uppercase tracking-widest"
+              style={{
+                clipPath: "polygon(2% 0%, 100% 0%, 98% 100%, 0% 100%)",
+              }}
+              onChange={handleChange}
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              className="bg-purple-900 text-white py-3 uppercase tracking-widest"
+              style={{
+                clipPath: "polygon(2% 0%, 100% 0%, 98% 100%, 0% 100%)",
+              }}
+              disabled={isLoading}
+            >
+              {isLoading ? "Loading..." : "Login"}
+            </button>
+            <div className="flex justify-center mt-2">
+             <p className="text-center text-xl">Not Registered Yet?</p><p className="text-xl text-sky-500 hover:cursor-pointer" onClick={()=>navigate('/register')}>Register</p>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios'; // Assuming axios instance is configured here
+import Select from 'react-select';
+import makeAnimated from 'react-select/animated';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { Tooltip } from 'react-tooltip'; // Assuming react-tooltip is installed
+import { FaTrophy, FaAlignLeft, FaCalendarAlt, FaClock, FaSortAmountUp, FaDollarSign, FaUsers, FaUser } from 'react-icons/fa';
+
+const animatedComponents = makeAnimated();
 
 const CreateAuction = () => {
   const [formData, setFormData] = useState({
     tournamentName: '',
     description: '',
-    date: '',
-    startTime: '',
+    date: null,
+    startTime: null,
     minBidIncrement: 500000,
     maxBudget: 150000000,
     teams: [],
@@ -14,18 +22,16 @@ const CreateAuction = () => {
     retainedPlayers: []
   });
 
-  // Ensure teams is always an array
-  useEffect(() => {
-    if (!Array.isArray(formData.teams)) {
-      setFormData(prev => ({ ...prev, teams: [] }));
-    }
-  }, [formData.teams]);
-
   const [allTeams, setAllTeams] = useState([]);
   const [allPlayers, setAllPlayers] = useState([]);
+  
+  // Add select all state for teams and players
+  const [selectAllTeams, setSelectAllTeams] = useState(false);
+  const [selectAllPlayers, setSelectAllPlayers] = useState(false);
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState({});
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Fetch teams and players for selection
@@ -42,209 +48,255 @@ const CreateAuction = () => {
     fetchTeamsAndPlayers();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-
-  const validateTimeFormat = (time) => {
-    const regex = /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/;
-    return regex.test(time);
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.tournamentName.trim()) {
+      newErrors.tournamentName = 'Tournament name is required';
+    }
+    if (!formData.date) {
+      newErrors.date = 'Auction date is required';
+    }
+    if (!formData.startTime) {
+      newErrors.startTime = 'Auction start time is required';
+    }
+    if (formData.maxBudget <= 0) {
+      newErrors.maxBudget = 'Max budget must be greater than zero';
+    }
+    if (formData.minBidIncrement <= 0) {
+      newErrors.minBidIncrement = 'Minimum bid increment must be greater than zero';
+    }
+    if (formData.teams.length === 0) {
+      newErrors.teams = 'At least one team must be selected';
+    }
+    if (formData.players.length === 0) {
+      newErrors.players = 'At least one player must be selected';
+    }
+    setError(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setSuccess('');
-
-    if (!formData.tournamentName.trim()) {
-      setError('Tournament name is required');
+    if (!validate()) {
       return;
     }
-    if (!formData.date) {
-      setError('Auction date is required');
-      return;
-    }
-    if (!validateTimeFormat(formData.startTime)) {
-      setError('Auction start time must be in HH:MM AM/PM format');
-      return;
-    }
-    if (formData.maxBudget <= 0) {
-      setError('Max budget must be greater than zero');
-      return;
-    }
-    if (formData.minBidIncrement <= 0) {
-      setError('Minimum bid increment must be greater than zero');
-      return;
-    }
-    if (formData.teams.length === 0) {
-      setError('At least one team must be selected');
-      return;
-    }
-    if (formData.players.length === 0) {
-      setError('At least one player must be selected');
-      return;
-    }
-
+    setLoading(true);
     try {
-      const response = await axios.post('/auctions/create', formData);
+      // Prepare data for API
+      const payload = {
+        ...formData,
+        date: formData.date ? formData.date.toISOString().split('T')[0] : '',
+        startTime: formData.startTime ? formData.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}) : '',
+        teams: formData.teams.map(t => t.value),
+        players: formData.players.map(p => p.value),
+      };
+      const response = await axios.post('/auctions/create', payload);
       if (response.data.success) {
         setSuccess('Auction created successfully');
         alert('Auction created successfully');
+        // Reset form or redirect as needed
       } else {
-        setError(response.data.error || 'Failed to create auction');
+        setError({form: response.data.error || 'Failed to create auction'});
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Server error');
+      setError({form: err.response?.data?.error || 'Server error'});
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Create Auction</h2>
-      {error && <div className="mb-4 text-red-600">{error}</div>}
+    <div className="max-w-md mx-auto p-6 bg-white rounded shadow-md">
+      <h2 className="text-3xl font-bold mb-6 text-center">Create Auction</h2>
+      {error.form && <div className="mb-4 text-red-600">{error.form}</div>}
       {success && <div className="mb-4 text-green-600">{success}</div>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="tournamentName" className="block font-medium">Tournament Name *</label>
+          <label htmlFor="tournamentName" className="font-semibold mb-1 flex items-center gap-2">
+            <FaTrophy className="text-blue-600" />
+            Tournament Name *
+          </label>
           <input
             type="text"
             id="tournamentName"
             name="tournamentName"
             value={formData.tournamentName}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            onChange={e => setFormData({...formData, tournamentName: e.target.value})}
+            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error.tournamentName ? 'border-red-500' : 'border-gray-300'}`}
           />
+          {error.tournamentName && <p className="text-red-500 text-sm mt-1">{error.tournamentName}</p>}
         </div>
+
         <div>
-          <label htmlFor="description" className="block font-medium">Description</label>
+          <label htmlFor="description" className="font-semibold mb-1 flex items-center gap-2">
+            <FaAlignLeft className="text-blue-600" />
+            Description
+          </label>
           <textarea
             id="description"
             name="description"
             value={formData.description}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            onChange={e => setFormData({...formData, description: e.target.value})}
+            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
           />
         </div>
+
         <div>
-          <label htmlFor="date" className="block font-medium">Auction Date *</label>
-          <input
-            type="date"
-            id="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded px-3 py-2"
+          <label htmlFor="date" className="font-semibold mb-1 flex items-center gap-2">
+            <FaCalendarAlt className="text-blue-600" />
+            Auction Date *
+          </label>
+          <DatePicker
+            selected={formData.date}
+            onChange={date => setFormData({...formData, date})}
+            dateFormat="yyyy-MM-dd"
+            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error.date ? 'border-red-500' : 'border-gray-300'}`}
+            placeholderText="Select a date"
           />
+          {error.date && <p className="text-red-500 text-sm mt-1">{error.date}</p>}
         </div>
+
         <div>
-          <label htmlFor="startTime" className="block font-medium">Auction Start Time (HH:MM AM/PM) *</label>
-          <input
-            type="text"
-            id="startTime"
-            name="startTime"
-            value={formData.startTime}
-            onChange={handleChange}
-            placeholder="e.g. 10:30 AM"
-            required
-            className="w-full border border-gray-300 rounded px-3 py-2"
+          <label htmlFor="startTime" className="font-semibold mb-1 flex items-center gap-2">
+            <FaClock className="text-blue-600" />
+            Auction Start Time *
+          </label>
+          <DatePicker
+            selected={formData.startTime}
+            onChange={time => setFormData({...formData, startTime: time})}
+            showTimeSelect
+            showTimeSelectOnly
+            timeIntervals={15}
+            timeCaption="Time"
+            dateFormat="h:mm aa"
+            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error.startTime ? 'border-red-500' : 'border-gray-300'}`}
+            placeholderText="Select start time"
           />
+          {error.startTime && <p className="text-red-500 text-sm mt-1">{error.startTime}</p>}
         </div>
+
         <div>
-          <label htmlFor="minBidIncrement" className="block font-medium">Minimum Bid Increment *</label>
+          <label htmlFor="minBidIncrement" className="font-semibold mb-1 flex items-center gap-2">
+            <FaSortAmountUp className="text-blue-600" />
+            Minimum Bid Increment *
+            <span data-tooltip-id="minBidTooltip" className="ml-1 text-blue-500 cursor-pointer">?</span>
+            <Tooltip id="minBidTooltip" place="top" effect="solid">
+              Minimum amount by which bids must increase.
+            </Tooltip>
+          </label>
           <input
             type="number"
             id="minBidIncrement"
             name="minBidIncrement"
             value={formData.minBidIncrement}
-            onChange={handleChange}
+            onChange={e => setFormData({...formData, minBidIncrement: Number(e.target.value)})}
             min={1}
-            required
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error.minBidIncrement ? 'border-red-500' : 'border-gray-300'}`}
           />
+          {error.minBidIncrement && <p className="text-red-500 text-sm mt-1">{error.minBidIncrement}</p>}
         </div>
+
         <div>
-          <label htmlFor="maxBudget" className="block font-medium">Max Budget *</label>
+          <label htmlFor="maxBudget" className="font-semibold mb-1 flex items-center gap-2">
+            <FaDollarSign className="text-blue-600" />
+            Max Budget *
+            <span data-tooltip-id="maxBudgetTooltip" className="ml-1 text-blue-500 cursor-pointer">?</span>
+            <Tooltip id="maxBudgetTooltip" place="top" effect="solid">
+              Maximum budget allowed for the auction.
+            </Tooltip>
+          </label>
           <input
             type="number"
             id="maxBudget"
             name="maxBudget"
             value={formData.maxBudget}
-            onChange={handleChange}
+            onChange={e => setFormData({...formData, maxBudget: Number(e.target.value)})}
             min={1}
-            required
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error.maxBudget ? 'border-red-500' : 'border-gray-300'}`}
           />
+          {error.maxBudget && <p className="text-red-500 text-sm mt-1">{error.maxBudget}</p>}
         </div>
+
         <div>
-          <label className="block font-medium mb-1">Select Teams *</label>
-          <div className="border border-gray-300 rounded p-2 max-h-48 overflow-y-auto">
-            {allTeams.map(team => (
-              <label key={team._id} className="flex items-center mb-1">
-                <input
-                  type="checkbox"
-                  value={team._id}
-                  checked={formData.teams.includes(team._id)}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setFormData(prev => {
-                      const teams = new Set(prev.teams);
-                      if (checked) {
-                        teams.add(team._id);
-                      } else {
-                        teams.delete(team._id);
-                      }
-                      return { ...prev, teams: Array.from(teams) };
-                    });
-                  }}
-                  className="mr-2"
-                />
-                {team.name}
-              </label>
-            ))}
-          </div>
+          <label className="font-semibold mb-2 flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <FaUsers className="text-blue-600" />
+              Select Teams *
+            </span>
+            <button
+              type="button"
+              className="text-sm text-blue-600 underline"
+              onClick={() => {
+                if (selectAllTeams) {
+                  setFormData({...formData, teams: []});
+                } else {
+                  setFormData({...formData, teams: allTeams.map(team => ({ value: team._id, label: team.name }))});
+                }
+                setSelectAllTeams(!selectAllTeams);
+              }}
+            >
+              {selectAllTeams ? 'Deselect All' : 'Select All'}
+            </button>
+          </label>
+          <Select
+            closeMenuOnSelect={false}
+            components={animatedComponents}
+            isMulti
+            options={allTeams.map(team => ({ value: team._id, label: team.name }))}
+            value={formData.teams}
+            onChange={selected => {
+              setFormData({...formData, teams: selected || []});
+              setSelectAllTeams(selected?.length === allTeams.length);
+            }}
+            className={error.teams ? 'border-red-500' : ''}
+          />
+          {error.teams && <p className="text-red-500 text-sm mt-1">{error.teams}</p>}
         </div>
+
         <div>
-          <label className="block font-medium mb-1">Select Players *</label>
-          <div className="border border-gray-300 rounded p-2 max-h-48 overflow-y-auto">
-            {allPlayers.map(player => (
-              <label key={player._id} className="flex items-center mb-1">
-                <input
-                  type="checkbox"
-                  value={player._id}
-                  checked={formData.players.includes(player._id)}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setFormData(prev => {
-                      const players = new Set(prev.players);
-                      if (checked) {
-                        players.add(player._id);
-                      } else {
-                        players.delete(player._id);
-                      }
-                      return { ...prev, players: Array.from(players) };
-                    });
-                  }}
-                  className="mr-2"
-                />
-                {player.playerName}
-              </label>
-            ))}
-          </div>
+          <label className="font-semibold mb-2 flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <FaUser className="text-blue-600" />
+              Select Players *
+            </span>
+            <button
+              type="button"
+              className="text-sm text-blue-600 underline"
+              onClick={() => {
+                if (selectAllPlayers) {
+                  setFormData({...formData, players: []});
+                } else {
+                  setFormData({...formData, players: allPlayers.map(player => ({ value: player._id, label: player.playerName }))});
+                }
+                setSelectAllPlayers(!selectAllPlayers);
+              }}
+            >
+              {selectAllPlayers ? 'Deselect All' : 'Select All'}
+            </button>
+          </label>
+          <Select
+            closeMenuOnSelect={false}
+            components={animatedComponents}
+            isMulti
+            options={allPlayers.map(player => ({ value: player._id, label: player.playerName }))}
+            value={formData.players}
+            onChange={selected => {
+              setFormData({...formData, players: selected || []});
+              setSelectAllPlayers(selected?.length === allPlayers.length);
+            }}
+            className={error.players ? 'border-red-500' : ''}
+          />
+          {error.players && <p className="text-red-500 text-sm mt-1">{error.players}</p>}
         </div>
-        {/* Retained players input can be added here if needed */}
+
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
+          className={`w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          Create Auction
+          {loading ? 'Creating...' : 'Create Auction'}
         </button>
       </form>
     </div>

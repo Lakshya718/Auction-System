@@ -75,14 +75,8 @@ const AuctionDetails = () => {
     setStatusError("");
     setStatusUpdating(true);
     try {
-      // Only status update is supported by backend, so update status if changed
-      if (editData.status !== auction.status) {
-        const response = await API.patch(`/auctions/${id}/status`, { status: editData.status });
-        setAuction((prev) => ({ ...prev, status: response.data.auction.status }));
-      }
-      // Update local auction state with edited fields (except status)
-      setAuction((prev) => ({
-        ...prev,
+      // Update all editable fields using new backend route
+      const response = await API.patch(`/auctions/${id}`, {
         tournamentName: editData.tournamentName,
         description: editData.description,
         date: editData.date,
@@ -90,11 +84,12 @@ const AuctionDetails = () => {
         minBidIncrement: editData.minBidIncrement,
         maxBudget: editData.maxBudget,
         status: editData.status,
-      }));
+      });
+      setAuction(response.data.auction);
       setIsEditing(false);
       setEditData(null);
     } catch (err) {
-      setStatusError(err.response?.data?.error || "Failed to update status");
+      setStatusError(err.response?.data?.error || "Failed to update auction");
     } finally {
       setStatusUpdating(false);
     }
@@ -128,23 +123,6 @@ const AuctionDetails = () => {
           <p className="mb-2"><strong>Start Time:</strong> {auction.startTime}</p>
           <p className="mb-2"><strong>Minimum Bid Increment:</strong> {auction.minBidIncrement}</p>
           <p className="mb-2"><strong>Max Budget:</strong> {auction.maxBudget}</p>
-          <p className="mb-4">
-            <strong>Status:</strong>{" "}
-            <select
-              value={auction.status}
-              onChange={handleStatusChange}
-              disabled={statusUpdating}
-              className="border border-gray-300 rounded px-2 py-1"
-            >
-              {validStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </option>
-              ))}
-            </select>
-            {statusUpdating && <span className="ml-2 text-blue-600">Updating...</span>}
-            {statusError && <p className="text-red-600 mt-1">{statusError}</p>}
-          </p>
           <div className="mb-4">
             <h3 className="font-semibold mb-2">Teams:</h3>
             {auction.teams && auction.teams.length > 0 ? (

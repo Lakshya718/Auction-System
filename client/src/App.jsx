@@ -19,17 +19,26 @@ import CreateMatch from './pages/CreateMatch.jsx';
 import MatchDetails from './pages/MatchDetails.jsx';
 import UpdateMatch from './pages/UpdateMatch.jsx';
 import AuctionBidPage from './pages/AuctionBidPage.jsx';
+import ImageSlider from './components/ImageSlider.jsx';
 
 const App = () => {
   return (
     <Router>
-      <Navbar/>
+      {/* <Navbar/> */}
         <Routes>
           <Route
             path="/login"
             element={
               <PublicRoute>
                 <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <ImageSlider />
               </PublicRoute>
             }
           />

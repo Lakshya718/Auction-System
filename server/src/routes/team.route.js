@@ -8,6 +8,6 @@ router.get('/all-teams', auth, getTeams);
 router.get('/my-team', auth, teamOwnerOnly, getMyTeam);
 router.get('/:id', auth, getTeam);
 router.patch('/:id', auth, teamOwnerOnly, updateTeam); // Added teamOwnerOnly for security
-router.get('/:id/players', auth, getTeamPlayers);
+router.get('/:id/players', auth, getTeamPlayers); //player are shown in getmyteam & getTeam
 
 export default router;
