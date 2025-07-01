@@ -2,7 +2,7 @@ import { Kafka, Partitioners } from 'kafkajs';
 
 const kafka = new Kafka({
   clientId: 'bidify-server',
-  brokers: ['localhost:9092'],
+  brokers: ['127.0.0.1:9092'],
   retry: {
     initialRetryTime: 100,
     retries: 8
