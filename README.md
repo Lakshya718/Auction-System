@@ -21,13 +21,20 @@ An online auction web application for sports auction where admin can create, lis
 
 | Homepage | Add Product | Live Auction |
 |----------|-------------|--------------|
-| ![Home](./screenshots/home.png) | ![Add Players](./screenshots/add-product.png) | ![Auction](./screenshots/live-auction.png) |
+| ![Home](<img width="1919" height="951" alt="Screenshot 2025-06-21 203133" src="https://github.com/user-attachments/assets/e43fa2d7-4e05-4b1a-9bbc-2220271a13d2" />
+) | ![Create Auction](<img width="1861" height="950" alt="Screenshot 2025-06-21 190245" src="https://github.com/user-attachments/assets/88b9dcef-0e72-4f3e-a307-d0d6b7153479" />
+) | ![Edit Profile](<img width="1917" height="889" alt="image" src="https://github.com/user-attachments/assets/1e32865f-a937-4df1-9302-580c05810206" />
+) | ![Live Auction Page](<img width="1882" height="876" alt="Screenshot 2025-06-14 102419" src="https://github.com/user-attachments/assets/4ea1040a-ef1a-4b39-82e0-a5e97b745623" />
+)
+| ![Add Player](<img width="1031" height="936" alt="image" src="https://github.com/user-attachments/assets/372230ae-9372-4d58-89a6-7d1ab9d4d37a" />
+) | ![Admin Dashboard](<img width="913" height="887" alt="image" src="https://github.com/user-attachments/assets/2cd0630a-c52e-4bc4-851f-bfb005307ce5" />
+)
 
 ---
 
 ## 🚀 Features
 
-- 🧑 User authentication
+- 🧑 Players authentication 
 - 📦 Teams dashboard to view auction players
 - ⏱  Real-time bidding system
 - 📈 Bid history and analytics
