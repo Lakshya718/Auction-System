@@ -27,7 +27,7 @@ router.post('/bid', auth, async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    await sendBidToKafka(bidData);
+    // await sendBidToKafka(bidData);
 
     res.status(200).json({ success: true, message: 'Bid sent to Kafka', bid: bidData });
   } catch (error) {
