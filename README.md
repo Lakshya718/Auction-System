@@ -1,4 +1,3 @@
-﻿# Auction-Sytem
 # 🧾 Auction System 🎯
 
 An online auction web application for sports auction where admin can create, lists, and control bids on products in real-time. This project is built with **React + Vite** on the frontend and **Node.js** (with Kafka & Redis) on the backend.
