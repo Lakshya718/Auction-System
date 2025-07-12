@@ -13,8 +13,8 @@ import auctionRoutes from "./src/routes/auction.route.js";
 import matchRoutes from "./src/routes/match.route.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 import { setupSocketHandlers } from "./src/utils/socket.js";
-import { initKafkaProducer } from "./src/kafka/producer.js";
-import { run as runKafkaConsumer } from "./src/kafka/consumer.js";
+// import { initKafkaProducer } from "./src/kafka/producer.js";
+// import { run as runKafkaConsumer } from "./src/kafka/consumer.js";
 
 dotenv.config();
 
@@ -57,7 +57,7 @@ app.set("io", io);
 // Attach Redis client to app for access in controllers/middleware
 app.set("redisClient", redisClient);
 
-await initKafkaProducer();
+// await initKafkaProducer();
 
 // Middleware
 app.use(express.json());
@@ -98,7 +98,7 @@ mongoose
   .then(async () => {
     console.log("Connected to MongoDB");
     try {
-      await runKafkaConsumer(io);
+      // await runKafkaConsumer(io);
       const PORT = process.env.PORT || 5000;
       httpServer.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
