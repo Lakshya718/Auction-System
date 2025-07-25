@@ -159,7 +159,7 @@ export const updateAuctionStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-
+   
     if (!isValidObjectId(id)) {
       return res.status(400).json({ error: "Invalid auction ID" });
     }

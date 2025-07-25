@@ -7,7 +7,7 @@ const PublicRoute = ({ children }) => {
 
   if (user) {
     // If logged in, redirect to profile page
-    return <Navigate to="/profile" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Not logged in, render children components

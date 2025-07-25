@@ -1,26 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../api/axios';
-
-const LoadingSpinner = () => (
-  <div className="flex justify-center items-center py-10">
-    <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500"></div>
-  </div>
-);
+import LoadingSpinner from "../components/LoadingSpinner";
+import { FaCheckCircle, FaTimesCircle, FaExclamationCircle, FaUserClock, FaSync } from 'react-icons/fa';
 
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg">
-      <p className="mb-4 text-lg">{message}</p>
-      <div className="flex justify-end space-x-4">
+  <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fade-in">
+    <div className="bg-gray-800 rounded-2xl shadow-xl p-8 w-full max-w-md m-4 text-white">
+      <p className="mb-6 text-lg text-center">{message}</p>
+      <div className="flex justify-center space-x-4">
         <button
           onClick={onCancel}
-          className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+          className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-500 transition-colors font-semibold"
         >
           Cancel
         </button>
         <button
           onClick={onConfirm}
-          className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+          className="px-6 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-semibold"
         >
           Confirm
         </button>
@@ -83,71 +79,77 @@ const PendingPlayerRequests = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <div className="flex h-screen items-center justify-center bg-gray-900"><LoadingSpinner /></div>;
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-4 text-center">
-        <p className="text-red-600 mb-4">{error}</p>
+      <div className="p-6 bg-gray-900 min-h-screen text-white flex flex-col items-center justify-center">
+        <p className="text-red-500 text-lg font-semibold mb-4 flex items-center gap-2"><FaExclamationCircle /> {error}</p>
         <button
           onClick={fetchPendingPlayers}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          Retry
+          <FaSync /> Retry
         </button>
       </div>
     );
   }
 
   if (pendingPlayers.length === 0) {
-    return <p className="max-w-4xl mx-auto p-4 text-center">No pending player registration requests.</p>;
+    return (
+      <div className="p-6 bg-gray-900 min-h-screen text-white flex items-center justify-center">
+        <p className="text-center text-gray-400 text-xl">No pending player registration requests.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6 text-center">Pending Player Registration Requests</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
+    <div className="p-6 bg-gray-900 min-h-screen text-white">
+      <h2 className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+        <FaUserClock className="inline-block mr-3" />Pending Player Requests
+      </h2>
+      <div className="overflow-x-auto bg-gray-800 rounded-2xl shadow-xl p-6">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2">Player Name</th>
-              <th className="border border-gray-300 px-4 py-2">Email</th>
-              <th className="border border-gray-300 px-4 py-2">Phone</th>
-              <th className="border border-gray-300 px-4 py-2">Age</th>
-              <th className="border border-gray-300 px-4 py-2">Role</th>
-              <th className="border border-gray-300 px-4 py-2">Country</th>
-              <th className="border border-gray-300 px-4 py-2">Actions</th>
+            <tr className="bg-gray-700 text-gray-300 uppercase text-sm leading-normal">
+              <th className="py-3 px-6 text-left">Player Name</th>
+              <th className="py-3 px-6 text-left">Email</th>
+              <th className="py-3 px-6 text-left">Phone</th>
+              <th className="py-3 px-6 text-left">Age</th>
+              <th className="py-3 px-6 text-left">Role</th>
+              <th className="py-3 px-6 text-left">Country</th>
+              <th className="py-3 px-6 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-gray-200 text-sm font-light">
             {pendingPlayers.map((player, index) => (
               <tr
                 key={player._id}
-                className={`text-center ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50`}
+                className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-700'} hover:bg-gray-600 transition-colors duration-200`}
               >
-                <td className="border border-gray-300 px-4 py-2">{player.playerName}</td>
-                <td className="border border-gray-300 px-4 py-2">{player.email}</td>
-                <td className="border border-gray-300 px-4 py-2">{player.phone}</td>
-                <td className="border border-gray-300 px-4 py-2">{player.age}</td>
-                <td className="border border-gray-300 px-4 py-2">{player.playerRole}</td>
-                <td className="border border-gray-300 px-4 py-2">{player.country}</td>
-                <td className="border border-gray-300 px-4 py-2 space-x-2">
+                <td className="py-3 px-6 text-left whitespace-nowrap">{player.playerName}</td>
+                <td className="py-3 px-6 text-left">{player.email}</td>
+                <td className="py-3 px-6 text-left">{player.phone}</td>
+                <td className="py-3 px-6 text-left">{player.age}</td>
+                <td className="py-3 px-6 text-left">{player.playerRole}</td>
+                <td className="py-3 px-6 text-left">{player.country}</td>
+                <td className="py-3 px-6 text-center space-x-2">
                   <button
                     disabled={reviewing === player._id}
                     onClick={() => openModal(player._id, 'accepted')}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex-inline items-center gap-1"
                     title="Approve Player"
                   >
-                    Approve
+                    <FaCheckCircle className="inline-block mr-1" />Approve
                   </button>
                   <button
                     disabled={reviewing === player._id}
                     onClick={() => openModal(player._id, 'rejected')}
-                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:opacity-50"
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex-inline items-center gap-1"
                     title="Reject Player"
                   >
-                    Reject
+                    <FaTimesCircle className="inline-block mr-1" />Reject
                   </button>
                 </td>
               </tr>

@@ -22,29 +22,31 @@ import {
   FaChartLine,
   FaTachometerAlt,
   FaBalanceScale,
+  FaUserPlus,
 } from "react-icons/fa";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const AddPlayer = () => {
   const [formData, setFormData] = useState({
-    playerName: "p9",
-    email: "p9@gmail.com",
-    phone: "1",
-    age: "24",
+    playerName: "",
+    email: "",
+    phone: "",
+    age: "",
     playerRole: "batsman",
     battingStyle: "right-handed",
     bowlingStyle: "none",
-    playingExperience: "7",
-    country: "India",
-    basePrice: "12345678",
-    description: "null",
+    playingExperience: "",
+    country: "",
+    basePrice: "",
+    description: "",
     contractEndDate: "",
     profilePhoto: null,
-    matches: "15",
-    runs: "500",
-    wickets: "2",
-    average: "100",
-    strikeRate: "120",
-    economy: "8.1",
+    matches: "",
+    runs: "",
+    wickets: "",
+    average: "",
+    strikeRate: "",
+    economy: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -168,34 +170,36 @@ const AddPlayer = () => {
   };
 
   return (
-    <div className="max-w-[90vw] mx-auto p-4">
-      <h2 className="text-3xl font-bold mb-6 text-center">Add Player</h2>
+    <div className="p-6 bg-gray-900 min-h-screen text-white">
+      <h2 className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+        Add New Player
+      </h2>
       {error && (
-        <p className="text-red-600 mb-4 flex items-center justify-center">
-          <FaUser className="w-5 h-5 mr-2 inline-block" />
+        <p className="bg-red-800 text-white p-3 rounded-lg flex items-center justify-center mb-6">
+          <FaExclamationCircle className="mr-2" />
           {error}
         </p>
       )}
       {success && (
-        <p className="text-green-600 mb-4 flex items-center justify-center">
-          <FaUser className="w-5 h-5 mr-2 inline-block" />
+        <p className="bg-green-800 text-white p-3 rounded-lg flex items-center justify-center mb-6">
+          <FaCheckCircle className="mr-2" />
           {success}
         </p>
       )}
       <form
         onSubmit={handleSubmit}
         encType="multipart/form-data"
-        className="bg-white shadow-md rounded-lg p-6 space-y-6 max-w-4xl mx-auto"
+        className="bg-gray-800 shadow-xl rounded-2xl p-8 space-y-8 max-w-6xl mx-auto"
       >
         <section>
-          <h3 className="text-xl font-semibold mb-4 border-b pb-2">
+          <h3 className="text-2xl font-semibold mb-6 pb-3 border-b border-gray-700 text-purple-300">
             Personal Information
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaUser className="text-gray-400" />
-                Player Name *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaUser className="inline-block mr-2 text-purple-400" />
+                Player Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -204,13 +208,13 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 required
                 placeholder="Enter player name"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaEnvelope className="text-gray-400" />
-                Email *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaEnvelope className="inline-block mr-2 text-purple-400" />
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -219,13 +223,13 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 required
                 placeholder="Enter email address"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaPhone className="text-gray-400" />
-                Phone *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaPhone className="inline-block mr-2 text-purple-400" />
+                Phone <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -234,13 +238,13 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 required
                 placeholder="Enter phone number"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaBirthdayCake className="text-gray-400" />
-                Age *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaBirthdayCake className="inline-block mr-2 text-purple-400" />
+                Age <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -250,20 +254,20 @@ const AddPlayer = () => {
                 required
                 min="0"
                 placeholder="Enter age"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaUserTie className="text-gray-400" />
-                Player Role *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaUserTie className="inline-block mr-2 text-purple-400" />
+                Player Role <span className="text-red-500">*</span>
               </label>
               <select
                 name="playerRole"
                 value={formData.playerRole}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
               >
                 {playerRoles.map((role) => (
                   <option key={role} value={role}>
@@ -273,16 +277,16 @@ const AddPlayer = () => {
               </select>
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaHandPaper className="text-gray-400" />
-                Batting Style *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaHandPaper className="inline-block mr-2 text-purple-400" />
+                Batting Style <span className="text-red-500">*</span>
               </label>
               <select
                 name="battingStyle"
                 value={formData.battingStyle}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
               >
                 {battingStyles.map((style) => (
                   <option key={style} value={style}>
@@ -292,15 +296,15 @@ const AddPlayer = () => {
               </select>
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaBowlingBall className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaBowlingBall className="inline-block mr-2 text-purple-400" />
                 Bowling Style
               </label>
               <select
                 name="bowlingStyle"
                 value={formData.bowlingStyle}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
               >
                 {bowlingStyles.map((style) => (
                   <option key={style} value={style}>
@@ -310,8 +314,8 @@ const AddPlayer = () => {
               </select>
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaClock className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaClock className="inline-block mr-2 text-purple-400" />
                 Playing Experience (years)
               </label>
               <input
@@ -321,13 +325,13 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 min="0"
                 placeholder="Enter years of experience"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaGlobe className="text-gray-400" />
-                Country *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaGlobe className="inline-block mr-2 text-purple-400" />
+                Country <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -336,21 +340,21 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 required
                 placeholder="Enter country"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
           </div>
         </section>
 
         <section>
-          <h3 className="text-xl font-semibold mb-4 border-b pb-2">
+          <h3 className="text-2xl font-semibold mb-6 pb-3 border-b border-gray-700 text-purple-300">
             Contract & Description
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaDollarSign className="text-gray-400" />
-                Base Price *
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaDollarSign className="inline-block mr-2 text-purple-400" />
+                Base Price <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -360,26 +364,26 @@ const AddPlayer = () => {
                 required
                 min="0"
                 placeholder="Enter base price"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
-            <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaAlignLeft className="text-gray-400" />
+            <div className="relative col-span-1 md:col-span-2">
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaAlignLeft className="inline-block mr-2 text-purple-400" />
                 Description
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows="2"
+                rows="3"
                 placeholder="Enter description"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaCalendarAlt className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaCalendarAlt className="inline-block mr-2 text-purple-400" />
                 Contract End Date
               </label>
               <input
@@ -387,12 +391,12 @@ const AddPlayer = () => {
                 name="contractEndDate"
                 value={formData.contractEndDate}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaFileImage className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaFileImage className="inline-block mr-2 text-purple-400" />
                 Profile Photo
               </label>
               <input
@@ -400,20 +404,20 @@ const AddPlayer = () => {
                 name="profilePhoto"
                 accept="image/*"
                 onChange={handleChange}
-                className="w-full pl-10"
+                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600"
               />
             </div>
           </div>
         </section>
 
         <section>
-          <h3 className="text-xl font-semibold mb-4 border-b pb-2">
+          <h3 className="text-2xl font-semibold mb-6 pb-3 border-b border-gray-700 text-purple-300">
             Performance Stats
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaListOl className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaListOl className="inline-block mr-2 text-purple-400" />
                 Matches
               </label>
               <input
@@ -423,12 +427,12 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 min="0"
                 placeholder="Enter matches played"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaRunning className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaRunning className="inline-block mr-2 text-purple-400" />
                 Runs
               </label>
               <input
@@ -438,12 +442,12 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 min="0"
                 placeholder="Enter runs scored"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaMedal className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaMedal className="inline-block mr-2 text-purple-400" />
                 Wickets
               </label>
               <input
@@ -453,12 +457,12 @@ const AddPlayer = () => {
                 onChange={handleChange}
                 min="0"
                 placeholder="Enter wickets taken"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaChartLine className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaChartLine className="inline-block mr-2 text-purple-400" />
                 Average
               </label>
               <input
@@ -469,12 +473,12 @@ const AddPlayer = () => {
                 min="0"
                 step="0.01"
                 placeholder="Enter batting average"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaTachometerAlt className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaTachometerAlt className="inline-block mr-2 text-purple-400" />
                 Strike Rate
               </label>
               <input
@@ -485,12 +489,12 @@ const AddPlayer = () => {
                 min="0"
                 step="0.01"
                 placeholder="Enter strike rate"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
             <div className="relative">
-              <label className=" font-semibold mb-1 flex items-center gap-2">
-                <FaBalanceScale className="text-gray-400" />
+              <label className="block text-gray-300 text-sm font-bold mb-2">
+                <FaBalanceScale className="inline-block mr-2 text-purple-400" />
                 Economy
               </label>
               <input
@@ -501,7 +505,7 @@ const AddPlayer = () => {
                 min="0"
                 step="0.01"
                 placeholder="Enter economy rate"
-                className="w-full border border-gray-300 rounded px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
             </div>
           </div>
@@ -511,34 +515,15 @@ const AddPlayer = () => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
+            className="mt-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
           >
             {loading ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-                Adding...
-              </>
+              <LoadingSpinner />
             ) : (
-              "Add Player"
+              <>
+                <FaUserPlus className="inline-block mr-2 text-purple-400" />
+                Add Player
+              </>
             )}
           </button>
         </div>

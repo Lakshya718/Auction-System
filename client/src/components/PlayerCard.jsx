@@ -1,3 +1,5 @@
+import { FaGavel, FaPaperPlane } from 'react-icons/fa';
+
 const PlayerCard = ({
   player,
   biddingHistory,
@@ -11,68 +13,88 @@ const PlayerCard = ({
   currentTeam,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-around gap-4 player-card border p-4 mb-4 rounded-lg shadow-md bg-white">
-      {/* Player Photo */}
-      <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-400">
-        <img
-          src={player.profilePhoto}
-          alt={player.playerName || "Player Photo"}
-          className="w-full h-full object-contain"
-        />
-      </div>
+    <div className="player-card bg-white/10 backdrop-blur-lg rounded-2xl shadow-lg overflow-hidden border border-gray-200/20 transition-all duration-300 hover:shadow-2xl hover:scale-105">
+      <div className="flex flex-col md:flex-row items-center p-6 gap-6">
+        {/* Player Photo */}
+        <div className="relative flex-shrink-0">
+          <img
+            src={player.profilePhoto}
+            alt={player.playerName || "Player Photo"}
+            className="w-32 h-32 object-cover rounded-full shadow-md border-4 border-purple-500/50"
+          />
+          {player.playerRole && (
+            <span className="absolute bottom-2 right-0 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+              {player.playerRole}
+            </span>
+          )}
+        </div>
 
-      {/* Player Info */}
-      <div className="text-center md:text-left flex-1">
-        <h3 className="font-semibold text-lg">
-          {player.playerName || "Unnamed Player"}
-        </h3>
-        <p>Base Price: {player.basePrice}</p>
-        {currentBid !== undefined && <p>Current Bid: {currentBid}</p>}
-        {currentTeam !== undefined && (
-          <p>Current Team: {currentTeam ? currentTeam : "null"}</p>
-        )}
-        {player.playerRole && <p>Role: {player.playerRole}</p>}
-      </div>
+        {/* Player Info */}
+        <div className="flex-1 text-center md:text-left">
+          <h3 className="text-3xl font-bold text-white tracking-wide">
+            {player.playerName || "Unnamed Player"}
+          </h3>
+          <p className="text-purple-300 font-semibold text-lg">
+            Base Price: ${player.basePrice?.toLocaleString()}
+          </p>
+          {currentBid !== undefined && (
+            <p className="text-green-400 font-bold text-xl">
+              Current Bid: ${currentBid?.toLocaleString()}
+            </p>
+          )}
+          {currentTeam && (
+            <p className="text-gray-300">
+              Highest Bidder: <span className="font-semibold text-white">{currentTeam}</span>
+            </p>
+          )}
+        </div>
 
-      {/* Admin View: Send Player Button */}
-      {isAdminView && (
-        <button
-          className="text-white bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 self-center md:self-auto"
-          onClick={() => onSendPlayer(player)}
-        >
-          Send Player
-        </button>
-      )}
+        {/* Action Buttons */}
+        <div className="flex flex-col items-center justify-center gap-4">
+          {isAdminView && (
+            <button
+              className="flex items-center gap-2 text-white bg-green-500 px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-300 transform hover:scale-110 shadow-lg"
+              onClick={() => onSendPlayer(player)}
+            >
+              <FaPaperPlane />
+              <span>Send Player</span>
+            </button>
+          )}
+          {!isAdminView && role === "team_owner" && (
+            <button
+              className={`flex items-center gap-2 p-4 rounded-lg px-6 text-white font-bold transition-all duration-300 transform hover:scale-110 shadow-lg ${
+                isSelling || placeBidDisabled
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              }`}
+              disabled={isSelling || placeBidDisabled}
+              onClick={onPlaceBid}
+              aria-label={`Place bid for ${player.playerName}`}
+            >
+              <FaGavel />
+              <span>Place Bid</span>
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Bidding History */}
       {biddingHistory && biddingHistory.length > 0 && (
-        <div className="bidding-history border-t pt-2 md:border-0 md:pt-0 max-w-xs">
-          <h4 className="font-medium">Bidding History:</h4>
-          <ul className="text-sm list-disc ml-4 max-h-40 overflow-y-auto">
+        <div className="bidding-history bg-black/20 p-4 mt-4 border-t border-gray-200/10">
+          <h4 className="font-semibold text-white mb-2 text-center">Bidding History</h4>
+          <ul className="text-sm text-gray-300 list-none max-h-40 overflow-y-auto space-y-2 pr-2">
             {biddingHistory.map((bid, index) => (
-              <li key={index}>
-                {bid.teamName || bid.team} bid {bid.amount} at{" "}
-                {new Date(bid.timestamp).toLocaleTimeString()}
+              <li key={index} className="flex justify-between items-center bg-white/5 p-2 rounded-md">
+                <span>
+                  <span className="font-bold text-purple-300">{bid.teamName || bid.team}</span> bid <span className="font-bold text-green-400">${bid.amount?.toLocaleString()}</span>
+                </span>
+                <span className="text-xs text-gray-400">
+                  {new Date(bid.timestamp).toLocaleTimeString()}
+                </span>
               </li>
             ))}
           </ul>
         </div>
-      )}
-
-      {/* Team Owner View: Place Bid Button */}
-      {!isAdminView && role === "team_owner" && (
-        <button
-          className={`p-2 rounded-lg px-4 text-white ${
-            isSelling || placeBidDisabled
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
-          }`}
-          disabled={isSelling || placeBidDisabled}
-          onClick={onPlaceBid}
-          aria-label={`Place bid for ${player.playerName}`}
-        >
-          Place Bid
-        </button>
       )}
     </div>
   );
