@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { FaSearch, FaTimes, FaUsers, FaExclamationCircle, FaUserCircle } from 'react-icons/fa';
 
 const AllPlayers = () => {
   const [players, setPlayers] = useState([]);
@@ -12,29 +13,28 @@ const AllPlayers = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const fetchPlayers = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = {};
-      if (search.trim() !== "") {
-        params.search = search.trim();
-      }
-      const response = await API.get("/players/verified", { params });
-      if (Array.isArray(response.data.players)) {
-        setPlayers(response.data.players);
-      } else {
-        setPlayers([]);
-        setError("Invalid data format received from server");
-      }
-    } catch {
-      setError("Failed to fetch Players");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchPlayers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = {};
+        if (search.trim() !== "") {
+          params.search = search.trim();
+        }
+        const response = await API.get("/players/verified", { params });
+        if (Array.isArray(response.data.players)) {
+          setPlayers(response.data.players);
+        } else {
+          setPlayers([]);
+          setError("Invalid data format received from server");
+        }
+      } catch {
+        setError("Failed to fetch Players");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchPlayers();
   }, [search]);
 
@@ -47,7 +47,7 @@ const AllPlayers = () => {
     }
     const timeout = setTimeout(() => {
       setSearch(value);
-    }, 80);
+    }, 300); // Debounce for 300ms
     setDebounceTimeout(timeout);
   };
 
@@ -61,52 +61,59 @@ const AllPlayers = () => {
   };
 
   return (
-    <div className="p-4 space-y-6 max-w-[90vw] mx-auto">
-      <h2 className="text-4xl font-extrabold mb-8 text-center text-blue-700">All Players</h2>
-      <div className="flex items-center mb-6 space-x-3 max-w-md mx-auto">
-        <input
-          type="text"
-          placeholder="Search player name"
-          value={tempSearch}
-          onChange={handleSearchChange}
-          className="flex-grow border border-gray-300 rounded-l-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        {tempSearch && (
-          <button
-            onClick={clearSearch}
-            className="bg-blue-500 text-white px-4 py-3 rounded-r-md hover:bg-blue-600 transition"
-            aria-label="Clear search"
-          >
-            Clear
-          </button>
-        )}
+    <div className="p-6 bg-gray-900 min-h-screen text-white">
+      <h1 className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+        <FaUsers className="inline-block mr-3" />All Players
+      </h1>
+
+      <div className="flex items-center justify-center mb-8">
+        <div className="relative w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Search player name..."
+            value={tempSearch}
+            onChange={handleSearchChange}
+            className="w-full bg-gray-800 text-white border border-gray-700 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+          />
+          <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          {tempSearch && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              aria-label="Clear search"
+            >
+              <FaTimes />
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
-        <p className="text-center text-red-600 text-lg font-semibold">{error}</p>
+        <p className="text-center text-red-500 text-lg font-semibold flex items-center justify-center gap-2"><FaExclamationCircle /> {error}</p>
       ) : players.length === 0 ? (
-        <p className="text-center text-gray-600 text-lg font-medium">No players found.</p>
+        <p className="text-center text-gray-400 text-xl">No players found.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {players.map((player) => (
             <div
               key={player._id}
-              className="cursor-pointer border w-full border-gray-300 rounded-lg p-5 shadow-md hover:shadow-xl transform hover:scale-105 transition duration-300 max-w-[25vw] mx-auto"
+              className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center cursor-pointer transform transition duration-300 hover:scale-105 hover:shadow-2xl border border-gray-700"
               onClick={() => handlePlayerClick(player._id)}
             >
-              <img
-                src={
-                  player.profilePhoto ||
-                  "https://media.istockphoto.com/id/1961226379/vector/cricket-player-playing-short-concept.jpg?s=612x612&w=0&k=20&c=CSiQd4qzLY-MB5o_anUOnwjIqxm7pP8aus-Lx74AQus="
-                }
-                alt={player.playerName}
-                className="w-full h-48 object-contain rounded-md mb-4"
-              />
-              <h3 className="text-2xl font-bold text-blue-800 mb-2">{player.playerName}</h3>
-              <p className="text-gray-700 mb-1">Age: {player.age}</p>
-              <p className="text-gray-700">Role: {player.playerRole}</p>
+              <div className="w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-purple-500/50">
+                <img
+                  src={player.profilePhoto || 'https://via.placeholder.com/150/6B46C1/FFFFFF?text=Player'}
+                  alt={player.playerName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-bold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                {player.playerName}
+              </h3>
+              <p className="text-gray-400 text-sm">Age: <span className="font-semibold">{player.age}</span></p>
+              <p className="text-gray-400 text-sm">Role: <span className="font-semibold capitalize">{player.playerRole}</span></p>
             </div>
           ))}
         </div>

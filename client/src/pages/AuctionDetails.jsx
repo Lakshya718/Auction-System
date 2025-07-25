@@ -29,22 +29,7 @@ const AuctionDetails = () => {
     fetchAuctionDetails();
   }, [id]);
 
-  const handleStatusChange = async (e) => {
-    const newStatus = e.target.value;
-    setStatusError("");
-    setStatusUpdating(true);
-    try {
-      const response = await API.patch(`/auctions/${id}/status`, { status: newStatus });
-      setAuction((prev) => ({ ...prev, status: response.data.auction.status }));
-      if (isEditing) {
-        setEditData((prev) => ({ ...prev, status: response.data.auction.status }));
-      }
-    } catch (err) {
-      setStatusError(err.response?.data?.error || "Failed to update status");
-    } finally {
-      setStatusUpdating(false);
-    }
-  };
+  
 
   const handleEditClick = () => {
     setEditData({

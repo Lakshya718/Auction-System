@@ -1,16 +1,20 @@
 import { useState } from "react";
 import API from "../../api/axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { FaUser, FaEnvelope, FaLock, FaUsers, FaBuilding, FaInfoCircle, FaImage, FaUserPlus } from "react-icons/fa";
 
 const Register = () => {
   const [form, setForm] = useState({
-    name: "",
+    playerName: "",
     email: "",
     password: "",
-    role: "user",
-    logo: null,
+    role: "team_owner", // Default role
+    teamName: "",
     bio: "",
+    logo: null,
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -20,139 +24,89 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
     const data = new FormData();
     Object.keys(form).forEach((key) => {
       if (form[key]) data.append(key, form[key]);
     });
 
     try {
-      const res = await API.post("/auth/register", data);
-      localStorage.setItem("token", res.data.token);
-      navigate("/profile");
+      await API.post("/auth/register", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.error || "Registration failed");
+      setError(err.response?.data?.error || "Registration failed. Please try again.");
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-indigo-600 via-purple-700 to-pink-600 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background SVG objects */}
-      <svg
-        className="absolute top-10 left-10 w-24 h-24 text-purple-300 opacity-50 animate-pulse"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle cx="12" cy="12" r="10" strokeWidth="2" />
-      </svg>
-      <svg
-        className="absolute bottom-20 right-10 w-32 h-32 text-pink-300 opacity-40 animate-bounce"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect x="4" y="4" width="16" height="16" strokeWidth="2" />
-      </svg>
-      <svg
-        className="absolute top-1/2 left-1/4 w-20 h-20 text-indigo-300 opacity-30 animate-spin-slow"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <polygon points="12 2 19 21 5 21" strokeWidth="2" />
-      </svg>
-
-      <div className="relative max-w-md w-full bg-white bg-opacity-90 rounded-xl shadow-lg p-8 backdrop-blur-md z-10">
-        {/* Animated SVG illustration */}
-        <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 w-32 h-32 animate-spin-slow">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className="w-32 h-32 text-teal-500"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 5v4m0 8v4m6-8h-4M4 12H0m16.24-4.24l-2.83 2.83m-7.07 7.07l-2.83 0.1m1-12.02l2.83 2.83m7.07 7.07l2.83 2.83"
-            />
-          </svg>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+      <div className="w-full max-w-4xl flex flex-col md:flex-row rounded-2xl shadow-2xl overflow-hidden">
+        {/* Info Panel */}
+        <div className="w-full md:w-1/2 p-10 flex flex-col justify-center items-center bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+          <h1 className="text-4xl font-bold mb-4 text-center">Join the League!</h1>
+          <p className="text-center mb-8">
+            Create your account to start building your team and competing in auctions.
+          </p>
+          <div className="w-32 h-1 bg-white/50 rounded-full"></div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-20">
-          <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-6">
-            Register
-          </h2>
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
-            onChange={handleChange}
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
-            onChange={handleChange}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
-            onChange={handleChange}
-          />
-          <select
-            name="role"
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
-            onChange={handleChange}
-          >
-            <option value="admin">Admin</option>
-            <option value="team_owner">Team Owner</option>
-          </select>
-          {form.role === "team_owner" && (
-            <>
-              <input
-                type="text"
-                name="teamName"
-                placeholder="Team Name"
-                required
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
-                onChange={handleChange}
-              />
-              <textarea
-                name="bio"
-                placeholder="Team Bio"
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
-                value={form.bio}
-                onChange={handleChange}
-              />
-              <input
-                type="file"
-                name="logo"
-                accept="image/*"
-                className="w-full"
-                onChange={handleChange}
-              />
-            </>
-          )}
-          <button
-            type="submit"
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-md transition"
-          >
-            Register
-          </button>
-        </form>
+        {/* Form Panel */}
+        <div className="w-full md:w-1/2 p-10 bg-gray-800">
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">Create Account</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <FaUser className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+              <input type="text" name="playerName" placeholder="Full Name" required className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" onChange={handleChange} disabled={isLoading} />
+            </div>
+            <div className="relative">
+              <FaEnvelope className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+              <input type="email" name="email" placeholder="Email" required className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" onChange={handleChange} disabled={isLoading} />
+            </div>
+            <div className="relative">
+              <FaLock className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+              <input type="password" name="password" placeholder="Password" required className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" onChange={handleChange} disabled={isLoading} />
+            </div>
+            <div className="relative">
+              <FaUsers className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+              <select name="role" className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none" onChange={handleChange} disabled={isLoading}>
+                <option value="team_owner">Team Owner</option>
+              </select>
+            </div>
+            {form.role === "team_owner" && (
+              <div className="space-y-4 p-4 border-l-2 border-purple-500">
+                <div className="relative">
+                  <FaBuilding className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+                  <input type="text" name="teamName" placeholder="Team Name" required className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" onChange={handleChange} disabled={isLoading} />
+                </div>
+                <div className="relative">
+                  <FaInfoCircle className="absolute top-4 left-4 text-gray-400" />
+                  <textarea name="bio" placeholder="Team Bio" className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" onChange={handleChange} disabled={isLoading}></textarea>
+                </div>
+                <div className="relative">
+                  <FaImage className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+                  <input type="file" name="logo" accept="image/*" className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600" onChange={handleChange} disabled={isLoading} />
+                </div>
+              </div>
+            )}
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            <button type="submit" className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isLoading}>
+              <FaUserPlus />
+              <span>{isLoading ? "Creating Account..." : "Register"}</span>
+            </button>
+            <p className="text-center text-gray-400">
+              Already have an account?
+              <Link to="/login" className="font-semibold text-purple-400 hover:text-purple-300 transition-colors duration-300">
+                Login Here
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -44,7 +44,7 @@ const AuctionBidPage = () => {
         fetchMyTeam();
       }
     }
-  }, [team]);
+  }, [team, role]);
   const [teamOwnerPlayer, setTeamOwnerPlayer] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [isSelling, setIsSelling] = useState(false);
@@ -62,6 +62,11 @@ const AuctionBidPage = () => {
 
   const playersRef = useRef(players);
   playersRef.current = players;
+
+  const teamOwnerPlayerRef = useRef(teamOwnerPlayer);
+  useEffect(() => {
+    teamOwnerPlayerRef.current = teamOwnerPlayer;
+  }, [teamOwnerPlayer]);
 
   useEffect(() => {
     // Get token from localStorage
@@ -135,7 +140,7 @@ const AuctionBidPage = () => {
         });
       });
       // If the updated player is the teamOwnerPlayer, update its currentBid as well
-      if (teamOwnerPlayer && teamOwnerPlayer._id === update.playerId) {
+      if (teamOwnerPlayerRef.current && teamOwnerPlayerRef.current._id === update.playerId) {
         setTeamOwnerPlayer((prev) => ({
           ...prev,
           currentBid: update.currentBid,
@@ -262,7 +267,7 @@ const AuctionBidPage = () => {
               : player
           )
         );
-        if (teamOwnerPlayer && teamOwnerPlayer._id === playerId) {
+        if (teamOwnerPlayerRef.current && teamOwnerPlayerRef.current._id === playerId) {
           setTeamOwnerPlayer(null);
           localStorage.removeItem("playerId");
           setPlayerId(null);

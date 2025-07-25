@@ -1,175 +1,141 @@
+
 import React, { useState, useEffect } from "react";
-//later on we will import the slides by making a differnent file that handles different
-//slides arrays and then we import these arrays and pass as props
+
 const slides = [
   {
     id: 1,
-    title: "SLIDER BUTTERFLY",
+    title: "Experience the Thrill",
     description:
-      "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Officiis culpa similique consequuntur, reprehenderit dicta repudiandae.",
+      "Witness the electrifying moments of the auction, where legends are made and teams are born.",
     image:
-      "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?cs=srgb&dl=pexels-thatguycraig000-1563356.jpg&fm=jpg",
-    preview:
-      "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?cs=srgb&dl=pexels-thatguycraig000-1563356.jpg&fm=jpg",
-  },
-  {
-    id: 2,
-    title: "SLIDER PARROT",
-    description:
-      "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Officiis culpa similique consequuntur, reprehenderit dicta repudiandae.",
-    image:
-      "https://images.pexels.com/photos/461416/pexels-photo-461416.jpeg?cs=srgb&dl=pexels-pixabay-461416.jpg&fm=jpg",
-    preview:
-      "https://images.pexels.com/photos/461416/pexels-photo-461416.jpeg?cs=srgb&dl=pexels-pixabay-461416.jpg&fm=jpg",
+      "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=1935&auto=format&fit=crop",
   },
   {
     id: 3,
-    title: "SLIDER EAGLE",
+    title: "Unleash the Power of Sport",
     description:
-      "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Officiis culpa similique consequuntur, reprehenderit dicta repudiandae.",
+    "Feel the passion, the drama, and the glory of the ultimate sporting showdown.",
     image:
-      "https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg?cs=srgb&dl=pexels-pixabay-326055.jpg&fm=jpg",
-    preview:
-      "https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg?cs=srgb&dl=pexels-pixabay-326055.jpg&fm=jpg",
+    "https://plus.unsplash.com/premium_photo-1671436824817-664338d9bb76?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NjZ8fHNwb3J0c3xlbnwwfHwwfHx8MA%3D%3D?q=80&w=2070&auto=format&fit=crop",
+  },
+  
+  {
+    id: 5,
+    title: "Cricket Fever",
+    description:
+    "Step onto the pitch and experience the excitement of cricket auctions. Bid for your favorite batsmen, bowlers, and all-rounders.",
+    image:
+    "https://plus.unsplash.com/premium_photo-1721963697195-a2db88d2d222?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTY1fHxjcmlja2V0fGVufDB8fDB8fHww?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTV8fGNyaWNrZXQlMjBiYWxsfGVufDB8fDB8fHww?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGNyaWNrZXR8ZW58MHx8MHx8fDA%3D?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Y3JpY2tldHxlbnwwfHwwfHx8MA%3D%3D?q=80&w=2070&auto=format&fit=crop",
+  },
+  {
+    id: 6,
+    title: "Volleyball Victory",
+    description:
+    "Spike, set, and serve your way to victory! Build an unbeatable volleyball team through strategic bidding.",
+    image:
+    "https://images.unsplash.com/photo-1666901356149-93f2eb3ba5a2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+  },
+  
+  {
+    id: 2,
+    title: "Basketball Blitz",
+    description:
+    "Dribble, shoot, and score! Draft your dream basketball team and dominate the court.",
+    image:
+    "https://images.unsplash.com/photo-1505666287802-931dc83948e9?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", // Replace with a valid image URL
+  },
+  {
+    id: 7,
+    title: "Build Your Dream Team",
+    description:
+      "Strategize, bid, and assemble a team of champions that will dominate the league.",
+      image:
+      "https://plus.unsplash.com/premium_photo-1675364966233-710334c771c5?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZHJlYW0lMjB0ZWFtfGVufDB8fDB8fHww?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHNwb3J0cyUyMHRlYW18ZW58MHx8MHx8fDA%3D?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
   {
     id: 4,
-    title: "SLIDER OWL",
+    title: "The Ultimate Auction",
     description:
-      "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Officiis culpa similique consequuntur, reprehenderit dicta repudiandae.",
+    "Where every bid counts and the stakes are higher than ever before.",
     image:
-      "https://images.pexels.com/photos/145939/pexels-photo-145939.jpeg?cs=srgb&dl=pexels-pixabay-145939.jpg&fm=jpg",
-    preview:
-      "https://images.pexels.com/photos/145939/pexels-photo-145939.jpeg?cs=srgb&dl=pexels-pixabay-145939.jpg&fm=jpg",
+    "https://plus.unsplash.com/premium_photo-1661940814738-5a028d647d3a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8YXVjdGlvbnxlbnwwfHwwfHx8MA%3D%3D?q=80&w=1932&auto=format&fit=crop",
   },
+  
 ];
-
-// Helper function to rotate array left or right
-const rotateArray = (arr, direction) => {
-  if (direction === "left") {
-    return [...arr.slice(1), arr[0]];
-  } else if (direction === "right") {
-    return [arr[arr.length - 1], ...arr.slice(0, arr.length - 1)];
-  }
-  return arr;
-};
 
 const Carousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [previewOrder, setPreviewOrder] = useState(slides);
-  const [animating, setAnimating] = useState(false);
-  const [animationDirection, setAnimationDirection] = useState(null); // 'next' or 'prev'
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Preload images
+  useEffect(() => {
+    slides.forEach((slide) => {
+      const img = new Image();
+      img.src = slide.image;
+    });
+  }, []);
 
   useEffect(() => {
-    if (animating) {
-      const timer = setTimeout(() => {
-        setAnimating(false);
-        setAnimationDirection(null);
-      }, 600); // duration of animation
-      return () => clearTimeout(timer);
-    }
-  }, [animating]);
-
-  // Auto slide effect with 8 seconds interval
-  useEffect(() => {
-    if (animating) return; // skip if animating
     const interval = setInterval(() => {
-      nextSlide();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [animating, currentIndex]);
-
-  const prevSlide = () => {
-    if (animating) return;
-    setAnimationDirection("prev");
-    setAnimating(true);
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-      setPreviewOrder((prevOrder) => rotateArray(prevOrder, "right"));
-    }, 300); // halfway through animation
-  };
-
-  const nextSlide = () => {
-    if (animating) return;
-    setAnimationDirection("next");
-    setAnimating(true);
-    setTimeout(() => {
+      setIsAnimating(true);
       setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-      setPreviewOrder((prevOrder) => rotateArray(prevOrder, "left"));
-    }, 300); // halfway through animation
+      setTimeout(() => setIsAnimating(false), 1000); // Animation duration
+    }, 4000); // 5 seconds interval
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
+  const goToSlide = (index) => {
+    if (isAnimating || currentIndex === index) return;
+    setIsAnimating(true);
+    setCurrentIndex(index);
+    setTimeout(() => setIsAnimating(false), 1000);
   };
 
   return (
-    <div className="carousel relative w-full h-screen bg-black text-white overflow-hidden">
-      {/* Large image full screen */}
-      <div
-        className={`absolute inset-0 transition-transform duration-500 ease-in-out ${
-          animating
-            ? animationDirection === "next"
-              ? "translate-x-full"
-              : "-translate-x-full"
-            : "translate-x-0"
-        }`}
-        style={{
-          backgroundImage: `url(${slides[currentIndex].image})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          zIndex: 10,
-        }}
-      >
-        <div className="absolute bottom-20 left-20 max-w-lg">
-          <h1 className="text-5xl font-extrabold mb-4">
+    <div className="relative w-full h-screen bg-black text-white overflow-hidden font-sans">
+      {/* Image Container */}
+      <div className="absolute inset-0 w-full h-full">
+        {slides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${currentIndex === index ? "opacity-100" : "opacity-0"}`}
+          >
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black opacity-50" />
+      </div>
+
+      {/* Content Container */}
+      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">
+        <div
+          key={currentIndex} // Re-trigger animation on slide change
+          className="animate-fade-in-down"
+        >
+          <h1 className="text-5xl md:text-7xl font-bold text-white uppercase tracking-wider mb-4 shadow-text-lg">
             {slides[currentIndex].title}
           </h1>
-          <p className="text-lg">{slides[currentIndex].description}</p>
-          {/* Navigation buttons */}
-          <div className="flex space-x-4 mt-6">
-            <button
-              onClick={prevSlide}
-              className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center"
-              aria-label="Previous Slide"
-            >
-              &#8592;
-            </button>
-            <button
-              onClick={nextSlide}
-              className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center"
-              aria-label="Next Slide"
-            >
-              &#8594;
-            </button>
-          </div>
+          <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto shadow-text-md">
+            {slides[currentIndex].description}
+          </p>
         </div>
       </div>
 
-      {/* Preview images floating at bottom right */}
-      <div className="absolute bottom-10 right-10 flex space-x-4 z-20">
-        {previewOrder
-          .filter((slide) => slide.id !== slides[currentIndex].id)
-          .map((slide) => (
-            <div
-              key={slide.id}
-              className="flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden cursor-pointer opacity-70 transition-transform duration-500 ease-in-out"
-              onClick={() => {
-                if (!animating) {
-                  const newIndex = slides.findIndex((s) => s.id === slide.id);
-                  setCurrentIndex(newIndex);
-                  // Rotate previewOrder to match new currentIndex
-                  let rotated = [...previewOrder];
-                  while (rotated[0].id !== slide.id) {
-                    rotated = rotateArray(rotated, "left");
-                  }
-                  setPreviewOrder(rotated);
-                }
-              }}
-            >
-              <img
-                src={slide.preview}
-                alt={slide.title}
-                className="w-full h-full object-cover rounded-lg"
-              />
-            </div>
-          ))}
+      {/* Thumbnails/Dots */}
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 flex space-x-3">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${currentIndex === index ? "bg-white scale-125" : "bg-white bg-opacity-50 hover:bg-opacity-75"}`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
       </div>
     </div>
   );

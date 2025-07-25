@@ -1,13 +1,14 @@
 import { useState } from "react";
 import API from "../../api/axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/userSlice";
-import Carousel from "../components/ImageSlider"; // Import the Carousel component
+import { FaEnvelope, FaLock, FaSignInAlt } from "react-icons/fa";
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -17,80 +18,85 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     try {
       const res = await API.post("/auth/login", form);
       localStorage.setItem("token", res.data.token);
 
-      // Adjust these according to your API response structure
       const userInfo = res.data.user || null;
       const userRole = res.data.user.role || null;
       const userTeam = res.data.team || null;
 
-      // Save user info, role, and team to localStorage for persistence
       localStorage.setItem("user", JSON.stringify(userInfo));
       localStorage.setItem("role", userRole);
       localStorage.setItem("team", JSON.stringify(userTeam));
 
       dispatch(setUser({ user: userInfo, role: userRole, team: userTeam }));
 
-      navigate("/profile");
+      navigate("/home");
     } catch (err) {
-      alert(err.response?.data?.error || "Login failed");
+      setError(err.response?.data?.error || "Login failed. Please check your credentials.");
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[80vh] border-2 border-pink-900 p-2">
-      <div className="w-full md:w-1/2 h-1/2 overflow-hidden md:h-[100%] border-green-500 border-2">
-        <Carousel />
-      </div>
-      <div className="w-full p-4 md:w-1/2 h-1/2 md:h-full border-green-500 border-2 flex justify-center items-center">
-        <form
-          onSubmit={handleSubmit}
-          className="p-3 md:h-[40vh] md:w-[35vw] h-[100%] w-[80%] rounded border-2 border-teal-500"
-        >
-          <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-          <div className="flex flex-col space-y-4">
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              required
-              className="bg-purple-600 text-white px-8 py-3 uppercase tracking-widest"
-              style={{
-                clipPath: "polygon(2% 0%, 100% 0%, 98% 100%, 0% 100%)",
-              }}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              required
-              className="bg-purple-600 text-white px-8 py-3 uppercase tracking-widest"
-              style={{
-                clipPath: "polygon(2% 0%, 100% 0%, 98% 100%, 0% 100%)",
-              }}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+      <div className="w-full max-w-4xl flex flex-col md:flex-row rounded-2xl shadow-2xl overflow-hidden">
+        {/* Info Panel */}
+        <div className="w-full md:w-1/2 p-10 flex flex-col justify-center items-center bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+          <h1 className="text-4xl font-bold mb-4 text-center">Welcome Back!</h1>
+          <p className="text-center mb-8">
+            Enter your credentials to access your account and dive back into the action.
+          </p>
+          <div className="w-32 h-1 bg-white/50 rounded-full"></div>
+        </div>
+
+        {/* Form Panel */}
+        <div className="w-full md:w-1/2 p-10 bg-gray-800">
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">Login</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative">
+              <FaEnvelope className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                required
+                className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="relative">
+              <FaLock className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             <button
               type="submit"
-              className="bg-purple-900 text-white py-3 uppercase tracking-widest"
-              style={{
-                clipPath: "polygon(2% 0%, 100% 0%, 98% 100%, 0% 100%)",
-              }}
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
             >
-              {isLoading ? "Loading..." : "Login"}
+              <FaSignInAlt />
+              <span>{isLoading ? "Signing In..." : "Login"}</span>
             </button>
-            <div className="flex justify-center mt-2">
-             <p className="text-center text-xl">Not Registered Yet?</p><p className="text-xl text-sky-500 hover:cursor-pointer" onClick={()=>navigate('/register')}>Register</p>
-            </div>
-          </div>
-        </form>
+            <p className="text-center text-gray-400">
+              Not registered yet? 
+              <Link to="/register" className="font-semibold text-purple-400 hover:text-purple-300 transition-colors duration-300">
+                Create an Account
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );
