@@ -36,7 +36,7 @@ const Navbar = () => {
 
   return (
     <header className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${scrolled ? 'bg-gray-800 shadow-lg' : 'bg-transparent'}`}>
-      <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+      <nav className="container mx-auto pl-10 px-6 py-4 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 hover:from-pink-600 hover:to-purple-400 transition-all duration-300">
           AuctionSphere
         </Link>

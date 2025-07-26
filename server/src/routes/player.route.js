@@ -53,7 +53,7 @@ router.delete("/:id", auth, adminOnly, deletePlayer);
 // New routes for Redis player storage and retrieval
 router.post("/redis/player", auth, storePlayerInRedis);
 router.get("/redis/player/:id", auth, getPlayerFromRedis);
-router.delete("/redis/player/:id",auth, deletePlayerFromRedis);
+router.delete("/redis/player/:id", auth, deletePlayerFromRedis);
 
 // New route for marking player unsold
 router.patch(
@@ -62,6 +62,5 @@ router.patch(
   adminOnly,
   markPlayerUnsold
 );
-
 
 export default router;
