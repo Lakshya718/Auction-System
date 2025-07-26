@@ -19,6 +19,8 @@ import AuctionDetails from './pages/AuctionDetails.jsx';
 import CreateMatch from './pages/CreateMatch.jsx';
 import MatchDetails from './pages/MatchDetails.jsx';
 import UpdateMatch from './pages/UpdateMatch.jsx';
+import AllMatches from './pages/AllMatches.jsx';
+import MatchResult from './pages/MatchResult.jsx';
 import AuctionBidPage from './pages/AuctionBidPage.jsx';
 import Homescreen from './pages/Homescreen.jsx';
 import ImageSlider from './components/ImageSlider.jsx';
@@ -174,6 +176,22 @@ const App = () => {
           element={
             <PrivateRoute>
               <MatchDetails />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/matches/update/:id"
+          element={
+            <PrivateRoute>
+              <MatchResult />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/all-matches"
+          element={
+            <PrivateRoute>
+              <AllMatches />
             </PrivateRoute>
           }
         />

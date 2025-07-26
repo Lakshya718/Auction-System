@@ -241,55 +241,6 @@ export const updateAuction = async (req, res) => {
   }
 };
 
-// export const updateAuctionTeamsPlayers = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { teams, players } = req.body;
-
-//     if (!isValidObjectId(id)) {
-//       return res.status(400).json({ error: "Invalid auction ID" });
-//     }
-
-//     if (!Array.isArray(teams) || !Array.isArray(players)) {
-//       return res.status(400).json({ error: "Teams and players must be arrays" });
-//     }
-
-//     // Validate team and player IDs
-//     const invalidTeamIds = teams.filter((teamId) => !isValidObjectId(teamId));
-//     const invalidPlayerIds = players.filter((playerId) => !isValidObjectId(playerId));
-
-//     if (invalidTeamIds.length > 0 || invalidPlayerIds.length > 0) {
-//       return res.status(400).json({ error: "Invalid team or player IDs" });
-//     }
-
-//     const auction = await Auction.findById(id);
-//     if (!auction) {
-//       return res.status(404).json({ error: "Auction not found" });
-//     }
-
-//     // Update teams and players
-//     auction.teams = teams;
-//     auction.players = players.map((playerId) => ({
-//       player: playerId,
-//       status: "available",
-//       currentBid: 0,
-//     }));
-
-//     // Update teamBudgets for new teams
-//     auction.teamBudgets = teams.map((teamId) => {
-//       const existingBudget = auction.teamBudgets.find((tb) => tb.team.toString() === teamId.toString());
-//       return existingBudget || { team: teamId, remainingBudget: auction.maxBudget };
-//     });
-
-//     await auction.save();
-
-//     res.status(200).json({ success: true, message: "Auction teams and players updated", auction });
-//   } catch (error) {
-//     console.error("Error updating auction teams and players:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
-
 export const sellPlayer = async (req, res) => {
   try {
     const { auctionId, playerId, teamId, currentBid } = req.body;

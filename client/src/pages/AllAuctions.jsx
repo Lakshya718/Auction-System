@@ -1,25 +1,32 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import API from "../../api/axios";
-import { useNavigate } from "react-router-dom";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { FaGavel, FaCalendarAlt, FaClock, FaInfoCircle, FaPlayCircle, FaEye } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import API from '../../api/axios';
+import { useNavigate } from 'react-router-dom';
+import LoadingSpinner from '../components/LoadingSpinner';
+import {
+  FaGavel,
+  FaCalendarAlt,
+  FaClock,
+  FaInfoCircle,
+  FaPlayCircle,
+  FaEye,
+} from 'react-icons/fa';
 
 const AllAuctions = () => {
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const role = useSelector((state) => state.user.role);
   const navigate = useNavigate();
 
   const fetchAuctions = async () => {
     setLoading(true);
-    setError("");
+    setError('');
     try {
-      const response = await API.get("/auctions/all-auctions");
+      const response = await API.get('/auctions/all-auctions');
       setAuctions(response.data.auctions);
     } catch {
-      setError("Failed to fetch auctions.");
+      setError('Failed to fetch auctions.');
     } finally {
       setLoading(false);
     }
@@ -30,37 +37,39 @@ const AllAuctions = () => {
   }, [role]);
 
   const pastAuctions = auctions.filter(
-    (a) => a.status === "completed" || a.status === "cancelled"
+    (a) => a.status === 'completed' || a.status === 'cancelled'
   );
-  const runningAuctions = auctions.filter((a) => a.status === "active");
-  const upcomingAuctions = auctions.filter((a) => a.status === "pending");
+  const runningAuctions = auctions.filter((a) => a.status === 'active');
+  const upcomingAuctions = auctions.filter((a) => a.status === 'pending');
 
   const statusBadge = (status) => {
-    let colorClass = "";
-    let text = "";
+    let colorClass = '';
+    let text = '';
     switch (status) {
-      case "pending":
-        colorClass = "bg-yellow-500 text-white";
-        text = "Upcoming";
+      case 'pending':
+        colorClass = 'bg-yellow-500 text-white';
+        text = 'Upcoming';
         break;
-      case "active":
-        colorClass = "bg-green-500 text-white";
-        text = "Running";
+      case 'active':
+        colorClass = 'bg-green-500 text-white';
+        text = 'Running';
         break;
-      case "completed":
-        colorClass = "bg-gray-500 text-white";
-        text = "Completed";
+      case 'completed':
+        colorClass = 'bg-gray-500 text-white';
+        text = 'Completed';
         break;
-      case "cancelled":
-        colorClass = "bg-red-500 text-white";
-        text = "Cancelled";
+      case 'cancelled':
+        colorClass = 'bg-red-500 text-white';
+        text = 'Cancelled';
         break;
       default:
-        colorClass = "bg-gray-400 text-white";
-        text = "Unknown";
+        colorClass = 'bg-gray-400 text-white';
+        text = 'Unknown';
     }
     return (
-      <span className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${colorClass}`}>
+      <span
+        className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${colorClass}`}
+      >
         {text}
       </span>
     );
@@ -68,14 +77,16 @@ const AllAuctions = () => {
 
   const renderAuctionList = (auctionList) =>
     auctionList.length === 0 ? (
-      <p className="text-center text-gray-400 text-lg">No auctions available in this category.</p>
+      <p className="text-center text-gray-400 text-lg">
+        No auctions available in this category.
+      </p>
     ) : (
       auctionList.map((auction) => {
         const auctionDate = new Date(auction.date);
         const formattedDate = auctionDate.toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
         });
         return (
           <div
@@ -84,15 +95,23 @@ const AllAuctions = () => {
           >
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-2xl font-bold text-purple-400 mb-2">{auction.tournamentName}</h3>
-                <p className="text-gray-300 text-sm mb-3">{auction.description}</p>
-                <p className="text-gray-400 text-sm flex items-center gap-2"><FaCalendarAlt /> {formattedDate}</p>
-                <p className="text-gray-400 text-sm flex items-center gap-2"><FaClock /> {auction.startTime}</p>
+                <h3 className="text-2xl font-bold text-purple-400 mb-2">
+                  {auction.tournamentName}
+                </h3>
+                <p className="text-gray-300 text-sm mb-3">
+                  {auction.description}
+                </p>
+                <p className="text-gray-400 text-sm flex items-center gap-2">
+                  <FaCalendarAlt /> {formattedDate}
+                </p>
+                <p className="text-gray-400 text-sm flex items-center gap-2">
+                  <FaClock /> {auction.startTime}
+                </p>
               </div>
               <div>{statusBadge(auction.status)}</div>
             </div>
             <div className="flex flex-wrap gap-3 mt-4">
-              {role === "team_owner" && (
+              {role === 'team_owner' && (
                 <button
                   className="flex items-center gap-2 bg-pink-600 text-white px-5 py-2 rounded-lg hover:bg-pink-700 transition-colors shadow-md"
                   onClick={() => navigate(`/auction-bid-page/${auction._id}`)}
@@ -100,7 +119,7 @@ const AllAuctions = () => {
                   <FaGavel /> Enter Auction
                 </button>
               )}
-              {role === "admin" && (
+              {role === 'admin' && (
                 <>
                   <button
                     onClick={() => navigate(`/auctions/${auction._id}`)}
@@ -111,19 +130,37 @@ const AllAuctions = () => {
                   <button
                     onClick={() => {
                       const currentDate = new Date();
-                      const auctionStartDateTime = new Date(`${auction.date}T${auction.startTime}`);
 
-                      if (currentDate < auctionStartDateTime) {
-                        alert("This auction cannot be started before its scheduled time!");
+                      // Parse auction date
+                      const auctionDate = new Date(auction.date);
+
+                      // Parse auction start time (assumed format "HH:mm" or "HH:mm:ss")
+                      const timeParts = auction.startTime.split(':');
+                      const hours = parseInt(timeParts[0], 10);
+                      const minutes = parseInt(timeParts[1], 10);
+                      const seconds =
+                        timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
+
+                      // Set hours, minutes, seconds on auctionDate
+                      auctionDate.setHours(hours, minutes, seconds, 0);
+
+                      if (currentDate < auctionDate) {
+                        alert(
+                          'This auction cannot be started before its scheduled time!'
+                        );
                       } else {
                         navigate(`/auction-bid-page/${auction._id}`);
                       }
                     }}
-                    disabled={auction.status === "completed" || auction.status === "active"}
+                    disabled={
+                      auction.status === 'completed' ||
+                      auction.status === 'active'
+                    }
                     className={`flex items-center gap-2 px-5 py-2 rounded-lg transition-colors shadow-md ${
-                      auction.status === "completed" || auction.status === "active"
-                        ? "bg-gray-500 cursor-not-allowed"
-                        : "bg-green-600 hover:bg-green-700"
+                      auction.status === 'completed' ||
+                      auction.status === 'active'
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
                     }`}
                   >
                     <FaPlayCircle /> Start Auction
@@ -140,31 +177,42 @@ const AllAuctions = () => {
     <div className="p-6 bg-gray-900 min-h-screen text-white">
       <header className="mb-12 text-center">
         <h1 className="text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-          <FaGavel className="inline-block mr-3" />All Auctions
+          <FaGavel className="inline-block mr-3" />
+          All Auctions
         </h1>
-        <p className="text-xl text-gray-400">Explore and manage all upcoming, running, and past auctions.</p>
+        <p className="text-xl text-gray-400">
+          Explore and manage all upcoming, running, and past auctions.
+        </p>
       </header>
 
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
-        <p className="text-center text-red-500 text-lg font-semibold">Error: {error}</p>
+        <p className="text-center text-red-500 text-lg font-semibold">
+          Error: {error}
+        </p>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-3xl font-bold mb-6 text-center text-yellow-400 flex items-center justify-center gap-2"><FaCalendarAlt /> Upcoming Auctions</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center text-yellow-400 flex items-center justify-center gap-2">
+              <FaCalendarAlt /> Upcoming Auctions
+            </h2>
             <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
               {renderAuctionList(upcomingAuctions)}
             </div>
           </section>
           <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-3xl font-bold mb-6 text-center text-green-400 flex items-center justify-center gap-2"><FaPlayCircle /> Running Auctions</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center text-green-400 flex items-center justify-center gap-2">
+              <FaPlayCircle /> Running Auctions
+            </h2>
             <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
               {renderAuctionList(runningAuctions)}
             </div>
           </section>
           <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-3xl font-bold mb-6 text-center text-gray-400 flex items-center justify-center gap-2"><FaInfoCircle /> Past Auctions</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center text-gray-400 flex items-center justify-center gap-2">
+              <FaInfoCircle /> Past Auctions
+            </h2>
             <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
               {renderAuctionList(pastAuctions)}
             </div>

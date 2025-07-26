@@ -107,9 +107,8 @@ const CreateMatch = () => {
               required
               className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
             >
-              <option value="">Select Tournament</option>
               {Array.isArray(tournaments) && tournaments.map(t => (
-                <option key={t._id} value={t._id}>{t.tournamentName || t.name}</option>
+                <option key={t._id} value={t._id}>{t.tournamentName}</option>
               ))}
             </select>
           </div>
@@ -126,7 +125,6 @@ const CreateMatch = () => {
               required
               className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
             >
-              <option value="">Select Team 1</option>
               {teams.map(team => (
                 <option key={team._id} value={team._id}>{team.name}</option>
               ))}
@@ -145,7 +143,6 @@ const CreateMatch = () => {
               required
               className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
             >
-              <option value="">Select Team 2</option>
               {teams.map(team => (
                 <option key={team._id} value={team._id}>{team.name}</option>
               ))}
@@ -177,7 +174,8 @@ const CreateMatch = () => {
               name="venue"
               value={formData.venue}
               onChange={handleChange}
-              placeholder="Venue (optional)"
+              placeholder="Venue"
+              required
               className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
             />
           </div>

@@ -7,9 +7,11 @@ import Sidebar from '../components/Sidebar';
 import { FaUser, FaSignOutAlt, FaCamera, FaEdit, FaTimes, FaEnvelope, FaUsers } from 'react-icons/fa';
 
 import LoadingSpinner from '../components/LoadingSpinner';
+import LogoutConfirmModal from '../components/LogoutConfirmModal';
 
 const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -31,7 +33,11 @@ const Profile = () => {
     fetchProfile();
   }, [navigate, dispatch]);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     try {
       await API.get('/auth/logout');
       localStorage.clear();
@@ -40,6 +46,8 @@ const Profile = () => {
     } catch (err) {
       console.error('Logout failed:', err);
       alert('Logout failed. Please try again.');
+    } finally {
+      setShowLogoutModal(false);
     }
   };
 
@@ -153,6 +161,11 @@ const Profile = () => {
         </div>
       </main>
       {showEditModal && <EditProfileModal user={user} dispatch={dispatch} setShowEditModal={setShowEditModal} />}
+      <LogoutConfirmModal
+        show={showLogoutModal}
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </div>
   );
 };
