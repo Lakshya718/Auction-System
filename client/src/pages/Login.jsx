@@ -1,4 +1,4 @@
-import { useState } from "react";
+ import { useState } from "react";
 import API from "../../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -17,8 +17,15 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
+
+    // Email validation for @gmail.com or @nith.ac.in
+    if (!form.email.endsWith("@gmail.com") && !form.email.endsWith("@nith.ac.in")) {
+      setError("Please enter a valid email like firstlast@gmail.com");
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const res = await API.post("/auth/login", form);
       localStorage.setItem("token", res.data.token);

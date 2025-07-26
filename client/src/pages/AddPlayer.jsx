@@ -23,6 +23,8 @@ import {
   FaTachometerAlt,
   FaBalanceScale,
   FaUserPlus,
+  FaCheckCircle,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import LoadingSpinner from "../components/LoadingSpinner";
 
@@ -99,6 +101,47 @@ const AddPlayer = () => {
     setError("");
     setSuccess("");
 
+    // Validation
+    if (formData.phone.length !== 10) {
+      setLoading(false);
+      setError("Phone number must be exactly 10 digits.");
+      return;
+    }
+    const ageNum = Number(formData.age);
+    if (ageNum < 5 || ageNum > 70) {
+      setLoading(false);
+      setError("Age must be between 5 and 70.");
+      return;
+    }
+    const playingExpNum = Number(formData.playingExperience);
+    if (playingExpNum < 0 || playingExpNum > 60) {
+      setLoading(false);
+      setError("Playing experience must be between 0 and 60.");
+      return;
+    }
+    const basePriceNum = Number(formData.basePrice);
+    if (basePriceNum < 1000000 || basePriceNum > 20000000) {
+      setLoading(false);
+      setError("Base price must be between 1,000,000 and 20,000,000.");
+      return;
+    }
+    const allowedCountries = [
+      "India",
+      "China",
+      "USA",
+      "Brazil",
+      "Sri Lanka",
+      "Pakistan",
+      "Nepal",
+      "Bangladesh",
+      "Afghanistan",
+    ];
+    if (!allowedCountries.includes(formData.country)) {
+      setLoading(false);
+      setError("Country must be one of the allowed options.");
+      return;
+    }
+
     try {
       const data = new FormData();
       for (const key in formData) {
@@ -159,6 +202,7 @@ const AddPlayer = () => {
           strikeRate: "",
           economy: "",
         });
+        navigate("/pending-players"); 
       } else {
         setError("Failed to add player.");
       }
@@ -252,7 +296,8 @@ const AddPlayer = () => {
                 value={formData.age}
                 onChange={handleChange}
                 required
-                min="0"
+                min="5"
+                max="70"
                 placeholder="Enter age"
                 className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
@@ -324,6 +369,7 @@ const AddPlayer = () => {
                 value={formData.playingExperience}
                 onChange={handleChange}
                 min="0"
+                max="60"
                 placeholder="Enter years of experience"
                 className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />
@@ -333,15 +379,26 @@ const AddPlayer = () => {
                 <FaGlobe className="inline-block mr-2 text-purple-400" />
                 Country <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
+              <select
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
                 required
-                placeholder="Enter country"
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-              />
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
+              >
+                <option value="" disabled>
+                  Select country
+                </option>
+                <option value="India">India</option>
+                <option value="China">China</option>
+                <option value="USA">USA</option>
+                <option value="Brazil">Brazil</option>
+                <option value="Sri Lanka">Sri Lanka</option>
+                <option value="Pakistan">Pakistan</option>
+                <option value="Nepal">Nepal</option>
+                <option value="Bangladesh">Bangladesh</option>
+                <option value="Afghanistan">Afghanistan</option>
+              </select>
             </div>
           </div>
         </section>
@@ -362,7 +419,8 @@ const AddPlayer = () => {
                 value={formData.basePrice}
                 onChange={handleChange}
                 required
-                min="0"
+                min="1000000"
+                max="20000000"
                 placeholder="Enter base price"
                 className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
               />

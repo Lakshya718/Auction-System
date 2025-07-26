@@ -24,7 +24,6 @@ import Homescreen from './pages/Homescreen.jsx';
 import ImageSlider from './components/ImageSlider.jsx';
 import Sidebar from './components/Sidebar.jsx';
 
-
 const App = () => {
   const user = useSelector((state) => state.user.user);
   const role = useSelector((state) => state.user.role);
@@ -186,7 +185,6 @@ const App = () => {
             </PrivateRoute>
           }
         />
-        
       </Routes>
     </Router>
   );

@@ -27,7 +27,7 @@ const playerSchema = new mongoose.Schema({
   },
   profilePhoto: {
     type: String,
-    default: "https://media.istockphoto.com/id/1961226379/vector/cricket-player-playing-short-concept.jpg?s=612x612&w=0&k=20&c=CSiQd4qzLY-MB5o_anUOnwjIqxm7pP8aus-Lx74AQus="
+    default: "https://www.shutterstock.com/image-vector/illustration-batsman-playing-cricket-action-600nw-2506131549.jpg"
   },
   battingStyle: {
     type: String,

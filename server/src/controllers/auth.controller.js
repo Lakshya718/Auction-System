@@ -11,7 +11,7 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    if (!['admin', 'team_owner'].includes(role)) {
+    if (!['team_owner'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
 

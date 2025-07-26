@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import sidebarImage from "../assets/sidebar.png"; 
 import {
   FaHome,
   FaUsers,
@@ -17,10 +18,27 @@ import { useNavigate } from "react-router-dom";
 const Sidebar = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const sidebarRef = useRef(null);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const allMenuItems = [
     { icon: <FaTachometerAlt />, label: "Dashboard", path: "/", roles: ["admin", "team_owner"] },
@@ -38,17 +56,20 @@ const Sidebar = ({ role }) => {
 
   return (
     <>
-      {/* Hamburger / Close button - Always visible */}
-      <button
-        onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 rounded-full bg-gray-800 text-white focus:outline-none hover:bg-gray-700 transition-all duration-300"
-        aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
-      >
-        {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-      </button>
+      {/* Hamburger button - Visible only when sidebar is closed */}
+      {!isOpen && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed top-5 left-0 z-50 p-2 rounded-full text-white focus:outline-none transition-all duration-300"
+          aria-label="Open sidebar"
+        >
+          <img src={sidebarImage} className="h-5 w-5" alt="" srcset="" />
+        </button>
+      )}
 
       {/* Sidebar */}
       <div
+        ref={sidebarRef}
         className={`fixed top-0 left-0 h-full bg-gray-900 text-white w-72 p-6 flex flex-col space-y-8 transform transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
         {/* This div maintains the top spacing */}
         <div className="flex justify-between items-center py-6">

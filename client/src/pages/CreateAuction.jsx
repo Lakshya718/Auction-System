@@ -96,6 +96,17 @@ const CreateAuction = () => {
       if (response.data.success) {
         setSuccess('Auction created successfully');
         // Reset form or redirect as needed
+        setFormData({
+          tournamentName: '',
+          description: '',
+          date: null,
+          startTime: null,
+          minBidIncrement: 500000,
+          maxBudget: 150000000,
+          teams: [],
+          players: [],
+          retainedPlayers: []
+        });
       } else {
         setError({form: response.data.error || 'Failed to create auction'});
       }

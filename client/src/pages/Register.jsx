@@ -5,13 +5,13 @@ import { FaUser, FaEnvelope, FaLock, FaUsers, FaBuilding, FaInfoCircle, FaImage,
 
 const Register = () => {
   const [form, setForm] = useState({
-    playerName: "",
+    name: "",
     email: "",
     password: "",
     role: "team_owner", // Default role
     teamName: "",
     bio: "",
-    logo: null,
+    teamLogo: null,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -62,7 +62,7 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
               <FaUser className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
-              <input type="text" name="playerName" placeholder="Full Name" required className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" onChange={handleChange} disabled={isLoading} />
+                  <input type="text" name="name" placeholder="Full Name" required className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" onChange={handleChange} disabled={isLoading} />
             </div>
             <div className="relative">
               <FaEnvelope className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
@@ -90,7 +90,7 @@ const Register = () => {
                 </div>
                 <div className="relative">
                   <FaImage className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" />
-                  <input type="file" name="logo" accept="image/*" className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600" onChange={handleChange} disabled={isLoading} />
+                  <input type="file" name="teamLogo" accept="image/*" className="w-full bg-gray-700 text-white pl-12 pr-4 py-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600" onChange={handleChange} disabled={isLoading} />
                 </div>
               </div>
             )}

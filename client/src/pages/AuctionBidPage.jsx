@@ -44,7 +44,7 @@ const AuctionBidPage = () => {
         fetchMyTeam();
       }
     }
-  }, [team, role]);
+  }, [team]);
   const [teamOwnerPlayer, setTeamOwnerPlayer] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [isSelling, setIsSelling] = useState(false);

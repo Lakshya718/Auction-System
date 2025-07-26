@@ -87,7 +87,7 @@ export const createAuction = async (req, res) => {
     await newAuction.save();
 
     // Initialize Redis hash keys for each player in the auction
-    const { redisClient } = await import("../utils/redisClient.js");
+    const redisClient = req.app.get("redisClient");
     for (const playerEntry of newAuction.players) {
       const redisKey = `auction:${newAuction._id}:player:${playerEntry.player}`;
       await redisClient.hSet(redisKey, {
