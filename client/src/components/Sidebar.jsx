@@ -41,7 +41,7 @@ const Sidebar = ({ role }) => {
   }, [isOpen]);
 
   const allMenuItems = [
-    { icon: <FaTachometerAlt />, label: "Dashboard", path: "/", roles: ["admin", "team_owner"] },
+    { icon: <FaTachometerAlt />, label: "Dashboard", path: "/profile", roles: ["admin", "team_owner"] },
     { icon: <FaHome />, label: "All Auctions", path: "/all-auctions", roles: ["admin", "team_owner"] },
     { icon: <FaUsers />, label: "All Players", path: "/all-players", roles: ["admin"] },
     { icon: <FaUserPlus />, label: "Add Player", path: "/add-player", roles: ["admin"] },
@@ -50,6 +50,7 @@ const Sidebar = ({ role }) => {
     { icon: <FaPlusCircle />, label: "Create Auction", path: "/create-auction", roles: ["admin"] },
     { icon: <FaClipboardList />, label: "Pending Requests", path: "/pending-players", roles: ["admin"] },
     { icon: <FaCalendarAlt />, label: "Create Match", path: "/matches/create", roles: ["admin"] },
+    { icon: <FaCalendarAlt />, label: "All Matches", path: "/all-matches", roles: ["admin", "team_owner"] },
   ];
 
   const menuItems = allMenuItems.filter((item) => item.roles.includes(role));
@@ -63,7 +64,7 @@ const Sidebar = ({ role }) => {
           className="fixed top-5 left-0 z-50 p-2 rounded-full text-white focus:outline-none transition-all duration-300"
           aria-label="Open sidebar"
         >
-          <img src={sidebarImage} className="h-5 w-5" alt="" srcset="" />
+<img src={sidebarImage} className="h-5 w-5" alt="" srcSet="" />
         </button>
       )}
 

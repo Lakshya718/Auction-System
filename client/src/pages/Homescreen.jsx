@@ -26,14 +26,14 @@ const featuredPlayers = [
     _id: '2',
     playerName: 'Christiano Ronaldo',
     profilePhoto:
-      'https://images.unsplash.com/photo-1552058544-f2b08422138a?q=80&w=1998&auto=format&fit=crop',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7OKQoMdfiI57E8ytdxfrTaQ9TAwSGWIXaBQ&s?q=80&w=1998&auto=format&fit=crop',
     playerRole: 'Forward',
   },
   {
     _id: '3',
     playerName: 'Neymar Jr.',
     profilePhoto:
-      'https://images.unsplash.com/photo-1534308143481-c55f00be8bd7?q=80&w=1930&auto=format&fit=crop',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBTEMe9t7yAgoOzXgYa60XP-sCFi48LIGNfw&s?q=80&w=1930&auto=format&fit=crop',
     playerRole: 'Midfielder',
   },
 ];
