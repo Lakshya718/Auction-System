@@ -25,15 +25,26 @@ import AuctionBidPage from './pages/AuctionBidPage.jsx';
 import Homescreen from './pages/Homescreen.jsx';
 import ImageSlider from './components/ImageSlider.jsx';
 import Sidebar from './components/Sidebar.jsx';
+import { useState } from 'react';
 
 const App = () => {
   const user = useSelector((state) => state.user.user);
   const role = useSelector((state) => state.user.role);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
   return (
     <Router>
-      <Navbar />
-      {user && <Sidebar role={role} />}
+      <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+      {user && (
+        <Sidebar
+          role={role}
+          isOpen={isSidebarOpen}
+          setIsOpen={setIsSidebarOpen}
+        />
+      )}
       <Routes>
         <Route
           path="/login"

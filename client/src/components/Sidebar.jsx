@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import sidebarImage from '../assets/sidebar.png';
+import React, { useRef, useEffect } from 'react';
 import {
   FaHome,
   FaUsers,
@@ -15,14 +14,10 @@ import {
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const Sidebar = ({ role }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const Sidebar = ({ role, isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -38,7 +33,7 @@ const Sidebar = ({ role }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, setIsOpen]);
 
   const allMenuItems = [
     {
@@ -107,21 +102,12 @@ const Sidebar = ({ role }) => {
 
   return (
     <>
-      {/* Hamburger button - Visible only when sidebar is closed */}
-      {!isOpen && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed top-5 left-6 z-50 p-2 rounded-full text-white focus:outline-none transition-all duration-300"
-          aria-label="Open sidebar"
-        >
-          <img src={sidebarImage} className="h-5 w-5" alt="" srcSet="" />
-        </button>
-      )}
-
       {/* Sidebar */}
       <div
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full bg-gradient-to-r from-gray-900 via-gray-800/95 to-gray-800/40 text-white w-64 px-6 flex flex-col transform transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 left-0 h-full bg-gradient-to-r from-gray-900 via-gray-800/95 to-gray-800/40 text-white w-64 px-6 flex flex-col transform transition-transform duration-300 ease-in-out z-40 shadow-2xl ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
         <nav className="flex flex-col space-y-3 flex-1 justify-center">
           {menuItems.map((item) => (

@@ -140,8 +140,7 @@ const Homescreen = () => {
                   <h3 className="text-2xl font-bold mb-2">{news.title}</h3>
                   <p className="text-gray-400">{news.summary}</p>
                   <a
-                    href="#"
-                    className="inline-block mt-4 text-purple-400 hover:text-purple-300 font-semibold"
+                    className="inline-block mt-4 hover:cursor-pointer text-purple-400 hover:text-purple-300 font-semibold"
                   >
                     See More <FaArrowRight className="inline ml-1" />
                   </a>
@@ -155,59 +154,16 @@ const Homescreen = () => {
         <HowItWorks />
       </section>
       {/* About Us Section */}
-      <section className="py-12 bg-gray-800 text-center">
-        <h2 className="text-3xl font-bold mb-3">
+      <section className="p-5 bg-gray-800 text-center">
+        <h2 className="text-3xl font-bold mb-1">
           <FaInfoCircle className="inline-block mr-2" />
           About AuctionSphere
         </h2>
-        <p className="text-base text-gray-400 mb-6 max-w-3xl mx-auto">
+        <p className="text-base text-gray-400 mb-1 max-w-3xl mx-auto">
           AuctionSphere is a revolutionary platform designed to bring the
           excitement of sports auctions to fans and team owners worldwide.
         </p>
-        <div className="flex justify-center flex-wrap">
-          <div className="flex flex-col items-center mx-4 my-4">
-            <h3 className="text-xl font-bold">Lakshya Kantiwal</h3>
-            <div className="flex justify-center space-x-4 mt-2">
-              <a
-                href="https://github.com/Lakshya718"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
-              >
-                <FaGithub size={24} />
-              </a>
-              <a
-                href="https://www.linkedin.com/in/lakshya-kantiwal-253a8925a/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
-              >
-                <FaLinkedin size={24} />
-              </a>
-            </div>
-          </div>
-          <div className="flex flex-col items-center mx-4 my-4">
-            <h3 className="text-xl font-bold">Yuvraj Singh</h3>
-            <div className="flex justify-center space-x-4 mt-2">
-              <a
-                href="https://github.com/yuvraj-singh-cs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
-              >
-                <FaGithub size={24} />
-              </a>
-              <a
-                href="https://www.linkedin.com/in/yuvraj-singh-rajput-12489925a/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white"
-              >
-                <FaLinkedin size={24} />
-              </a>
-            </div>
-          </div>
-        </div>
+       
       </section>
     </div>
   );

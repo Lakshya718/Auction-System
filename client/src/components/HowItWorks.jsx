@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { FaUserPlus, FaUserClock, FaCalendarPlus, FaTachometerAlt } from 'react-icons/fa';
 
 const HowItWorks = () => {
   return (
@@ -72,6 +72,82 @@ const HowItWorks = () => {
                       </dt>
                       <dd className="mt-2 text-base text-gray-500">
                         Set up auctions for your players, defining the bidding rules and starting prices.
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaUserPlus className="h-6 w-6 text-indigo-500" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-lg font-medium text-gray-900">
+                        Register Player
+                      </dt>
+                      <dd className="mt-2 text-base text-gray-500">
+                        Team owners can register their players for upcoming auctions, making them available for bidding.
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaUserClock className="h-6 w-6 text-indigo-500" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-lg font-medium text-gray-900">
+                        Pending Players
+                      </dt>
+                      <dd className="mt-2 text-base text-gray-500">
+                        Admins can review and approve pending player registrations to ensure all participants are valid.
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaCalendarPlus className="h-6 w-6 text-indigo-500" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-lg font-medium text-gray-900">
+                        Create Matches
+                      </dt>
+                      <dd className="mt-2 text-base text-gray-500">
+                        After the auction, admins can schedule matches between teams, setting dates and times.
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FaTachometerAlt className="h-6 w-6 text-indigo-500" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-lg font-medium text-gray-900">
+                        Dashboard
+                      </dt>
+                      <dd className="mt-2 text-base text-gray-500">
+                        The dashboard provides a comprehensive overview of all league activities, including auctions, matches, and player stats.
                       </dd>
                     </dl>
                   </div>
