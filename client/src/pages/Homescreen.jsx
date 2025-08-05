@@ -71,32 +71,42 @@ const Homescreen = () => {
       <ImageSlider />
 
       {/* Welcome Section (Now below slider, full width) */}
-      <section className="py-20 bg-gray-900 text-center">
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 animate-fade-in-down">
+      <section className="py-8 bg-gray-900 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 animate-fade-in-down">
           Welcome, {user?.playerName || 'Champion'}!
         </h1>
-        <p className="mt-4 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto animate-fade-in-up animation-delay-300">
+        <p className="mt-2 text-sm md:text-base text-gray-300 max-w-xl mx-auto animate-fade-in-up animation-delay-300">
           The ultimate platform for player auctions. Build your dream team,
           dominate the league, and write your own legacy.
         </p>
-        <div className='items-center justify-center flex'>
-          <button
-            onClick={handleProfileClick}
-            className="mt-8 flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg transform hover:scale-105 hover:shadow-2xl transition-all duration-300 ease-in-out animate-fade-in-up animation-delay-600"
-          >
-            <span>Go to Your Dashboard</span>
-            <FaArrowRight />
-          </button>
+        <div className="items-center justify-center flex">
+          {user ? (
+            <button
+              onClick={handleProfileClick}
+              className="mt-4 flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold rounded-full shadow-md transform hover:scale-105 hover:shadow-lg transition-all duration-300 ease-in-out animate-fade-in-up animation-delay-600"
+            >
+              <span>Go to Your Dashboard</span>
+              <FaArrowRight className="text-sm" />
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="mt-4 flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold rounded-full shadow-md transform hover:scale-105 hover:shadow-lg transition-all duration-300 ease-in-out animate-fade-in-up animation-delay-600"
+            >
+              <span>Get Started</span>
+              <FaArrowRight className="text-sm" />
+            </button>
+          )}
         </div>
       </section>
 
       {/* Featured Players Section */}
-      <section className="py-20 bg-gray-800">
+      <section className="py-12 bg-gray-800">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12 flex items-center justify-center gap-4">
+          <h2 className="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-3">
             <FaUsers /> Featured Players
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredPlayers.map((player) => (
               <div
                 key={player._id}
@@ -110,12 +120,12 @@ const Homescreen = () => {
       </section>
 
       {/* Latest News Section */}
-      <section className="py-20 bg-gray-900">
+      <section className="py-12 bg-gray-900">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12 flex items-center justify-center gap-4">
+          <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
             <FaNewspaper /> Latest News
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {latestNews.map((news) => (
               <div
                 key={news.id}
@@ -124,7 +134,7 @@ const Homescreen = () => {
                 <img
                   src={news.image}
                   alt={news.title}
-                  className="w-full h-64 object-cover"
+                  className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
                   <h3 className="text-2xl font-bold mb-2">{news.title}</h3>
@@ -142,15 +152,15 @@ const Homescreen = () => {
         </div>
       </section>
       <section>
-        <HowItWorks/>
-</section>
+        <HowItWorks />
+      </section>
       {/* About Us Section */}
-      <section className="py-20 bg-gray-800 text-center">
-        <h2 className="text-4xl font-bold mb-4">
+      <section className="py-12 bg-gray-800 text-center">
+        <h2 className="text-3xl font-bold mb-3">
           <FaInfoCircle className="inline-block mr-2" />
           About AuctionSphere
         </h2>
-        <p className="text-lg text-gray-400 mb-8">
+        <p className="text-base text-gray-400 mb-6 max-w-3xl mx-auto">
           AuctionSphere is a revolutionary platform designed to bring the
           excitement of sports auctions to fans and team owners worldwide.
         </p>

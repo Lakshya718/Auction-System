@@ -86,16 +86,8 @@ const AuctionDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-6 px-6 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition duration-300 flex items-center space-x-2 shadow-md"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-        </svg>
-        <span>Back to Auctions</span>
-      </button>
-
+      <div className='h-[8vh]'></div>
+    
       {!isEditing ? (
         <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-8 text-white">
