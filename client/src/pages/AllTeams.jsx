@@ -90,7 +90,7 @@ const AllTeams = () => {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <div className="min-h-screen flex items-center justify-center"><LoadingSpinner /></div>
       ) : error ? (
         <p className="text-center text-red-500 text-lg font-semibold flex items-center justify-center gap-2"><FaExclamationCircle /> {error}</p>
       ) : teams.length === 0 ? (

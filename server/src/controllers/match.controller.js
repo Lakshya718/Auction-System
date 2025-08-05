@@ -66,14 +66,21 @@ export const getMatch = async (req, res) => {
     const match = await Match.findById(id)
       .populate("team1 team2", "name logo")
       .populate("scorecard.player", "playerName")
-      .populate("tournament", "tournamentName")
+      .populate({
+        path: "tournament",
+        select: "tournamentName players",
+        populate: {
+          path: "players.player",
+          select: "playerName",
+        },
+      })
       .populate("tossWinner", "name")
       .populate("manOfTheMatch", "playerName");
 
     if (!match) {
       return res.status(404).json({ error: "Match not found" });
     }
-
+    
     res.status(200).json({ success: true, match });
   } catch (error) {
     console.error("Error fetching match:", error);

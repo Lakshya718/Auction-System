@@ -104,35 +104,36 @@ const PlayerDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
+      <div className="h-[10vh]"></div>
       {!editMode ? (
-        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden md:flex">
+        <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden md:flex">
           <div className="md:flex-shrink-0 p-6 flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800">
             <img
               src={player.profilePhoto || "/default-profile.png"}
               alt={player.playerName}
-              className="w-64 h-64 object-cover rounded-full border-4 border-white shadow-lg"
+              className="w-48 h-48 object-cover rounded-full border-4 border-white shadow-lg"
             />
           </div>
-          <div className="p-8 flex-grow">
-            <h2 className="text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
+          <div className="p-6 flex-grow">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4 leading-tight">
               {player.playerName}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-blue-700">Age</p>
-                <p className="text-2xl font-semibold text-gray-800">{player.age}</p>
+                <p className="text-xl font-semibold text-gray-800">{player.age}</p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-blue-700">Role</p>
-                <p className="text-2xl font-semibold text-gray-800">{player.playerRole}</p>
+                <p className="text-xl font-semibold text-gray-800">{player.playerRole}</p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-blue-700">Status</p>
-                <p className="text-2xl font-semibold text-gray-800">{player.status}</p>
+                <p className="text-xl font-semibold text-gray-800">{player.status}</p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-blue-700">Base Price</p>
-                <p className="text-2xl font-semibold text-gray-800">${player.basePrice}</p>
+                <p className="text-xl font-semibold text-gray-800">${player.basePrice}</p>
               </div>
             </div>
             <div className="mb-8">
@@ -144,7 +145,7 @@ const PlayerDetails = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => setEditMode(true)}
-                className="bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+                className="bg-blue-600 text-white px-6 py-2 rounded-full text-base font-semibold hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
               >
                 Edit Player Profile
               </button>
@@ -152,14 +153,14 @@ const PlayerDetails = () => {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-8 p-8 bg-white shadow-xl rounded-xl max-w-2xl mx-auto my-8">
+        <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-white shadow-xl rounded-xl max-w-xl mx-auto my-8">
           <h2 className="text-4xl font-extrabold mb-8 text-center text-blue-800">Edit Player: {player.playerName}</h2>
 
           <div className="flex flex-col items-center mb-8">
             <img
               src={previewPhoto || player.profilePhoto || "/default-profile.png"}
               alt={player.playerName}
-              className="w-56 h-56 object-cover rounded-full border-4 border-blue-400 shadow-md mb-6"
+              className="w-40 h-40 object-cover rounded-full border-4 border-blue-400 shadow-md mb-4"
             />
             <label
               htmlFor="profilePhoto"
@@ -177,7 +178,7 @@ const PlayerDetails = () => {
             </label>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-gray-700 text-lg font-bold mb-2" htmlFor="playerName">Player Name</label>
               <input
@@ -249,14 +250,14 @@ const PlayerDetails = () => {
             <button
               type="submit"
               disabled={updating}
-              className="bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+              className="bg-blue-600 text-white px-6 py-2 rounded-full text-base font-semibold hover:bg-blue-700 disabled:opacity-50 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
             >
               {updating ? "Updating..." : "Update Player"}
             </button>
             <button
               type="button"
               onClick={() => setEditMode(false)}
-              className="bg-gray-400 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-gray-500 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+              className="bg-gray-400 text-white px-6 py-2 rounded-full text-base font-semibold hover:bg-gray-500 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
             >
               Cancel
             </button>

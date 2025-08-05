@@ -48,7 +48,7 @@ const CreateMatch = () => {
       setError('Teams cannot be the same');
       return;
     }
-    if (!formData.tournament || !formData.team1 || !formData.team2 || !formData.matchDate) {
+    if (!formData.tournament || !formData.team1 || !formData.team2 || !formData.matchDate || !formData.venue) {
       setError('Please fill in all required fields');
       return;
     }
@@ -64,7 +64,7 @@ const CreateMatch = () => {
           matchDate: '',
           venue: '',
         });
-        navigate(`/matches/${res.data.match._id}`);
+        
       } else {
         setError(res.data.error || 'Failed to create match');
       }
@@ -108,6 +108,7 @@ const CreateMatch = () => {
               required
               className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
             >
+              <option value="">Select a Tournament</option>
               {Array.isArray(tournaments) && tournaments.map(t => (
                 <option key={t._id} value={t._id}>{t.tournamentName}</option>
               ))}
@@ -126,6 +127,7 @@ const CreateMatch = () => {
               required
               className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
             >
+              <option value="">Select Team 1</option>
               {teams.map(team => (
                 <option key={team._id} value={team._id}>{team.name}</option>
               ))}
@@ -144,6 +146,7 @@ const CreateMatch = () => {
               required
               className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors appearance-none"
             >
+              <option value="">Select Team 2</option>
               {teams.map(team => (
                 <option key={team._id} value={team._id}>{team.name}</option>
               ))}

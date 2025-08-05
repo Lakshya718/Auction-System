@@ -30,27 +30,27 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
-const redisClient = redis.createClient({
-  url:
-    process.env.REDIS_URL ||
-    `redis://${process.env.REDIS_HOST || "localhost"}:${
-      process.env.REDIS_PORT || 6379
-    }`,
-});
-// Connect Redis client and handle connection events
-redisClient
-  .connect()
-  .then(() => {
-    console.log("Connected to Redis");
-  })
-  .catch((err) => {
-    console.error("Redis connection error:", err);
-  });
+// const redisClient = redis.createClient({
+//   url:
+//     process.env.REDIS_URL ||
+//     `redis://${process.env.REDIS_HOST || "localhost"}:${
+//       process.env.REDIS_PORT || 6379
+//     }`,
+// });
+// // Connect Redis client and handle connection events
+// redisClient
+//   .connect()
+//   .then(() => {
+//     console.log("Connected to Redis");
+//   })
+//   .catch((err) => {
+//     console.error("Redis connection error:", err);
+//   });
 
 // Add error event listener to handle runtime errors and prevent app crash
-redisClient.on("error", (err) => {
-  console.error("Redis Client Error", err);
-});
+// redisClient.on("error", (err) => {
+//   console.error("Redis Client Error", err);
+// });
 
 // Socket.io setup
 setupSocketHandlers(io);
@@ -58,7 +58,7 @@ setupSocketHandlers(io);
 // Attach io to app for controller access
 app.set("io", io);
 // Attach Redis client to app for access in controllers/middleware
-app.set("redisClient", redisClient);
+// app.set("redisClient", redisClient);
 
 // await initKafkaProducer();
 
