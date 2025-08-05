@@ -466,6 +466,7 @@ const AuctionBidPage = () => {
 
   return (
     <div className="auction-bid-page p-4">
+      <div className='h-[5vh]'></div>
       <h2>Auction Bidding</h2>
       <p>Status: {connected ? "Connected" : "Disconnected"}</p>
 

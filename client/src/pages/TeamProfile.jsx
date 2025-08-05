@@ -88,6 +88,7 @@ const TeamProfile = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+      <div className='h-[5vh]'></div>
       <h2 className="text-3xl font-bold mb-6 text-center">{team.name}</h2>
       {team.logo && !editMode && (
         <div className="flex justify-center mb-6">

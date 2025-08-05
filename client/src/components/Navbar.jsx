@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { FaUserPlus, FaSignInAlt, FaUserCircle } from "react-icons/fa";
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { FaUserPlus, FaSignInAlt, FaUserCircle } from 'react-icons/fa';
 import React, { useState, useEffect } from 'react';
 
 const Navbar = () => {
@@ -9,7 +9,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
 
   const handleProfileClick = () => {
-    navigate("/profile");
+    navigate('/profile');
   };
 
   useEffect(() => {
@@ -35,9 +35,14 @@ const Navbar = () => {
   }, []);
 
   return (
-    <header className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${scrolled ? 'bg-gray-800 shadow-lg' : 'bg-transparent'}`}>
-      <nav className="container mx-auto pl-10 px-6 py-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 hover:from-pink-600 hover:to-purple-400 transition-all duration-300">
+    <header
+      className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${scrolled ? 'bg-gray-800 shadow-lg' : 'bg-transparent'}`}
+    >
+      <nav className="container mx-auto pl-20 px-6 py-4 flex justify-between items-center">
+        <Link
+          to="/"
+          className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 hover:from-pink-600 hover:to-purple-400 transition-all duration-300"
+        >
           AuctionSphere
         </Link>
         <div className="flex items-center space-x-4">
@@ -59,21 +64,42 @@ const Navbar = () => {
               </Link>
             </>
           ) : (
-            <button
-              onClick={handleProfileClick}
-              className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-purple-500 hover:border-pink-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              aria-label="Go to Profile"
-            >
-              {user.profilePhoto ? (
-                <img
-                  src={user.profilePhoto}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <FaUserCircle className="w-full h-full text-gray-400" />
-              )}
-            </button>
+            <div className="flex items-center space-x-6">
+              <Link to="/all-auctions" className="group relative px-4 py-2">
+                <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                  All Auctions
+                </span>
+                <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
+              </Link>
+              <Link to="/all-matches" className="group relative px-4 py-2">
+                <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                  All Matches
+                </span>
+                <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
+              </Link>
+              <Link to="/pending-players" className="group relative px-4 py-2">
+                <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                  Pending Players
+                </span>
+                <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
+              </Link>
+              <div className="h-6 w-[1px] bg-gradient-to-b from-transparent via-gray-500/50 to-transparent"></div>
+              <button
+                onClick={handleProfileClick}
+                className="relative w-8 h-8 rounded-full overflow-hidden border-[1.5px] border-purple-500 hover:border-pink-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                aria-label="Go to Profile"
+              >
+                {user.profilePhoto ? (
+                  <img
+                    src={user.profilePhoto}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FaUserCircle className="w-full h-full text-gray-400" />
+                )}
+              </button>
+            </div>
           )}
         </div>
       </nav>

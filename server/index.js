@@ -22,7 +22,10 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || ["http://localhost:5173","https://auction-system-deploy.onrender.com"],
+    origin: process.env.CORS_ORIGIN || [
+      "http://localhost:5173",
+      "https://auction-system-deploy.onrender.com",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -66,9 +69,17 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://auction-system-lakshya.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://auction-system-lakshya.vercel.app",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept","Access-Control-Allow-Origin"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Accept",
+      "Access-Control-Allow-Origin",
+    ],
     credentials: true,
   })
 );

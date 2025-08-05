@@ -215,6 +215,7 @@ const AddPlayer = () => {
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white">
+      <div className='h-[5vh]'></div>
       <h2 className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
         Add New Player
       </h2>

@@ -75,6 +75,9 @@ const AllAuctions = () => {
     );
   };
 
+  const [redisLoading, setRedisLoading] = useState(false);
+  const [redisError, setRedisError] = useState('');
+
   const renderAuctionList = (auctionList) =>
     auctionList.length === 0 ? (
       <p className="text-center text-gray-400 text-lg">
@@ -128,46 +131,93 @@ const AllAuctions = () => {
                     <FaEye /> View Auction
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       const currentDate = new Date();
-
-                      // Parse auction date
                       const auctionDate = new Date(auction.date);
 
-                      // Parse auction start time (assumed format "HH:mm" or "HH:mm:ss")
-                      const timeParts = auction.startTime.split(':');
-                      const hours = parseInt(timeParts[0], 10);
-                      const minutes = parseInt(timeParts[1], 10);
-                      const seconds =
-                        timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
+                      // Parse auction start time
+                      const [time, period] = auction.startTime.split(' ');
+                      const [hours, minutes] = time.split(':').map(Number);
 
-                      // Set hours, minutes, seconds on auctionDate
-                      auctionDate.setHours(hours, minutes, seconds, 0);
+                      // Convert to 24-hour format if needed
+                      let hour24 = hours;
+                      if (period === 'PM' && hours !== 12) hour24 += 12;
+                      if (period === 'AM' && hours === 12) hour24 = 0;
+
+                      auctionDate.setHours(hour24, minutes, 0, 0);
 
                       if (currentDate < auctionDate) {
                         alert(
                           'This auction cannot be started before its scheduled time!'
                         );
-                      } else {
-                        navigate(`/auction-bid-page/${auction._id}`);
+                        return;
+                      }
+
+                      setRedisLoading(true);
+                      setRedisError('');
+
+                      try {
+                        // First ensure Redis is connected
+                        const redisResponse = await API.post(
+                          '/auctions/start-redis'
+                        );
+
+                        if (redisResponse.data.success) {
+                          // Then update auction status to active
+                          const statusResponse = await API.patch(
+                            `/auctions/${auction._id}/status`,
+                            {
+                              status: 'active',
+                            }
+                          );
+
+                          if (statusResponse.data.success) {
+                            navigate(`/auction-bid-page/${auction._id}`);
+                          } else {
+                            setRedisError('Failed to start the auction');
+                          }
+                        } else {
+                          setRedisError('Failed to connect to auction server');
+                        }
+                      } catch (error) {
+                        console.error('Error starting auction:', error);
+                        setRedisError(
+                          error.response?.data?.message ||
+                            'Failed to start auction'
+                        );
+                      } finally {
+                        setRedisLoading(false);
                       }
                     }}
                     disabled={
                       auction.status === 'completed' ||
-                      auction.status === 'active'
+                      auction.status === 'active' ||
+                      redisLoading
                     }
                     className={`flex items-center gap-2 px-5 py-2 rounded-lg transition-colors shadow-md ${
                       auction.status === 'completed' ||
-                      auction.status === 'active'
+                      auction.status === 'active' ||
+                      redisLoading
                         ? 'bg-gray-500 cursor-not-allowed'
                         : 'bg-green-600 hover:bg-green-700'
                     }`}
                   >
-                    <FaPlayCircle /> Start Auction
+                    {redisLoading ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <>
+                        <FaPlayCircle /> Start Auction
+                      </>
+                    )}
                   </button>
                 </>
               )}
             </div>
+            {redisError && (
+              <p className="text-red-500 mt-2 text-center font-semibold">
+                {redisError}
+              </p>
+            )}
           </div>
         );
       })
@@ -175,12 +225,13 @@ const AllAuctions = () => {
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white">
-      <header className="mb-12 text-center">
-        <h1 className="text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+      <div className='h-[5vh]'></div>
+      <header className="mb-5 text-center">
+        <h1 className="text-4xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
           <FaGavel className="inline-block mr-3" />
           All Auctions
         </h1>
-        <p className="text-xl text-gray-400">
+        <p className="text-lg text-gray-400">
           Explore and manage all upcoming, running, and past auctions.
         </p>
       </header>
@@ -194,7 +245,7 @@ const AllAuctions = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-3xl font-bold mb-6 text-center text-yellow-400 flex items-center justify-center gap-2">
+            <h2 className="text-2xl font-bold mb-6 text-center text-yellow-400 flex items-center justify-center gap-2">
               <FaCalendarAlt /> Upcoming Auctions
             </h2>
             <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
@@ -202,7 +253,7 @@ const AllAuctions = () => {
             </div>
           </section>
           <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-3xl font-bold mb-6 text-center text-green-400 flex items-center justify-center gap-2">
+            <h2 className="text-2xl font-bold mb-6 text-center text-green-400 flex items-center justify-center gap-2">
               <FaPlayCircle /> Running Auctions
             </h2>
             <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
@@ -210,7 +261,7 @@ const AllAuctions = () => {
             </div>
           </section>
           <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-3xl font-bold mb-6 text-center text-gray-400 flex items-center justify-center gap-2">
+            <h2 className="text-2xl font-bold mb-6 text-center text-gray-400 flex items-center justify-center gap-2">
               <FaInfoCircle /> Past Auctions
             </h2>
             <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">

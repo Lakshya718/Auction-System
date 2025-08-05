@@ -85,6 +85,7 @@ const PendingPlayerRequests = () => {
   if (error) {
     return (
       <div className="p-6 bg-gray-900 min-h-screen text-white flex flex-col items-center justify-center">
+        <div className='h-[5vh]'></div>
         <p className="text-red-500 text-lg font-semibold mb-4 flex items-center gap-2"><FaExclamationCircle /> {error}</p>
         <button
           onClick={fetchPendingPlayers}

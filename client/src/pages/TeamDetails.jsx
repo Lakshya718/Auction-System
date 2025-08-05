@@ -29,6 +29,7 @@ const TeamDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8 pt-20">
+      <div className='h-[5vh]'></div>
       <div className="max-w-6xl mx-auto bg-gray-800 rounded-lg shadow-lg overflow-hidden md:flex">
         {team.teamLogo && (
           <div className="md:flex-shrink-0">

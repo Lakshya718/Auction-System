@@ -51,14 +51,7 @@ const App = () => {
             </PublicRoute>
           }
         />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Homescreen />
-            </PrivateRoute>
-          }
-        />
+        <Route path="/" element={<Homescreen />} />
         <Route
           path="/register"
           element={

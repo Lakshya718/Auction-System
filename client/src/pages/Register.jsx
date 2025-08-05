@@ -46,6 +46,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+      <div className='h-[5vh]'></div>
       <div className="w-full max-w-4xl flex flex-col md:flex-row rounded-2xl shadow-2xl overflow-hidden">
         {/* Info Panel */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center items-center bg-gradient-to-br from-purple-600 to-pink-600 text-white">
