@@ -24,7 +24,8 @@ const io = new Server(httpServer, {
   cors: {
     origin: process.env.CORS_ORIGIN || [
       "http://localhost:5173",
-      "https://auction-system-deploy.onrender.com",
+      "https://auction-system-lakshya.vercel.app",
+      "https://auction-server.onrender.com",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
@@ -47,6 +48,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://auction-system-lakshya.vercel.app",
+      "https://auction-server.onrender.com",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
