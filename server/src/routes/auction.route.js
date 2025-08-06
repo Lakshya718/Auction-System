@@ -144,6 +144,85 @@ router.post("/start-redis", auth, adminOnly, async (req, res) => {
   }
 });
 
+// Check services status (for resuming auction)
+router.post("/check-services-status", auth, adminOnly, async (req, res) => {
+  try {
+    console.log("Checking services status for auction resumption...");
+
+    // Check Redis status
+    let redisStatus = "error";
+    if (isRedisReady()) {
+      console.log("Redis is ready and connected");
+      redisStatus = "connected";
+    } else {
+      console.log("Redis is not connected, attempting to reconnect...");
+      try {
+        await connectRedis();
+        if (isRedisReady()) {
+          console.log("Redis reconnected successfully");
+          redisStatus = "connected";
+        }
+      } catch (redisError) {
+        console.error("Failed to reconnect to Redis:", redisError);
+      }
+    }
+
+    // Check Kafka status with a simple test
+    let kafkaStatus = "error";
+    try {
+      // Create a simple test message
+      const testMessage = {
+        auctionId: "test-resume-auction-id",
+        playerId: "test-player-id",
+        teamId: "test-team-id",
+        amount: 100,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Try to send it using the sendBidToKafka function without throwing
+      const kafkaResult = await sendBidToKafka(testMessage);
+      if (kafkaResult.success) {
+        console.log("Kafka is connected and working");
+        kafkaStatus = "connected";
+      } else {
+        console.log("Kafka is not connected properly, trying to initialize...");
+        try {
+          await initKafkaProducer();
+          const retryResult = await sendBidToKafka(testMessage);
+          if (retryResult.success) {
+            console.log("Kafka reconnected successfully");
+            kafkaStatus = "connected";
+          }
+        } catch (kafkaInitError) {
+          console.error("Failed to initialize Kafka:", kafkaInitError);
+        }
+      }
+    } catch (kafkaError) {
+      console.error("Error checking Kafka status:", kafkaError);
+    }
+
+    console.log(
+      `Services status check - Redis: ${redisStatus}, Kafka: ${kafkaStatus}`
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Services status checked for auction resumption",
+      services: {
+        redis: redisStatus,
+        kafka: kafkaStatus,
+      },
+    });
+  } catch (error) {
+    console.error("Error checking services status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error checking services status",
+      error: error.message,
+    });
+  }
+});
+
 // New POST /bid route
 router.post("/bid", auth, async (req, res) => {
   try {

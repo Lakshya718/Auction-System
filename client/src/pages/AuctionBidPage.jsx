@@ -2,10 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import API from '../../api/axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import LeaveConfirmModal from '../components/LeaveConfirmModal';
 
 const AuctionBidPage = () => {
   const { auctionId } = useParams();
+  const navigate = useNavigate();
   const [socket, setSocket] = useState(null);
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
@@ -26,6 +28,9 @@ const AuctionBidPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [placeBidDisabled, setPlaceBidDisabled] = useState(false);
+  const [showLeaveConfirmModal, setShowLeaveConfirmModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const isPageReloading = useRef(false);
   useEffect(() => {
     if (team && team._id) {
       console.log('Setting loggedInTeamId from Redux store:', team._id);
@@ -80,6 +85,74 @@ const AuctionBidPage = () => {
       setPlayerId(storedPlayerId);
     }
   }, []);
+
+  // Add confirmation before leaving the page
+  useEffect(() => {
+    // Only add the confirmation for admins
+    if (role !== 'admin') return;
+
+    // Handler for keydown to detect page reload shortcuts (F5, Ctrl+R)
+    const handleKeyDown = (e) => {
+      // F5 key or Ctrl+R
+      if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+        isPageReloading.current = true;
+        // Reset after a short delay to handle cases where reload is canceled
+        setTimeout(() => {
+          isPageReloading.current = false;
+        }, 1000);
+      }
+    };
+
+    // Handle beforeunload event (closing tab or page)
+    const handleBeforeUnload = (e) => {
+      // Don't show confirmation if reloading the page
+      if (isPageReloading.current) {
+        isPageReloading.current = false;
+        return;
+      }
+
+      const message =
+        "You may miss many valuable players, don't leave. Wait till finish of auction.";
+      e.preventDefault();
+      e.returnValue = message; // Required for Chrome
+      return message; // For older browsers
+    };
+
+    // Handle navigation attempts with back button
+    const handlePopState = (e) => {
+      // Show the custom modal and store the intended navigation
+      if (role === 'admin') {
+        e.preventDefault();
+        setShowLeaveConfirmModal(true);
+        setPendingNavigation('/'); // Default to home, will be handled by the modal confirm action
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Push a new entry to the history stack to enable detecting the back button
+    window.history.pushState(null, null, window.location.pathname);
+
+    // Clean up function
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [role]);
+
+  // Handle custom navigation with confirmation
+  const handleNavigation = (path) => {
+    if (role === 'admin') {
+      setShowLeaveConfirmModal(true);
+      setPendingNavigation(path);
+    } else {
+      navigate(path);
+    }
+  };
 
   useEffect(() => {
     if (!auctionId || !token) return;
@@ -964,18 +1037,44 @@ const AuctionBidPage = () => {
       {/* Messages Section (Admin Only) */}
       {role === 'admin' && (
         <div className="bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700">
-          <h3 className="text-xl font-bold mb-4 text-purple-400 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-purple-400 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+              </svg>
+              Activity Log
+            </h3>
+            <button
+              onClick={() => {
+                // Set reload flag to true before refreshing
+                isPageReloading.current = true;
+                window.location.reload();
+              }}
+              className="flex items-center gap-1 bg-indigo-600 text-white px-3 py-1 text-sm rounded hover:bg-indigo-700 transition-colors shadow-sm"
             >
-              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-            </svg>
-            Activity Log
-          </h3>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Refresh
+            </button>
+          </div>
           <div className="bg-gray-900 rounded-lg p-4 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-gray-800 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
             {messages.length === 0 ? (
               <p className="text-gray-400 text-center italic">
@@ -996,6 +1095,22 @@ const AuctionBidPage = () => {
           </div>
         </div>
       )}
+
+      {/* Leave confirmation modal */}
+      <LeaveConfirmModal
+        show={showLeaveConfirmModal}
+        onConfirm={() => {
+          setShowLeaveConfirmModal(false);
+          if (pendingNavigation) {
+            navigate(pendingNavigation);
+          }
+        }}
+        onCancel={() => {
+          setShowLeaveConfirmModal(false);
+          // Push state again to reset the history navigation
+          window.history.pushState(null, null, window.location.pathname);
+        }}
+      />
     </div>
   );
 };
