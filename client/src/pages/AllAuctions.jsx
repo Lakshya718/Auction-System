@@ -4,6 +4,7 @@ import API from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ServicesLoadingScreen from '../components/ServicesLoadingScreen';
+import ResumeAuctionLoadingScreen from '../components/ResumeAuctionLoadingScreen';
 import {
   FaGavel,
   FaCalendarAlt,
@@ -11,6 +12,7 @@ import {
   FaInfoCircle,
   FaPlayCircle,
   FaEye,
+  FaRedoAlt,
 } from 'react-icons/fa';
 
 const AllAuctions = () => {
@@ -80,6 +82,7 @@ const AllAuctions = () => {
   const [redisError, setRedisError] = useState('');
   const [showServicesLoadingScreen, setShowServicesLoadingScreen] =
     useState(false);
+  const [showResumeLoadingScreen, setShowResumeLoadingScreen] = useState(false);
   const [selectedAuctionId, setSelectedAuctionId] = useState(null);
 
   const renderAuctionList = (auctionList) =>
@@ -136,54 +139,72 @@ const AllAuctions = () => {
                   >
                     <FaEye className="text-xs" /> View Auction
                   </button>
-                  <button
-                    onClick={async () => {
-                      const currentDate = new Date();
-                      const auctionDate = new Date(auction.date);
+                  {auction.status === 'active' ? (
+                    <button
+                      onClick={() => {
+                        // Set the selected auction and show the resume loading screen
+                        setSelectedAuctionId(auction._id);
+                        setShowResumeLoadingScreen(true);
+                      }}
+                      disabled={redisLoading}
+                      className={`flex items-center gap-1 px-3 py-1 text-sm rounded transition-colors shadow-sm ${
+                        redisLoading
+                          ? 'bg-gray-500 cursor-not-allowed'
+                          : 'bg-indigo-600 hover:bg-indigo-700'
+                      }`}
+                    >
+                      {redisLoading ? (
+                        <LoadingSpinner />
+                      ) : (
+                        <>
+                          <FaRedoAlt className="text-xs" /> Resume Auction
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        const currentDate = new Date();
+                        const auctionDate = new Date(auction.date);
 
-                      // Parse auction start time
-                      const [time, period] = auction.startTime.split(' ');
-                      const [hours, minutes] = time.split(':').map(Number);
+                        // Parse auction start time
+                        const [time, period] = auction.startTime.split(' ');
+                        const [hours, minutes] = time.split(':').map(Number);
 
-                      // Convert to 24-hour format if needed
-                      let hour24 = hours;
-                      if (period === 'PM' && hours !== 12) hour24 += 12;
-                      if (period === 'AM' && hours === 12) hour24 = 0;
+                        // Convert to 24-hour format if needed
+                        let hour24 = hours;
+                        if (period === 'PM' && hours !== 12) hour24 += 12;
+                        if (period === 'AM' && hours === 12) hour24 = 0;
 
-                      auctionDate.setHours(hour24, minutes, 0, 0);
+                        auctionDate.setHours(hour24, minutes, 0, 0);
 
-                      if (currentDate < auctionDate) {
-                        alert(
-                          'This auction cannot be started before its scheduled time!'
-                        );
-                        return;
-                      }
+                        if (currentDate < auctionDate) {
+                          alert(
+                            'This auction cannot be started before its scheduled time!'
+                          );
+                          return;
+                        }
 
-                      // Set the selected auction and show the services loading screen
-                      setSelectedAuctionId(auction._id);
-                      setShowServicesLoadingScreen(true);
-                    }}
-                    disabled={
-                      auction.status === 'completed' ||
-                      auction.status === 'active' ||
-                      redisLoading
-                    }
-                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded transition-colors shadow-sm ${
-                      auction.status === 'completed' ||
-                      auction.status === 'active' ||
-                      redisLoading
-                        ? 'bg-gray-500 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700'
-                    }`}
-                  >
-                    {redisLoading ? (
-                      <LoadingSpinner />
-                    ) : (
-                      <>
-                        <FaPlayCircle className="text-xs" /> Start Auction
-                      </>
-                    )}
-                  </button>
+                        // Set the selected auction and show the services loading screen
+                        setSelectedAuctionId(auction._id);
+                        setShowServicesLoadingScreen(true);
+                      }}
+                      disabled={auction.status === 'completed' || redisLoading}
+                      className={`flex items-center gap-1 px-3 py-1 text-sm rounded transition-colors shadow-sm ${
+                        auction.status === 'completed' || redisLoading
+                          ? 'bg-gray-500 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
+                    >
+                      {redisLoading ? (
+                        <LoadingSpinner />
+                      ) : (
+                        <>
+                          <FaPlayCircle className="text-xs" /> Start Auction
+                        </>
+                      )}
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -297,6 +318,34 @@ const AllAuctions = () => {
               'Failed to connect to required services. Please try again.'
             );
             setShowServicesLoadingScreen(false);
+          }}
+        />
+      )}
+
+      {showResumeLoadingScreen && (
+        <ResumeAuctionLoadingScreen
+          onComplete={() => {
+            // Clear any previous errors
+            setRedisError('');
+
+            // Wait a bit before redirecting to ensure all state updates are complete
+            setTimeout(() => {
+              // Hide the loading screen first
+              setShowResumeLoadingScreen(false);
+
+              // Then redirect to the auction bid page
+              console.log(
+                `Redirecting to auction bid page: /auction-bid-page/${selectedAuctionId}`
+              );
+              navigate(`/auction-bid-page/${selectedAuctionId}`);
+            }, 1500);
+          }}
+          onError={(error) => {
+            console.error('Services check error:', error);
+            setRedisError(
+              'Failed to connect to required services. Please try again.'
+            );
+            setShowResumeLoadingScreen(false);
           }}
         />
       )}
