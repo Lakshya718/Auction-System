@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import API from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ServicesLoadingScreen from '../components/ServicesLoadingScreen';
 import {
   FaGavel,
   FaCalendarAlt,
@@ -68,7 +69,7 @@ const AllAuctions = () => {
     }
     return (
       <span
-        className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${colorClass}`}
+        className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${colorClass}`}
       >
         {text}
       </span>
@@ -77,6 +78,9 @@ const AllAuctions = () => {
 
   const [redisLoading, setRedisLoading] = useState(false);
   const [redisError, setRedisError] = useState('');
+  const [showServicesLoadingScreen, setShowServicesLoadingScreen] =
+    useState(false);
+  const [selectedAuctionId, setSelectedAuctionId] = useState(null);
 
   const renderAuctionList = (auctionList) =>
     auctionList.length === 0 ? (
@@ -94,41 +98,43 @@ const AllAuctions = () => {
         return (
           <div
             key={auction._id}
-            className="bg-gray-800 rounded-xl shadow-lg p-6 mb-6 border border-gray-700 transform hover:scale-105 transition-all duration-300"
+            className="bg-gray-800 rounded-lg shadow p-4 mb-3 border border-gray-700 transform hover:scale-102 transition-all duration-200 flex flex-col h-full"
           >
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="text-2xl font-bold text-purple-400 mb-2">
+                <h3 className="text-lg font-bold text-purple-400 mb-1 truncate">
                   {auction.tournamentName}
                 </h3>
-                <p className="text-gray-300 text-sm mb-3">
+                <p className="text-gray-300 text-xs mb-2 line-clamp-2">
                   {auction.description}
                 </p>
-                <p className="text-gray-400 text-sm flex items-center gap-2">
-                  <FaCalendarAlt /> {formattedDate}
-                </p>
-                <p className="text-gray-400 text-sm flex items-center gap-2">
-                  <FaClock /> {auction.startTime}
-                </p>
+                <div className="flex gap-4">
+                  <p className="text-gray-400 text-xs flex items-center gap-1">
+                    <FaCalendarAlt className="text-gray-500" /> {formattedDate}
+                  </p>
+                  <p className="text-gray-400 text-xs flex items-center gap-1">
+                    <FaClock className="text-gray-500" /> {auction.startTime}
+                  </p>
+                </div>
               </div>
               <div>{statusBadge(auction.status)}</div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-4">
+            <div className="flex flex-wrap gap-2 mt-3">
               {role === 'team_owner' && (
                 <button
-                  className="flex items-center gap-2 bg-pink-600 text-white px-5 py-2 rounded-lg hover:bg-pink-700 transition-colors shadow-md"
+                  className="flex items-center gap-1 bg-pink-600 text-white px-3 py-1 text-sm rounded hover:bg-pink-700 transition-colors shadow-sm"
                   onClick={() => navigate(`/auction-bid-page/${auction._id}`)}
                 >
-                  <FaGavel /> Enter Auction
+                  <FaGavel className="text-xs" /> Enter Auction
                 </button>
               )}
               {role === 'admin' && (
                 <>
                   <button
                     onClick={() => navigate(`/auctions/${auction._id}`)}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                    className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700 transition-colors shadow-sm"
                   >
-                    <FaEye /> View Auction
+                    <FaEye className="text-xs" /> View Auction
                   </button>
                   <button
                     onClick={async () => {
@@ -153,48 +159,16 @@ const AllAuctions = () => {
                         return;
                       }
 
-                      setRedisLoading(true);
-                      setRedisError('');
-
-                      try {
-                        // First ensure Redis is connected
-                        const redisResponse = await API.post(
-                          '/auctions/start-redis'
-                        );
-
-                        if (redisResponse.data.success) {
-                          // Then update auction status to active
-                          const statusResponse = await API.patch(
-                            `/auctions/${auction._id}/status`,
-                            {
-                              status: 'active',
-                            }
-                          );
-
-                          if (statusResponse.data.success) {
-                            navigate(`/auction-bid-page/${auction._id}`);
-                          } else {
-                            setRedisError('Failed to start the auction');
-                          }
-                        } else {
-                          setRedisError('Failed to connect to auction server');
-                        }
-                      } catch (error) {
-                        console.error('Error starting auction:', error);
-                        setRedisError(
-                          error.response?.data?.message ||
-                            'Failed to start auction'
-                        );
-                      } finally {
-                        setRedisLoading(false);
-                      }
+                      // Set the selected auction and show the services loading screen
+                      setSelectedAuctionId(auction._id);
+                      setShowServicesLoadingScreen(true);
                     }}
                     disabled={
                       auction.status === 'completed' ||
                       auction.status === 'active' ||
                       redisLoading
                     }
-                    className={`flex items-center gap-2 px-5 py-2 rounded-lg transition-colors shadow-md ${
+                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded transition-colors shadow-sm ${
                       auction.status === 'completed' ||
                       auction.status === 'active' ||
                       redisLoading
@@ -206,7 +180,7 @@ const AllAuctions = () => {
                       <LoadingSpinner />
                     ) : (
                       <>
-                        <FaPlayCircle /> Start Auction
+                        <FaPlayCircle className="text-xs" /> Start Auction
                       </>
                     )}
                   </button>
@@ -214,7 +188,7 @@ const AllAuctions = () => {
               )}
             </div>
             {redisError && (
-              <p className="text-red-500 mt-2 text-center font-semibold">
+              <p className="text-red-500 mt-1 text-xs font-medium">
                 {redisError}
               </p>
             )}
@@ -224,14 +198,14 @@ const AllAuctions = () => {
     );
 
   return (
-    <div className="p-6 bg-gray-900 min-h-screen text-white">
-      <div className='h-[5vh]'></div>
-      <header className="mb-5 text-center">
-        <h1 className="text-4xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-          <FaGavel className="inline-block mr-3" />
+    <div className="p-4 bg-gray-900 min-h-screen text-white">
+      <div className="h-[4vh]"></div>
+      <header className="mb-4 text-center">
+        <h1 className="text-3xl font-bold mb-1 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          <FaGavel className="inline-block mr-2" />
           All Auctions
         </h1>
-        <p className="text-lg text-gray-400">
+        <p className="text-sm text-gray-400">
           Explore and manage all upcoming, running, and past auctions.
         </p>
       </header>
@@ -243,32 +217,64 @@ const AllAuctions = () => {
           Error: {error}
         </p>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-6 text-center text-yellow-400 flex items-center justify-center gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <section className="bg-gray-800 p-4 rounded-lg shadow">
+            <h2 className="text-xl font-bold mb-3 text-center text-yellow-400 flex items-center justify-center gap-1">
               <FaCalendarAlt /> Upcoming Auctions
             </h2>
-            <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
+            <div className="overflow-y-auto max-h-[calc(100vh-220px)] pr-1 custom-scrollbar">
               {renderAuctionList(upcomingAuctions)}
             </div>
           </section>
-          <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-6 text-center text-green-400 flex items-center justify-center gap-2">
+          <section className="bg-gray-800 p-4 rounded-lg shadow">
+            <h2 className="text-xl font-bold mb-3 text-center text-green-400 flex items-center justify-center gap-1">
               <FaPlayCircle /> Running Auctions
             </h2>
-            <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
+            <div className="overflow-y-auto max-h-[calc(100vh-220px)] pr-1 custom-scrollbar">
               {renderAuctionList(runningAuctions)}
             </div>
           </section>
-          <section className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-6 text-center text-gray-400 flex items-center justify-center gap-2">
+          <section className="bg-gray-800 p-4 rounded-lg shadow">
+            <h2 className="text-xl font-bold mb-3 text-center text-gray-400 flex items-center justify-center gap-1">
               <FaInfoCircle /> Past Auctions
             </h2>
-            <div className="overflow-y-auto max-h-[calc(100vh-250px)] pr-2">
+            <div className="overflow-y-auto max-h-[calc(100vh-220px)] pr-1 custom-scrollbar">
               {renderAuctionList(pastAuctions)}
             </div>
           </section>
         </div>
+      )}
+
+      {showServicesLoadingScreen && (
+        <ServicesLoadingScreen
+          onComplete={async () => {
+            try {
+              // Update auction status to active
+              const statusResponse = await API.patch(
+                `/auctions/${selectedAuctionId}/status`,
+                { status: 'active' }
+              );
+
+              if (statusResponse.data.success) {
+                navigate(`/auction-bid-page/${selectedAuctionId}`);
+              } else {
+                setRedisError('Failed to start the auction');
+              }
+            } catch (error) {
+              console.error('Error starting auction:', error);
+              setRedisError(
+                error.response?.data?.message || 'Failed to start auction'
+              );
+            } finally {
+              setShowServicesLoadingScreen(false);
+            }
+          }}
+          onError={(error) => {
+            console.error('Services error:', error);
+            setRedisError('Failed to connect to auction server');
+            setShowServicesLoadingScreen(false);
+          }}
+        />
       )}
     </div>
   );

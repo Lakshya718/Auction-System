@@ -7,8 +7,16 @@ const bidSchema = new mongoose.Schema({
 });
 
 const auctionPlayerSchema = new mongoose.Schema({
-  player: { type: mongoose.Schema.Types.ObjectId, ref: "Player", required: true },
-  status: { type: String, enum: ["available", "sold", "unsold"], default: "available" },
+  player: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Player",
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["available", "sold", "unsold"],
+    default: "available",
+  },
   currentBid: { type: Number, default: 0 },
   currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
   biddingHistory: [bidSchema],
@@ -25,8 +33,18 @@ const auctionSchema = new mongoose.Schema(
   {
     tournamentName: { type: String, required: true, unique: true },
     description: { type: String },
+    sport: {
+      type: String,
+      enum: ["cricket", "football", "basketball", "volleyball", "kabaddi"],
+      required: true,
+      default: "cricket",
+    },
     date: { type: Date, required: true },
-    startTime: { type: String, required: true, match: /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/ },
+    startTime: {
+      type: String,
+      required: true,
+      match: /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/,
+    },
     status: {
       type: String,
       enum: ["pending", "active", "completed", "cancelled"],
@@ -35,9 +53,17 @@ const auctionSchema = new mongoose.Schema(
     players: [auctionPlayerSchema],
     retainedPlayers: [
       {
-        player: { type: mongoose.Schema.Types.ObjectId, ref: "Player", required: true },
-        team: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
-      }
+        player: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Player",
+          required: true,
+        },
+        team: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Team",
+          required: true,
+        },
+      },
     ],
     teams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team" }],
     teamBudgets: [teamBudgetSchema],
@@ -46,7 +72,6 @@ const auctionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 
 const Auction = mongoose.model("Auction", auctionSchema);
 export default Auction;

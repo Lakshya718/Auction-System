@@ -24,7 +24,7 @@ const logout = async () => {
 };
 
 const token = localStorage.getItem('token');
-console.log("Token from localStorage:", token);
+console.log('Token from localStorage:', token);
 if (token) {
   try {
     const base64Url = token.split('.')[1];
@@ -32,16 +32,28 @@ if (token) {
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
     const userData = JSON.parse(jsonPayload);
-    console.log("Decoded userData from token:", userData);
+    console.log('Decoded userData from token:', userData);
 
+    // Get stored user data
+    const storedUserData = localStorage.getItem('user');
+    // Parse stored user data if it exists, otherwise use token data
+    const userInfo = storedUserData ? JSON.parse(storedUserData) : userData;
+
+    // Get team data
     const teamData = localStorage.getItem('team');
     const team = teamData ? JSON.parse(teamData) : null;
+
+    // Prioritize role from stored user data, fallback to localStorage role, then token
     const storedRole = localStorage.getItem('role');
-    store.dispatch(setUser({ user: userData, role: userData.role || storedRole || null, team }));
+    // Make sure we properly set the role - prioritize what's in userInfo first
+    const role = userInfo.role || storedRole || userData.role || null;
+
+    console.log('Using role:', role);
+    store.dispatch(setUser({ user: userInfo, role: role, team }));
 
     // Calculate token expiration time in milliseconds
     const currentTime = Math.floor(Date.now() / 1000);

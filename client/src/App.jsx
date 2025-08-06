@@ -176,7 +176,7 @@ const App = () => {
           }
         />
         <Route
-          path="/matches/:id"
+          path="/matches/view/:id"
           element={
             <PrivateRoute>
               <MatchDetails />
@@ -196,14 +196,6 @@ const App = () => {
           element={
             <PrivateRoute>
               <AllMatches />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/matches/:id"
-          element={
-            <PrivateRoute>
-              <UpdateMatch />
             </PrivateRoute>
           }
         />

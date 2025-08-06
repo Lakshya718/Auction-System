@@ -37,6 +37,12 @@ const Login = () => {
       const userRole = res.data.user.role || null;
       const userTeam = res.data.team || null;
 
+      // Make sure to store all user data including the role property
+      if (userInfo && userRole) {
+        // Ensure role is also included in the user object
+        userInfo.role = userRole;
+      }
+
       localStorage.setItem('user', JSON.stringify(userInfo));
       localStorage.setItem('role', userRole);
       localStorage.setItem('team', JSON.stringify(userTeam));

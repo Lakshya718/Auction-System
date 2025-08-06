@@ -1,16 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import API from "../../api/axios";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { FaSearch, FaTimes, FaUsers, FaExclamationCircle, FaUserCircle } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import API from '../../api/axios';
+import LoadingSpinner from '../components/LoadingSpinner';
+import {
+  FaSearch,
+  FaTimes,
+  FaUsers,
+  FaExclamationCircle,
+  FaUserCircle,
+  FaFilter,
+  FaFootballBall,
+  FaBasketballBall,
+  FaVolleyballBall,
+  FaRunning,
+} from 'react-icons/fa';
+import { GiCricketBat } from 'react-icons/gi';
 
 const AllPlayers = () => {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tempSearch, setTempSearch] = useState("");
-  const [search, setSearch] = useState("");
+  const [tempSearch, setTempSearch] = useState('');
+  const [search, setSearch] = useState('');
   const [debounceTimeout, setDebounceTimeout] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const [selectedSport, setSelectedSport] = useState('all');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,24 +32,27 @@ const AllPlayers = () => {
       setError(null);
       try {
         const params = {};
-        if (search.trim() !== "") {
+        if (search.trim() !== '') {
           params.search = search.trim();
         }
-        const response = await API.get("/players/verified", { params });
+        if (selectedSport !== 'all') {
+          params.sport = selectedSport;
+        }
+        const response = await API.get('/players/verified', { params });
         if (Array.isArray(response.data.players)) {
           setPlayers(response.data.players);
         } else {
           setPlayers([]);
-          setError("Invalid data format received from server");
+          setError('Invalid data format received from server');
         }
       } catch {
-        setError("Failed to fetch Players");
+        setError('Failed to fetch Players');
       } finally {
         setLoading(false);
       }
     };
     fetchPlayers();
-  }, [search]);
+  }, [search, selectedSport]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -52,22 +68,41 @@ const AllPlayers = () => {
   };
 
   const clearSearch = () => {
-    setTempSearch("");
-    setSearch("");
+    setTempSearch('');
+    setSearch('');
   };
 
   const handlePlayerClick = (playerId) => {
     navigate(`/players/${playerId}`);
   };
 
+  // Function to get appropriate sport icon
+  const getSportIcon = (sport) => {
+    switch (sport) {
+      case 'cricket':
+        return <GiCricketBat className="inline-block mr-1" />;
+      case 'football':
+        return <FaFootballBall className="inline-block mr-1" />;
+      case 'basketball':
+        return <FaBasketballBall className="inline-block mr-1" />;
+      case 'volleyball':
+        return <FaVolleyballBall className="inline-block mr-1" />;
+      case 'kabaddi':
+        return <FaRunning className="inline-block mr-1" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white">
-      <div className='h-[5vh]'></div>
+      <div className="h-[5vh]"></div>
       <h1 className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-        <FaUsers className="inline-block mr-3" />All Players
+        <FaUsers className="inline-block mr-3" />
+        All Players
       </h1>
 
-      <div className="flex items-center justify-center mb-8">
+      <div className="flex flex-col md:flex-row items-center justify-center mb-8 gap-4">
         <div className="relative w-full max-w-md">
           <input
             type="text"
@@ -87,12 +122,30 @@ const AllPlayers = () => {
             </button>
           )}
         </div>
+
+        <div className="flex items-center">
+          <FaFilter className="mr-2 text-purple-400" />
+          <select
+            value={selectedSport}
+            onChange={(e) => setSelectedSport(e.target.value)}
+            className="bg-gray-800 text-white border border-gray-700 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+          >
+            <option value="all">All Sports</option>
+            <option value="cricket">Cricket</option>
+            <option value="football">Football</option>
+            <option value="basketball">Basketball</option>
+            <option value="volleyball">Volleyball</option>
+            <option value="kabaddi">Kabaddi</option>
+          </select>
+        </div>
       </div>
 
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
-        <p className="text-center text-red-500 text-lg font-semibold flex items-center justify-center gap-2"><FaExclamationCircle /> {error}</p>
+        <p className="text-center text-red-500 text-lg font-semibold flex items-center justify-center gap-2">
+          <FaExclamationCircle /> {error}
+        </p>
       ) : players.length === 0 ? (
         <p className="text-center text-gray-400 text-xl">No players found.</p>
       ) : (
@@ -105,7 +158,10 @@ const AllPlayers = () => {
             >
               <div className="w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-purple-500/50">
                 <img
-                  src={player.profilePhoto || 'https://via.placeholder.com/150/6B46C1/FFFFFF?text=Player'}
+                  src={
+                    player.profilePhoto ||
+                    'https://via.placeholder.com/150/6B46C1/FFFFFF?text=Player'
+                  }
                   alt={player.playerName}
                   className="w-full h-full object-cover"
                 />
@@ -113,8 +169,29 @@ const AllPlayers = () => {
               <h3 className="text-2xl font-bold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
                 {player.playerName}
               </h3>
-              <p className="text-gray-400 text-sm">Age: <span className="font-semibold">{player.age}</span></p>
-              <p className="text-gray-400 text-sm">Role: <span className="font-semibold capitalize">{player.playerRole}</span></p>
+              {player.sport && (
+                <p className="text-gray-400 text-sm mb-1">
+                  Sport:{' '}
+                  <span className="font-semibold text-white capitalize flex items-center">
+                    {getSportIcon(player.sport)}
+                    {player.sport}
+                  </span>
+                </p>
+              )}
+              {player.age && (
+                <p className="text-gray-400 text-sm mb-1">
+                  Age:{' '}
+                  <span className="font-semibold text-white">{player.age}</span>
+                </p>
+              )}
+              {player.playerRole && (
+                <p className="text-gray-400 text-sm">
+                  Role:{' '}
+                  <span className="font-semibold text-white capitalize">
+                    {player.playerRole.replace(/-/g, ' ')}
+                  </span>
+                </p>
+              )}
             </div>
           ))}
         </div>

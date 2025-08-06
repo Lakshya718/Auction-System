@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-// import { sendBidToKafka } from '../kafka/producer.js';
+import { sendBidToKafka } from '../kafka/producer.js';
 import Auction from '../models/Auction.js';
 import Team from '../models/Team.js';
 import User from '../models/User.js';
@@ -161,7 +161,7 @@ export const setupSocketHandlers = (io) => {
           timestamp: new Date().toISOString()
         };
 
-        // await sendBidToKafka(bidData);
+        await sendBidToKafka(bidData);
         io.to(auctionId).emit('bid-placed', {
           ...bidData,
           playerName: (await Player.findById(playerId)).playerName,
