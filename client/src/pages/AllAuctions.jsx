@@ -249,6 +249,9 @@ const AllAuctions = () => {
         <ServicesLoadingScreen
           onComplete={async () => {
             try {
+              console.log(
+                'Services connected successfully, updating auction status...'
+              );
               // Update auction status to active
               const statusResponse = await API.patch(
                 `/auctions/${selectedAuctionId}/status`,
@@ -256,22 +259,43 @@ const AllAuctions = () => {
               );
 
               if (statusResponse.data.success) {
-                navigate(`/auction-bid-page/${selectedAuctionId}`);
+                console.log(
+                  'Auction status updated to active, redirecting to bid page'
+                );
+                // Clear any previous errors
+                setRedisError('');
+
+                // Wait a bit before redirecting to ensure all state updates are complete
+                setTimeout(() => {
+                  // Hide the loading screen first
+                  setShowServicesLoadingScreen(false);
+
+                  // Then redirect to the auction bid page
+                  console.log(
+                    `Redirecting to auction bid page: /auction-bid-page/${selectedAuctionId}`
+                  );
+                  navigate(`/auction-bid-page/${selectedAuctionId}`);
+                }, 1500);
               } else {
-                setRedisError('Failed to start the auction');
+                setRedisError(
+                  'Failed to start the auction: ' +
+                    (statusResponse.data.error || 'Unknown error')
+                );
+                setShowServicesLoadingScreen(false);
               }
             } catch (error) {
               console.error('Error starting auction:', error);
               setRedisError(
                 error.response?.data?.message || 'Failed to start auction'
               );
-            } finally {
               setShowServicesLoadingScreen(false);
             }
           }}
           onError={(error) => {
             console.error('Services error:', error);
-            setRedisError('Failed to connect to auction server');
+            setRedisError(
+              'Failed to connect to required services. Please try again.'
+            );
             setShowServicesLoadingScreen(false);
           }}
         />

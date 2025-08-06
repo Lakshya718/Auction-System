@@ -44,7 +44,26 @@ const AnimatedServiceConnector = ({
     const startServices = async () => {
       try {
         // Start the connection process
-        await processSteps();
+        const result = await processSteps();
+        console.log('Process steps result:', result);
+
+        if (result.allConnected) {
+          setOverallStatus('complete');
+          console.log('All services connected successfully');
+          // Let ServicesLoadingScreen handle this with its useEffect
+        } else if (result.connectedCount > 0) {
+          // At least one service connected, we consider this a success
+          setOverallStatus('complete');
+          console.log(
+            `Partial success: ${result.connectedCount}/${result.totalSteps} services connected`
+          );
+          // Let ServicesLoadingScreen handle this with its useEffect
+        } else {
+          // No services connected at all
+          setOverallStatus('error');
+          setErrorMessage(errorSubtitle);
+          if (onError) onError(new Error(`Failed to connect any services`));
+        }
       } catch (error) {
         console.error('Error in service connection process:', error);
         setErrorMessage(errorSubtitle);
@@ -59,31 +78,32 @@ const AnimatedServiceConnector = ({
   }, []);
 
   const processSteps = async () => {
-    for (let i = 0; i < steps.length; i++) {
+    let connectedCount = 0;
+    const totalSteps = steps.length;
+
+    // Process all steps even if some fail
+    for (let i = 0; i < totalSteps; i++) {
       try {
-        await connectStep(i);
+        const stepSuccess = await connectStep(i);
+        if (stepSuccess) {
+          connectedCount++;
+        }
       } catch (error) {
-        // If a step fails, stop the process
-        return;
+        console.error('Step processing error at step', i, error);
+        // Continue with next step instead of stopping
       }
     }
 
-    // Check if all services connected successfully
-    const allConnected = steps.every(
-      (step) => step.status === Status.CONNECTED
-    );
+    // Log connection status
+    console.log(`Connected ${connectedCount}/${totalSteps} services`);
 
-    if (allConnected) {
-      setOverallStatus('complete');
-      // Wait a moment for animation to complete before calling onComplete
-      setTimeout(() => {
-        if (onComplete) onComplete();
-      }, 1000);
-    } else {
-      setOverallStatus('error');
-      setErrorMessage(errorSubtitle);
-      if (onError) onError(new Error('Some services failed to connect'));
-    }
+    // Return detailed result object
+    return {
+      success: connectedCount > 0,
+      connectedCount,
+      totalSteps,
+      allConnected: connectedCount === totalSteps,
+    };
   };
 
   const connectStep = async (stepIndex) => {
@@ -98,38 +118,80 @@ const AnimatedServiceConnector = ({
     // Simulate connection delay for better UI experience
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    try {
-      // Call the provided function to connect the service
-      const result = await connectService(steps[stepIndex], stepIndex);
+    // Maximum retry attempts
+    const maxRetries = 3;
+    let currentRetry = 0;
+    let success = false;
 
-      // Update step status based on result
-      setSteps((prevSteps) =>
-        prevSteps.map((step, idx) =>
-          idx === stepIndex
-            ? { ...step, status: result ? Status.CONNECTED : Status.FAILED }
-            : step
-        )
-      );
+    while (currentRetry < maxRetries && !success) {
+      try {
+        // Call the provided function to connect the service
+        const result = await connectService(steps[stepIndex], stepIndex);
+        success = result;
 
-      if (!result) {
-        throw new Error(`Connection failed for ${steps[stepIndex].name}`);
+        // If successful, update status and break out of retry loop
+        if (success) {
+          setSteps((prevSteps) =>
+            prevSteps.map((step, idx) =>
+              idx === stepIndex ? { ...step, status: Status.CONNECTED } : step
+            )
+          );
+          console.log(
+            `Service ${steps[stepIndex].name} connected successfully`
+          );
+          break;
+        } else {
+          // If failed but we have retries left
+          currentRetry++;
+          if (currentRetry < maxRetries) {
+            console.log(
+              `Retry ${currentRetry}/${maxRetries} for ${steps[stepIndex].name}...`
+            );
+            // Wait before retrying
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          } else {
+            // Update step status to failed after all retries
+            setSteps((prevSteps) =>
+              prevSteps.map((step, idx) =>
+                idx === stepIndex ? { ...step, status: Status.FAILED } : step
+              )
+            );
+            console.error(
+              `Service ${steps[stepIndex].name} failed to connect after ${maxRetries} attempts`
+            );
+          }
+        }
+      } catch (error) {
+        console.error(`Error connecting step ${stepIndex}:`, error);
+        currentRetry++;
+
+        // If we have retries left
+        if (currentRetry < maxRetries) {
+          console.log(
+            `Retry ${currentRetry}/${maxRetries} for ${steps[stepIndex].name} after error...`
+          );
+          // Wait before retrying
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } else {
+          // Update step status to failed after all retries
+          setSteps((prevSteps) =>
+            prevSteps.map((step, idx) =>
+              idx === stepIndex ? { ...step, status: Status.FAILED } : step
+            )
+          );
+
+          // Set error message
+          setErrorMessage(
+            error.response?.data?.message ||
+              error.message ||
+              'Connection failed'
+          );
+        }
       }
-    } catch (error) {
-      console.error(`Error connecting step ${stepIndex}:`, error);
-
-      // Update step status to failed
-      setSteps((prevSteps) =>
-        prevSteps.map((step, idx) =>
-          idx === stepIndex ? { ...step, status: Status.FAILED } : step
-        )
-      );
-
-      // Set error message
-      setErrorMessage(
-        error.response?.data?.message || error.message || 'Connection failed'
-      );
-      throw error;
     }
+
+    // Return success/failure status
+    return success;
   };
 
   const getStatusIcon = (status) => {

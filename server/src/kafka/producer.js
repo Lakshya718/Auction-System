@@ -3,9 +3,11 @@ import { Kafka, Partitioners } from "kafkajs";
 const kafka = new Kafka({
   clientId: "bidify-server",
   brokers: ["localhost:9092"],
+  connectionTimeout: 10000,
   retry: {
-    initialRetryTime: 100,
-    retries: 8,
+    initialRetryTime: 300,
+    retries: 10,
+    maxRetryTime: 30000,
   },
 });
 
@@ -50,9 +52,41 @@ const ensureProducerConnected = async () => {
 export const initKafkaProducer = async () => {
   try {
     console.log("Connecting to Kafka...");
-    await producer.connect();
+
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Kafka connection timeout after 10 seconds"));
+      }, 10000);
+    });
+
+    // Race the connection against the timeout
+    await Promise.race([producer.connect(), timeoutPromise]);
+
     producerConnected = true;
     console.log("Connected to Kafka");
+
+    // Test topic creation if it doesn't exist
+    try {
+      const admin = kafka.admin();
+      await admin.connect();
+
+      const topics = await admin.listTopics();
+      if (!topics.includes("bids")) {
+        console.log("Creating 'bids' topic in Kafka...");
+        await admin.createTopics({
+          topics: [{ topic: "bids", numPartitions: 1, replicationFactor: 1 }],
+        });
+        console.log("'bids' topic created successfully");
+      } else {
+        console.log("'bids' topic already exists");
+      }
+
+      await admin.disconnect();
+    } catch (topicError) {
+      console.warn("Error creating/checking Kafka topic:", topicError.message);
+      // Continue even if topic creation fails - it might already exist
+    }
   } catch (error) {
     console.error("Failed to connect to Kafka:", error);
     producerConnected = false;

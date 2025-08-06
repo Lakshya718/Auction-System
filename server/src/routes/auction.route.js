@@ -50,8 +50,14 @@ router.post("/start-services", auth, adminOnly, async (req, res) => {
     let redisStatus = "connected";
     try {
       await connectRedis();
+      // Add a small delay to ensure the connection is properly established
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       if (!isRedisReady()) {
+        console.log("Redis is not ready after connection attempt");
         redisStatus = "error";
+      } else {
+        console.log("Redis is ready and connected");
       }
     } catch (redisError) {
       console.error("Failed to connect to Redis:", redisError);
@@ -62,14 +68,43 @@ router.post("/start-services", auth, adminOnly, async (req, res) => {
     let kafkaStatus = "connected";
     try {
       await initKafkaProducer();
+
+      // Perform a simple Kafka operation to verify connection
+      try {
+        // Create a simple test message
+        const testMessage = {
+          auctionId: "test-auction-id",
+          playerId: "test-player-id",
+          teamId: "test-team-id",
+          amount: 100,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Try to send it using the sendBidToKafka function
+        const kafkaResult = await sendBidToKafka(testMessage);
+        if (!kafkaResult.success) {
+          console.error("Kafka test failed:", kafkaResult.error);
+          kafkaStatus = "error";
+        } else {
+          console.log("Kafka test message sent successfully");
+        }
+      } catch (testError) {
+        console.error("Failed to send test message to Kafka:", testError);
+        kafkaStatus = "error";
+      }
     } catch (kafkaError) {
       console.error("Failed to connect to Kafka:", kafkaError);
       kafkaStatus = "error";
     }
 
+    console.log(
+      `Service status - Redis: ${redisStatus}, Kafka: ${kafkaStatus}`
+    );
+
+    // Always return success: true for consistency but include actual statuses
     return res.status(200).json({
       success: true,
-      message: "Auction services started",
+      message: "Auction services status checked",
       services: {
         redis: redisStatus,
         kafka: kafkaStatus,
