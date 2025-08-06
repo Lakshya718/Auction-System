@@ -13,6 +13,7 @@ import { isValidObjectId } from "mongoose";
 const kafka = new Kafka({
   clientId: "bidify-consumer",
   brokers: ["localhost:9092"],
+  connectionTimeout: 10000,
   retry: {
     initialRetryTime: 300,
     retries: 10,
