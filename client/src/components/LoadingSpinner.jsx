@@ -1,21 +1,41 @@
+import React from 'react';
 
-import React from "react";
+const LoadingSpinner = ({ inButton }) => {
+  // If used in a button, show a more compact version
+  if (inButton) {
+    return (
+      <div className="flex items-center justify-center space-x-2">
+        <div
+          className="w-2 h-2 rounded-full bg-white animate-bounce"
+          style={{ animationDelay: '0s' }}
+        ></div>
+        <div
+          className="w-2 h-2 rounded-full bg-white animate-bounce"
+          style={{ animationDelay: '-0.15s' }}
+        ></div>
+        <div
+          className="w-2 h-2 rounded-full bg-white animate-bounce"
+          style={{ animationDelay: '-0.3s' }}
+        ></div>
+      </div>
+    );
+  }
 
-const LoadingSpinner = () => {
+  // Default full-screen spinner
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center">
       <div className="flex items-center justify-center space-x-2">
         <div
           className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-400 to-pink-600 animate-bounce"
-          style={{ animationDelay: "0s" }}
+          style={{ animationDelay: '0s' }}
         ></div>
         <div
           className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-400 to-pink-600 animate-bounce"
-          style={{ animationDelay: "-0.15s" }}
+          style={{ animationDelay: '-0.15s' }}
         ></div>
         <div
           className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-400 to-pink-600 animate-bounce"
-          style={{ animationDelay: "-0.3s" }}
+          style={{ animationDelay: '-0.3s' }}
         ></div>
       </div>
       <p className="mt-4 text-lg font-semibold text-gray-600 tracking-widest uppercase">

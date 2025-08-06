@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
-
-import { io } from "socket.io-client";
-import API from "../../api/axios";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { io } from 'socket.io-client';
+import API from '../../api/axios';
+import { useParams } from 'react-router-dom';
 
 const AuctionBidPage = () => {
   const { auctionId } = useParams();
@@ -14,37 +13,11 @@ const AuctionBidPage = () => {
   // Removed unused bidAmounts and setBidAmounts to fix eslint error
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
-  const [teamId, setTeamId] = useState("");
-  const [loggedInTeamId, setLoggedInTeamId] = useState("");
-  const [token, setToken] = useState("");
+  const [teamId, setTeamId] = useState('');
+  const [loggedInTeamId, setLoggedInTeamId] = useState('');
+  const [token, setToken] = useState('');
   const team = useSelector((state) => state.user.team);
 
-  useEffect(() => {
-    if (team && team._id) {
-      console.log("Setting loggedInTeamId from Redux store:", team._id);
-      setLoggedInTeamId(team._id);
-    } else {
-      // Fallback: fetch team from backend if not in Redux store and role is team_owner
-      if (role === "team_owner") {
-        const fetchMyTeam = async () => {
-          try {
-            const response = await API.get("/teams/my-team", {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            });
-            if (response.data && response.data._id) {
-              console.log("Fetched team from backend:", response.data._id);
-              setLoggedInTeamId(response.data._id);
-            }
-          } catch (error) {
-            console.error("Error fetching my team:", error);
-          }
-        };
-        fetchMyTeam();
-      }
-    }
-  }, [team]);
   const [teamOwnerPlayer, setTeamOwnerPlayer] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [isSelling, setIsSelling] = useState(false);
@@ -53,6 +26,32 @@ const AuctionBidPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [placeBidDisabled, setPlaceBidDisabled] = useState(false);
+  useEffect(() => {
+    if (team && team._id) {
+      console.log('Setting loggedInTeamId from Redux store:', team._id);
+      setLoggedInTeamId(team._id);
+    } else {
+      // Fallback: fetch team from backend if not in Redux store and role is team_owner
+      if (role === 'team_owner') {
+        const fetchMyTeam = async () => {
+          try {
+            const response = await API.get('/teams/my-team', {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+            if (response.data && response.data._id) {
+              console.log('Fetched team from backend:', response.data._id);
+              setLoggedInTeamId(response.data._id);
+            }
+          } catch (error) {
+            console.error('Error fetching my team:', error);
+          }
+        };
+        fetchMyTeam();
+      }
+    }
+  }, [team, role]);
 
   useEffect(() => {
     if (role && token && initialized) {
@@ -70,13 +69,13 @@ const AuctionBidPage = () => {
 
   useEffect(() => {
     // Get token from localStorage
-    const storedToken = localStorage.getItem("token");
+    const storedToken = localStorage.getItem('token');
     setToken(storedToken);
   }, []);
 
   // New useEffect to read playerId from localStorage on mount
   useEffect(() => {
-    const storedPlayerId = localStorage.getItem("playerId");
+    const storedPlayerId = localStorage.getItem('playerId');
     if (storedPlayerId) {
       setPlayerId(storedPlayerId);
     }
@@ -85,25 +84,25 @@ const AuctionBidPage = () => {
   useEffect(() => {
     if (!auctionId || !token) return;
 
-    const backendUrl = "http://localhost:5000";
+    const backendUrl = 'http://localhost:5000';
 
     const newSocket = io(backendUrl, {
       auth: { token },
-      transports: ["websocket"],
+      transports: ['websocket'],
     });
 
     setSocket(newSocket);
 
-    newSocket.on("connect", () => {
+    newSocket.on('connect', () => {
       setConnected(true);
-      newSocket.emit("join-auction", { auctionId });
+      newSocket.emit('join-auction', { auctionId });
     });
 
-    newSocket.on("joined-auction", (data) => {
+    newSocket.on('joined-auction', (data) => {
       setMessages((msgs) => [...msgs, `Joined auction: ${data.message}`]);
     });
 
-    newSocket.on("bid-placed", (bid) => {
+    newSocket.on('bid-placed', (bid) => {
       setMessages((msgs) => [
         ...msgs,
         `Bid placed: ${bid.teamName} bid ${bid.amount} for ${bid.playerName}`,
@@ -126,7 +125,7 @@ const AuctionBidPage = () => {
     });
 
     // Listen for bidUpdate event to update current bid in real-time
-    newSocket.on("bidUpdate", (update) => {
+    newSocket.on('bidUpdate', (update) => {
       setPlayers((prevPlayers) => {
         return prevPlayers.map((player) => {
           if (player.player._id === update.playerId) {
@@ -140,7 +139,10 @@ const AuctionBidPage = () => {
         });
       });
       // If the updated player is the teamOwnerPlayer, update its currentBid as well
-      if (teamOwnerPlayerRef.current && teamOwnerPlayerRef.current._id === update.playerId) {
+      if (
+        teamOwnerPlayerRef.current &&
+        teamOwnerPlayerRef.current._id === update.playerId
+      ) {
         setTeamOwnerPlayer((prev) => ({
           ...prev,
           currentBid: update.currentBid,
@@ -149,25 +151,25 @@ const AuctionBidPage = () => {
       }
     });
 
-    newSocket.on("error", (error) => {
+    newSocket.on('error', (error) => {
       setMessages((msgs) => [...msgs, `Error: ${error.message || error}`]);
     });
 
-    newSocket.on("disconnect", () => {
+    newSocket.on('disconnect', () => {
       setConnected(false);
-      setMessages((msgs) => [...msgs, "Disconnected from server"]);
+      setMessages((msgs) => [...msgs, 'Disconnected from server']);
     });
 
     // Listen for refresh-player-data event to fetch fresh player data from Redis
-    newSocket.on("refresh-player-data", async ({ playerId }) => {
-      console.log("Received refresh-player-data event for playerId:", playerId);
+    newSocket.on('refresh-player-data', async ({ playerId }) => {
+      console.log('Received refresh-player-data event for playerId:', playerId);
       if (!playerId || !token) {
-        console.log("Missing playerId or token, skipping fetch");
+        console.log('Missing playerId or token, skipping fetch');
         return;
       }
       try {
         const url = `/players/redis/player/${playerId}`;
-        console.log("Fetching fresh player data from:", url);
+        console.log('Fetching fresh player data from:', url);
         const response = await API.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -177,23 +179,23 @@ const AuctionBidPage = () => {
             ...msgs,
             `Player data refreshed for playerId: ${playerId}`,
           ]);
-          console.log("Player data updated in state for playerId:", playerId);
+          console.log('Player data updated in state for playerId:', playerId);
         } else {
-          console.log("Failed to fetch player data or no player data returned");
+          console.log('Failed to fetch player data or no player data returned');
         }
       } catch (error) {
         setMessages((msgs) => [
           ...msgs,
           `Error refreshing player data: ${error.message}`,
         ]);
-        console.error("Error fetching fresh player data:", error);
+        console.error('Error fetching fresh player data:', error);
       }
     });
 
     // Listen for user-joined event to show when a team_owner joins
     const roleRef = { current: role };
-    newSocket.on("user-joined", (data) => {
-      if (roleRef.current === "admin") {
+    newSocket.on('user-joined', (data) => {
+      if (roleRef.current === 'admin') {
         setMessages((msgs) => [
           ...msgs,
           `Team owner joined with email: ${data.email}`,
@@ -202,15 +204,15 @@ const AuctionBidPage = () => {
     });
 
     // Listen for player-sold event to refresh admin player list
-    newSocket.on("player-sold", async (data) => {
-      console.log("player-sold event received:", data);
-      if (roleRef.current === "admin") {
+    newSocket.on('player-sold', async (data) => {
+      console.log('player-sold event received:', data);
+      if (roleRef.current === 'admin') {
         try {
           const response = await API.get(`/auctions/${auctionId}`);
           if (response.data.auction) {
             const filteredPlayers = (
               response.data.auction.players || []
-            ).filter((player) => player.status === "available");
+            ).filter((player) => player.status === 'available');
             setPlayers(filteredPlayers);
             setMessages((msgs) => [
               ...msgs,
@@ -224,7 +226,7 @@ const AuctionBidPage = () => {
           ]);
         }
       }
-      console.log("Disabling Placebid button");
+      console.log('Disabling Placebid button');
       setPlaceBidDisabled(true);
     });
 
@@ -244,13 +246,13 @@ const AuctionBidPage = () => {
       setMessages((msgs) => [...msgs, `Player marked as unsold: ${playerId}`]);
 
       // Refetch all players for admin to re-render the list
-      if (role === "admin") {
+      if (role === 'admin') {
         try {
           const response = await API.get(`/auctions/${auctionId}`);
           if (response.data.auction) {
             const filteredPlayers = (
               response.data.auction.players || []
-            ).filter((player) => player.status === "available");
+            ).filter((player) => player.status === 'available');
             setPlayers(filteredPlayers);
           }
         } catch (error) {
@@ -263,25 +265,28 @@ const AuctionBidPage = () => {
         setPlayers((prevPlayers) =>
           prevPlayers.map((player) =>
             player.player._id === playerId
-              ? { ...player, status: "unsold" }
+              ? { ...player, status: 'unsold' }
               : player
           )
         );
-        if (teamOwnerPlayerRef.current && teamOwnerPlayerRef.current._id === playerId) {
+        if (
+          teamOwnerPlayerRef.current &&
+          teamOwnerPlayerRef.current._id === playerId
+        ) {
           setTeamOwnerPlayer(null);
-          localStorage.removeItem("playerId");
+          localStorage.removeItem('playerId');
           setPlayerId(null);
         }
       }
       // Disable placeBid button after player marked unsold
-      console.log("Disabling Placebid button");
+      console.log('Disabling Placebid button');
       setPlaceBidDisabled(true);
     };
 
-    socket.on("player-unsold", handlePlayerUnsold);
+    socket.on('player-unsold', handlePlayerUnsold);
 
     return () => {
-      socket.off("player-unsold", handlePlayerUnsold);
+      socket.off('player-unsold', handlePlayerUnsold);
     };
   }, [socket, auctionId, teamOwnerPlayer, role]);
 
@@ -292,7 +297,7 @@ const AuctionBidPage = () => {
         const response = await API.get(`/auctions/${auctionId}`);
         // auction data is in data.auction
         const filteredPlayers = (response.data.auction.players || []).filter(
-          (player) => player.status === "available"
+          (player) => player.status === 'available'
         );
         setPlayers(filteredPlayers);
         setTeams(response.data.auction.teams || []);
@@ -319,14 +324,14 @@ const AuctionBidPage = () => {
   // On mount, fetch current player from Redis for team_owner to persist view on reload
   useEffect(() => {
     const fetchCurrentPlayer = async () => {
-      const playerId = localStorage.getItem("playerId");
+      const playerId = localStorage.getItem('playerId');
       if (playerId && token) {
         try {
           const url = `/players/redis/player/${playerId}`;
           const response = await API.get(url, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          console.log("after request get ", url);
+          console.log('after request get ', url);
           if (response.data.success && response.data.player) {
             setTeamOwnerPlayer(response.data.player);
           }
@@ -347,7 +352,7 @@ const AuctionBidPage = () => {
       // Include auctionId in the request body
       const playerWithAuction = { ...player, auctionId };
       const response = await API.post(
-        "/players/redis/player",
+        '/players/redis/player',
         playerWithAuction,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -359,7 +364,7 @@ const AuctionBidPage = () => {
           `Player sent ${player.playerName} and stored in Redis`,
         ]);
         // Store playerId in localStorage
-        localStorage.setItem("playerId", player._id);
+        localStorage.setItem('playerId', player._id);
         // Emit socket event to notify other clients
         // Fetch player from Redis to update team owner view
         const fetchResponse = await API.get(
@@ -373,7 +378,7 @@ const AuctionBidPage = () => {
           setPlayerId(player._id);
         }
         if (socket) {
-          socket.emit("send-player", { auctionId, player });
+          socket.emit('send-player', { auctionId, player });
         }
       }
     } catch (error) {
@@ -389,23 +394,23 @@ const AuctionBidPage = () => {
     if (!socket) return;
 
     const handlePlayerSent = (data) => {
-      if (role === "team_owner") {
+      if (role === 'team_owner') {
         setPlayerId(data.player._id);
         // Store playerId in localStorage
-        localStorage.setItem("playerId", data.player._id);
+        localStorage.setItem('playerId', data.player._id);
         setMessages((msgs) => [
           ...msgs,
           `Player sent: ${data.player.playerName}`,
         ]);
       }
-      console.log("Enabling Placebid button");
+      console.log('Enabling Placebid button');
       setPlaceBidDisabled(false);
     };
 
-    socket.on("player-sent", handlePlayerSent);
+    socket.on('player-sent', handlePlayerSent);
 
     return () => {
-      socket.off("player-sent", handlePlayerSent);
+      socket.off('player-sent', handlePlayerSent);
     };
   }, [socket, role]);
 
@@ -414,24 +419,24 @@ const AuctionBidPage = () => {
 
     const handlePlayerCacheCleared = (data) => {
       console.log(
-        "player-cache-cleared event received for role:",
+        'player-cache-cleared event received for role:',
         role,
-        "with playerId:",
+        'with playerId:',
         data.playerId
       );
       setMessages((msgs) => [
         ...msgs,
         `Player cache cleared for id: ${data.playerId}`,
       ]);
-      localStorage.removeItem("playerId");
+      localStorage.removeItem('playerId');
       setPlayerId(null);
       setTeamOwnerPlayer(null);
     };
 
-    socket.on("player-cache-cleared", handlePlayerCacheCleared);
+    socket.on('player-cache-cleared', handlePlayerCacheCleared);
 
     return () => {
-      socket.off("player-cache-cleared", handlePlayerCacheCleared);
+      socket.off('player-cache-cleared', handlePlayerCacheCleared);
     };
   }, [socket, role]);
 
@@ -446,7 +451,7 @@ const AuctionBidPage = () => {
         const response = await API.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("after request get ", url);
+        console.log('after request get ', url);
         if (response.data.success && response.data.player) {
           setTeamOwnerPlayer(response.data.player);
         }
@@ -461,121 +466,195 @@ const AuctionBidPage = () => {
   }, [token, playerId]);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-xl text-white">Loading auction data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="auction-bid-page p-4">
-      <div className='h-[5vh]'></div>
-      <h2>Auction Bidding</h2>
-      <p>Status: {connected ? "Connected" : "Disconnected"}</p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
+      <div className="h-[5vh]"></div>
 
-      {role === "admin" && (
-        <>
-          <div className="players-list border-2 border-red-500 p-4">
-            <div className="text-2xl md:text-3xl text-center mb-4">
-              All Players Available (Admin)
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-extrabold text-center mb-3 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          Live Auction Bidding
+        </h1>
+        <div className="flex justify-center items-center gap-3">
+          <div
+            className={`px-4 py-1 rounded-full ${connected ? 'bg-green-600' : 'bg-red-600'} flex items-center`}
+          >
+            <span
+              className={`h-3 w-3 rounded-full ${connected ? 'bg-green-300' : 'bg-red-300'} mr-2 animate-pulse`}
+            ></span>
+            <span>{connected ? 'Connected' : 'Disconnected'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Admin Players Section */}
+      {role === 'admin' && (
+        <div className="bg-gray-800 rounded-xl shadow-xl p-6 mb-8 border border-gray-700">
+          <div className="text-3xl font-bold mb-6 text-center text-purple-400">
+            Available Players
+          </div>
+
+          {players.length === 0 && (
+            <div className="bg-gray-700 rounded-lg p-4 text-center text-gray-300">
+              No players available for auction
             </div>
+          )}
 
-            {players.length === 0 && <p>No players available</p>}
-
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {players.map((player) => (
               <div
                 key={player.player._id}
-                className="flex flex-col md:flex-row md:items-center md:justify-around gap-4 player-card border p-4 mb-4"
+                className="bg-gray-700 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:translate-y-[-5px]"
               >
-                {/* Player Photo */}
-                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-400">
-                  <img
-                    src={player.player.profilePhoto}
-                    alt={player.player.playerName || "Player Photo"}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-
-                {/* Player Info */}
-                <div className="text-center md:text-left">
-                  <h3 className="font-semibold">
-                    {player.player.playerName || "Unnamed Player"}
-                  </h3>
-                  <p>BasePrice: {player.player.basePrice}</p>
-                </div>
-
-                {/* Send Button */}
-                <button
-                  className="text-white bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 self-center md:self-auto"
-                  onClick={() => handleSendPlayer(player.player)}
-                >
-                  Send Player
-                </button>
-
-                {/* Bidding History (if available) */}
-                {player.biddingHistory && player.biddingHistory.length > 0 && (
-                  <div className="bidding-history border-t pt-2 md:border-0 md:pt-0">
-                    <h4 className="font-medium">Bidding History:</h4>
-                    <ul className="text-sm list-disc ml-4">
-                      {player.biddingHistory.map((bid, index) => (
-                        <li key={index}>
-                          {bid.teamName || bid.team} bid {bid.amount} at{" "}
-                          {new Date(bid.timestamp).toLocaleTimeString()}
-                        </li>
-                      ))}
-                    </ul>
+                <div className="p-4 bg-gradient-to-r from-purple-800 to-indigo-800 flex items-center space-x-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
+                    <img
+                      src={player.player.profilePhoto}
+                      alt={player.player.playerName || 'Player Photo'}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                )}
+                  <div>
+                    <h3 className="font-bold text-xl text-white">
+                      {player.player.playerName || 'Unnamed Player'}
+                    </h3>
+                    <p className="text-purple-200">
+                      {player.player.playerRole || 'Role not specified'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="flex justify-between mb-3">
+                    <span className="text-gray-300">Base Price:</span>
+                    <span className="font-semibold text-green-400">
+                      ₹{player.player.basePrice?.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {player.biddingHistory &&
+                    player.biddingHistory.length > 0 && (
+                      <div className="mt-3 border-t border-gray-600 pt-3">
+                        <h4 className="font-medium text-purple-300 mb-2">
+                          Bidding History:
+                        </h4>
+                        <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-gray-700 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
+                          <ul className="space-y-1 text-sm">
+                            {player.biddingHistory.map((bid, index) => (
+                              <li key={index} className="flex justify-between">
+                                <span>{bid.teamName || bid.team}</span>
+                                <span className="text-green-400">
+                                  ₹{bid.amount.toLocaleString()}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                  <button
+                    className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transform transition-all duration-300 flex items-center justify-center"
+                    onClick={() => handleSendPlayer(player.player)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Send to Auction
+                  </button>
+                </div>
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
 
-      <div className="players-list border-2 border-red-500 p-4">
-        <h3 className="text-3xl text-center mb-4">Team Owner View</h3>
+      {/* Current Auction Player Section */}
+      <div className="bg-gray-800 rounded-xl shadow-xl p-6 mb-8 border border-gray-700">
+        <h2 className="text-3xl font-bold mb-6 text-center text-purple-400">
+          Current Auction
+        </h2>
 
-        {/* Responsive Flexbox */}
-        <div className="flex flex-col md:flex-row justify-between border-2 border-yellow-600 md:h-30 gap-4">
-          <div className="flex flex-col min-w-[100%]">
-            {/* Right: Player Info */}
-            <div className="w-full border-2 border-pink-600 md:m-w-[80%]">
-              {teamOwnerPlayer ? (
-                <div className="flex">
-                  <div className="w-[20%] m-auto">
-                    <div className="w-32 h-32 m-auto rounded-full border-2 border-red-500 overflow-hidden">
-                      <img
-                        src={`${teamOwnerPlayer.profilePhoto}`}
-                        alt="Description"
-                        className="w-full h-full object-contain overflow-hidden"
-                      />
+        {teamOwnerPlayer ? (
+          <div className="bg-gray-700 rounded-xl overflow-hidden">
+            <div className="p-6 bg-gradient-to-r from-indigo-800 to-purple-900">
+              <div className="flex flex-col md:flex-row items-center">
+                <div className="md:w-1/3 flex justify-center mb-6 md:mb-0">
+                  <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                    <img
+                      src={teamOwnerPlayer.profilePhoto}
+                      alt={teamOwnerPlayer.playerName || 'Player'}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                <div className="md:w-2/3 md:pl-8">
+                  <h3 className="text-3xl font-bold mb-2">
+                    {teamOwnerPlayer.playerName || 'Unnamed Player'}
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
+                      <p className="text-gray-400 text-sm">Role</p>
+                      <p className="font-semibold text-lg">
+                        {teamOwnerPlayer.playerRole || 'Not Specified'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
+                      <p className="text-gray-400 text-sm">Base Price</p>
+                      <p className="font-semibold text-lg text-green-400">
+                        ₹{teamOwnerPlayer.basePrice?.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
+                      <p className="text-gray-400 text-sm">Current Bid</p>
+                      <p className="font-semibold text-lg text-green-400">
+                        ₹{teamOwnerPlayer.currentBid?.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
+                      <p className="text-gray-400 text-sm">Current Team</p>
+                      <p className="font-semibold text-lg">
+                        {teamOwnerPlayer.currentTeam || 'None'}
+                      </p>
                     </div>
                   </div>
-                  <div className="player-card w-[80%] border-violet-700 border p-2">
-                    <h3>{teamOwnerPlayer.playerName || "Unnamed Player"}</h3>
-                    <p>BasePrice: {teamOwnerPlayer.basePrice}</p>
-                    <p>Current Bid: {teamOwnerPlayer.currentBid}</p>
-                    <p>
-                      Current Team:{" "}
-                      {teamOwnerPlayer.currentTeam
-                        ? teamOwnerPlayer.currentTeam
-                        : "null"}
-                    </p>
-                    <p>Role: {teamOwnerPlayer.playerRole}</p>
 
-                    {role === "team_owner" && (
+                  {role === 'team_owner' && (
+                    <div className="mt-6 flex justify-center">
                       <button
-                        className={`p-2 rounded-lg px-4 text-white ${
-                          isSelling || placeBidDisabled
-                            ? "bg-gray-500 cursor-not-allowed"
-                            : "bg-blue-500"
-                        }`}
+                        className={`px-8 py-3 rounded-full font-bold text-lg shadow-lg transform transition-all duration-300 hover:scale-105 flex items-center 
+                          ${
+                            isSelling || placeBidDisabled
+                              ? 'bg-gray-600 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700'
+                          }`}
                         disabled={isSelling || placeBidDisabled}
                         onClick={async () => {
                           try {
-                            // Calculate new bid amount as currentBid + minBidIncrement (assumed 500000 here)
                             const bidAmount =
                               teamOwnerPlayer.currentBid + minBidIncrement;
-
-                            // Check if team has sufficient budget before sending bid
-                            // Assuming teams state has team budgets, find current team's remaining budget
                             const teamBudgetObj = teams.find(
                               (team) => team._id === teamId
                             );
@@ -591,56 +670,123 @@ const AuctionBidPage = () => {
                               return;
                             }
 
-                            const response = await API.post(
-                              "/auctions/bid",
-                              {
-                                auctionId,
-                                playerId: playerId,
-                                teamId: loggedInTeamId,
-                                amount: bidAmount,
-                              },
-                              {
-                                headers: { Authorization: `Bearer ${token}` },
+                            console.log('Sending bid request:', {
+                              auctionId,
+                              playerId,
+                              teamId: loggedInTeamId,
+                              amount: bidAmount,
+                            });
+
+                            try {
+                              const response = await API.post(
+                                '/auctions/bid',
+                                {
+                                  auctionId,
+                                  playerId: playerId,
+                                  teamId: loggedInTeamId,
+                                  amount: bidAmount,
+                                },
+                                {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                }
+                              );
+
+                              console.log(
+                                'Bid response received:',
+                                response.data
+                              );
+
+                              if (response.data.success) {
+                                setMessages((msgs) => [
+                                  ...msgs,
+                                  `Bid placed successfully: ${bidAmount}${response.data.kafkaAvailable === false ? ' (direct processing)' : ''}`,
+                                ]);
+                              } else {
+                                const errorMsg =
+                                  response.data.error || 'Unknown error';
+                                setMessages((msgs) => [
+                                  ...msgs,
+                                  `Failed to place bid: ${errorMsg}`,
+                                ]);
                               }
-                            );
-                            if (response.data.success) {
+                            } catch (error) {
+                              console.error('Error in bid submission:', error);
+                              let errorMessage = error.message;
+
+                              // Try to extract more detailed error message if available
+                              if (error.response && error.response.data) {
+                                if (error.response.data.error) {
+                                  errorMessage = error.response.data.error;
+                                } else if (error.response.data.message) {
+                                  errorMessage = error.response.data.message;
+                                }
+                              }
+
                               setMessages((msgs) => [
                                 ...msgs,
-                                `Bid placed successfully: ${bidAmount}`,
+                                `Error placing bid: ${errorMessage}`,
                               ]);
-                            } else {
-                              setMessages((msgs) => [
-                                ...msgs,
-                                `Failed to place bid`,
-                              ]);
+
+                              // Attempt to send a notification via socket even if the API call failed
+                              try {
+                                socket.emit('manual-bid-error', {
+                                  auctionId,
+                                  playerId,
+                                  teamId: loggedInTeamId,
+                                  error: errorMessage,
+                                });
+                              } catch (socketError) {
+                                console.error(
+                                  'Failed to emit socket error event:',
+                                  socketError
+                                );
+                              }
                             }
-                          } catch (error) {
+                          } catch (outerError) {
+                            console.error('Unexpected error:', outerError);
                             setMessages((msgs) => [
                               ...msgs,
-                              `Error placing bid: ${error.message}`,
+                              `Unexpected error: ${outerError.message}`,
                             ]);
                           }
                         }}
                       >
-                        Placebid
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                        Place Bid (₹
+                        {(
+                          teamOwnerPlayer.currentBid + minBidIncrement
+                        )?.toLocaleString()}
+                        )
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <p>No player is available in auction right now</p>
-              )}
+              </div>
             </div>
-            {role === "admin" && (
-              <div className="w-[100%] flex flex-col md:flex-row justify-around py-2 items-center gap-2">
+
+            {role === 'admin' && (
+              <div className="p-4 bg-gray-800 flex flex-col sm:flex-row justify-center gap-4">
                 <button
-                  className="bg-red-500 px-3 p-2 rounded-sm text-white hover:cursor-pointer hover:bg-red-600"
+                  className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors duration-300"
                   onClick={async () => {
-                    const playerId = localStorage.getItem("playerId");
+                    const playerId = localStorage.getItem('playerId');
                     if (!auctionId || !playerId) {
                       setMessages((msgs) => [
                         ...msgs,
-                        "Missing auctionId or playerId for marking unsold",
+                        'Missing auctionId or playerId for marking unsold',
                       ]);
                       return;
                     }
@@ -655,19 +801,17 @@ const AuctionBidPage = () => {
                       if (response.data.success) {
                         setMessages((msgs) => [
                           ...msgs,
-                          "Player marked as unsold successfully",
+                          'Player marked as unsold successfully',
                         ]);
-                        // Update players state to reflect unsold status
                         setPlayers((prevPlayers) =>
                           prevPlayers.map((player) =>
                             player.player._id === playerId
-                              ? { ...player, status: "unsold" }
+                              ? { ...player, status: 'unsold' }
                               : player
                           )
                         );
-                        // Clear teamOwnerPlayer state and localStorage
                         setTeamOwnerPlayer(null);
-                        localStorage.removeItem("playerId");
+                        localStorage.removeItem('playerId');
                         setPlayerId(null);
                       } else {
                         setMessages((msgs) => [
@@ -683,12 +827,24 @@ const AuctionBidPage = () => {
                     }
                   }}
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                   Mark Unsold
                 </button>
                 <button
-                  className="text-white p-2 px-3 bg-purple-500 hover:bg-purple-600 hover:cursor-pointer rounded-sm"
+                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center justify-center transition-colors duration-300"
                   onClick={async () => {
-                    console.log("Sold button clicked with:", {
+                    console.log('Sold button clicked with:', {
                       auctionId,
                       playerId,
                       teamId,
@@ -696,7 +852,7 @@ const AuctionBidPage = () => {
                     if (!auctionId || !playerId || !teamId) {
                       setMessages((msgs) => [
                         ...msgs,
-                        "Missing auctionId, playerId, or teamId for selling player",
+                        'Missing auctionId, playerId, or teamId for selling player',
                       ]);
                       return;
                     }
@@ -705,14 +861,14 @@ const AuctionBidPage = () => {
                         `/players/redis/player/${playerId}`
                       );
                       const currentBid = playerResponse.data.player.currentBid;
-                      console.log("Selling player with data:", {
+                      console.log('Selling player with data:', {
                         auctionId,
                         playerId,
                         teamId,
                         currentBid,
                       });
                       const response = await API.post(
-                        "/auctions/sell-player",
+                        '/auctions/sell-player',
                         {
                           auctionId,
                           playerId,
@@ -728,17 +884,15 @@ const AuctionBidPage = () => {
                           ...msgs,
                           `Player sold successfully`,
                         ]);
-                        // Clear the team_owner view state after successful sell
                         setTeamOwnerPlayer(null);
                         setIsSelling(false);
-                        // Remove player from Redis cache
                         try {
                           await API.delete(`/players/redis/player/${playerId}`);
                           setMessages((msgs) => [
                             ...msgs,
                             `Player removed from Redis cache`,
                           ]);
-                          localStorage.removeItem("playerId");
+                          localStorage.removeItem('playerId');
                           setPlayerId(null);
                         } catch (err) {
                           setMessages((msgs) => [
@@ -750,7 +904,7 @@ const AuctionBidPage = () => {
                         setMessages((msgs) => [
                           ...msgs,
                           `Failed to sell player: ${
-                            response.data.error || "Unknown error"
+                            response.data.error || 'Unknown error'
                           }`,
                         ]);
                         setIsSelling(false);
@@ -764,22 +918,82 @@ const AuctionBidPage = () => {
                     }
                   }}
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                   Sold
                 </button>
               </div>
             )}
           </div>
-        </div>
+        ) : (
+          <div className="bg-gray-700 rounded-lg p-8 text-center">
+            <svg
+              className="w-16 h-16 mx-auto text-gray-500 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <p className="text-xl text-gray-300">
+              No player is currently available in the auction
+            </p>
+            <p className="text-gray-400 mt-2">
+              Please wait for the admin to send a player
+            </p>
+          </div>
+        )}
       </div>
 
-      {role === "admin" && (
-        <div className="messages mt-4">
-          <h4>Messages:</h4>
-          <ul>
-            {messages.map((msg, idx) => (
-              <li key={idx}>{msg}</li>
-            ))}
-          </ul>
+      {/* Messages Section (Admin Only) */}
+      {role === 'admin' && (
+        <div className="bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700">
+          <h3 className="text-xl font-bold mb-4 text-purple-400 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+            </svg>
+            Activity Log
+          </h3>
+          <div className="bg-gray-900 rounded-lg p-4 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-gray-800 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
+            {messages.length === 0 ? (
+              <p className="text-gray-400 text-center italic">
+                No activity yet
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {messages.map((msg, idx) => (
+                  <li
+                    key={idx}
+                    className="text-gray-300 py-1 px-2 rounded even:bg-gray-800"
+                  >
+                    {msg}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </div>

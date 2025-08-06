@@ -14,6 +14,12 @@ const teamSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    sport: {
+      type: String,
+      enum: ["cricket", "football", "basketball", "volleyball", "kabaddi"],
+      required: true,
+      default: "cricket",
+    },
     bio: { type: String },
     logo: { type: String },
     tournaments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Auction" }],

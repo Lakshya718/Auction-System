@@ -12,9 +12,16 @@ import sidebarLogo from '../assets/sidebar.png';
 
 const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
   const user = useSelector((state) => state.user.user);
+  const role = useSelector((state) => state.user.role); // Get role directly from Redux store
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // For debugging - can be removed later
+  useEffect(() => {
+    console.log('Current user in Navbar:', user);
+    console.log('Current role in Navbar:', role);
+  }, [user, role]);
 
   const handleProfileClick = () => {
     navigate('/profile');
@@ -53,17 +60,19 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
     >
       <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-3">
-          <button
-            onClick={toggleSidebar}
-            className={`p-2 rounded-full text-white focus:outline-none transition-all duration-300 ${isSidebarOpen ? 'invisible' : 'visible'}`}
-            aria-label="Open sidebar"
-          >
-            <img
-              src={sidebarLogo}
-              alt="AuctionSphere"
-              className="h-7 w-7 object-contain transition-transform duration-300 group-hover:scale-110"
-            />
-          </button>
+          {user && (
+            <button
+              onClick={toggleSidebar}
+              className={`p-2 rounded-full text-white focus:outline-none transition-all duration-300 ${isSidebarOpen ? 'invisible' : 'visible'}`}
+              aria-label="Open sidebar"
+            >
+              <img
+                src={sidebarLogo}
+                alt="AuctionSphere"
+                className="h-7 w-7 object-contain transition-transform duration-300 group-hover:scale-110"
+              />
+            </button>
+          )}
           <Link
             to="/"
             className="flex items-center space-x-3 group"
@@ -108,12 +117,17 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
                 </span>
                 <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
               </Link>
-              <Link to="/pending-players" className="group relative px-4 py-2">
-                <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
-                  Pending Players
-                </span>
-                <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
-              </Link>
+              {role === 'admin' && (
+                <Link
+                  to="/pending-players"
+                  className="group relative px-4 py-2"
+                >
+                  <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                    Pending Players
+                  </span>
+                  <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
+                </Link>
+              )}
               <div className="h-6 w-[1px] bg-gradient-to-b from-transparent via-gray-500/50 to-transparent"></div>
               <button
                 onClick={handleProfileClick}
@@ -185,13 +199,15 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
                 >
                   All Matches
                 </Link>
-                <Link
-                  to="/pending-players"
-                  className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors duration-300"
-                  onClick={closeMobileMenu}
-                >
-                  Pending Players
-                </Link>
+                {role === 'admin' && (
+                  <Link
+                    to="/pending-players"
+                    className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors duration-300"
+                    onClick={closeMobileMenu}
+                  >
+                    Pending Players
+                  </Link>
+                )}
                 <button
                   onClick={handleProfileClick}
                   className="flex items-center space-x-2 px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors duration-300 w-full text-left"
