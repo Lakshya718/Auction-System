@@ -21,15 +21,9 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
-// Define allowed origins
-const allowedOrigins = [
-  "http://localhost:5173", // Local development client
-  "https://auction-system-lakshya.vercel.app", // Production client
-];
-
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: process.env.CORS_ORIGIN || ["http://localhost:5173", "https://auction-system-deploy.onrender.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -44,21 +38,13 @@ app.set("io", io);
 // CORS configuration - must be before other middleware
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+     origin: process.env.CORS_ORIGIN || ["http://localhost:5173","https://auction-system-deploy.onrender.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
       "Accept",
+      "Access-Control-Allow-Origin",
       "X-Requested-With",
       "Range",
     ],
