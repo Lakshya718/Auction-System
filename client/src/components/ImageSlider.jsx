@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -98,6 +99,7 @@ const slides = [
 ];
 
 const Carousel = () => {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -186,6 +188,17 @@ const Carousel = () => {
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
+  };
+
+  const handleJoinAuction = () => {
+    navigate('/login');
+  };
+
+  const handleWatchDemo = () => {
+    const demoSection = document.getElementById('demo-section');
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   if (!isLoaded) {
@@ -349,13 +362,16 @@ const Carousel = () => {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
+                  onClick={handleJoinAuction}
                   className={`group flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r ${currentSlide.color} rounded-full font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-current/25`}
                 >
                   <FaTrophy className="text-lg" />
                   <span>Join Auction</span>
                   <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform" />
                 </button>
-                <button className="flex items-center justify-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-full font-bold text-white hover:bg-white/20 transition-all duration-300">
+                <button 
+                  onClick={handleWatchDemo}
+                  className="flex items-center justify-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-full font-bold text-white hover:bg-white/20 transition-all duration-300">
                   <FaPlay className="text-sm" />
                   <span>Watch Demo</span>
                 </button>
