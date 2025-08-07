@@ -21,9 +21,26 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
+// Define allowed origins
+const defaultOrigins = [
+  "http://localhost:5173", 
+  "https://auction-system-deploy.onrender.com", 
+  "https://auction-system-lakshya.vercel.app"
+];
+
+// Combine environment origins with default origins
+const getAllowedOrigins = () => {
+  const envOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
+  return [...new Set([...defaultOrigins, ...envOrigins])];
+};
+
+const allowedOrigins = getAllowedOrigins();
+
+console.log('Allowed CORS origins:', allowedOrigins);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || ["http://localhost:5173", "https://auction-system-deploy.onrender.com", "https://auction-system-lakshya.vercel.app"],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -38,7 +55,19 @@ app.set("io", io);
 // CORS configuration - must be before other middleware
 app.use(
   cors({
-     origin: process.env.CORS_ORIGIN || ["http://localhost:5173","https://auction-system-deploy.onrender.com", "https://auction-system-lakshya.vercel.app"],
+    origin: function (origin, callback) {
+      console.log('CORS request from origin:', origin);
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log('Origin not allowed by CORS:', origin);
+        console.log('Allowed origins:', allowedOrigins);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
@@ -57,9 +86,6 @@ app.use(
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Define allowed origins for manual CORS control
-const allowedOrigins = ["http://localhost:5173", "https://auction-system-deploy.onrender.com", "https://auction-system-lakshya.vercel.app"];
 
 // Additional preflight handler for manual CORS control
 app.options("*", (req, res) => {
