@@ -23,6 +23,7 @@ import AllMatches from './pages/AllMatches.jsx';
 import MatchResult from './pages/MatchResult.jsx';
 import AuctionBidPage from './pages/AuctionBidPage.jsx';
 import Homescreen from './pages/Homescreen.jsx';
+import News from './pages/News.jsx';
 import ImageSlider from './components/ImageSlider.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import { useState } from 'react';
@@ -63,6 +64,7 @@ const App = () => {
           }
         />
         <Route path="/" element={<Homescreen />} />
+        <Route path="/news" element={<News />} />
         <Route
           path="/register"
           element={
