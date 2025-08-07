@@ -347,8 +347,6 @@ export const getPlayer = async (req, res) => {
 
 export const updatePlayer = async (req, res) => {
   try {
-    console.log("Update player request received with body:", req.body);
-    console.log("Files received:", req.files);
 
     const { id } = req.params;
     if (!isValidObjectId(id)) {
@@ -552,7 +550,6 @@ export const updatePlayer = async (req, res) => {
     if (description) player.description = description;
 
     if (req.file) {
-      console.log("Profile photo file received:", req.file);
       if (player.profilePhoto !== defaultProfilePhoto) {
         const publicId = player.profilePhoto.split("/").pop().split(".")[0];
         await deleteMediaFromCloudinary(publicId);
@@ -563,7 +560,6 @@ export const updatePlayer = async (req, res) => {
     }
 
     await player.save();
-    console.log("Player updated successfully:", player);
     res.status(200).json({ success: true, player });
   } catch (error) {
     console.error("Error updating player:", error);
@@ -622,12 +618,6 @@ export const storePlayerInRedis = async (req, res) => {
     let { _id, profilePhoto, basePrice, playerName, playerRole, auctionId } =
       req.body;
 
-    console.log("storePlayerInRedis called with:", {
-      _id,
-      auctionId,
-      playerName,
-    });
-
     // Validate required fields
     if (!_id) {
       return res.status(400).json({ error: "Player _id is required" });
@@ -667,7 +657,6 @@ export const storePlayerInRedis = async (req, res) => {
       });
     }
 
-    console.log(`Player data stored in Redis string key: ${key}`);
 
     // Update Redis hash key for auction-player currentBid and currentTeam
     const redisHashKey = `auction:${auctionId}:player:${_id}`;
@@ -683,8 +672,6 @@ export const storePlayerInRedis = async (req, res) => {
       console.warn(
         `Failed to update hash key ${redisHashKey}, but player data was stored`
       );
-    } else {
-      console.log(`Player data updated in Redis hash key: ${redisHashKey}`);
     }
 
     return res.status(200).json({
@@ -841,14 +828,12 @@ export const getPlayerFromRedis = async (req, res) => {
     }
 
     const key = req.params.id;
-    console.log("Fetching player from Redis with key:", key);
 
     const playerData = await safeRedisOperation(async () => {
       return await redisClient.get(key);
     }, null);
 
     if (!playerData) {
-      console.log(`Player with key ${key} not found in Redis`);
       return res.status(200).json({
         success: false,
         message: "Player not found in Redis",
@@ -896,7 +881,6 @@ export const deletePlayerFromRedis = async (req, res) => {
     }
 
     const key = req.params.id;
-    console.log("Deleting player from Redis with key:", key);
 
     // Check if player exists
     const playerExists = await safeRedisOperation(async () => {

@@ -16,7 +16,6 @@ export const setupSocketHandlers = (io) => {
     if (!token) {
       return next(new Error('Authentication required'));
     }
-    console.log("ye wahi token h");
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.userId);
@@ -52,7 +51,6 @@ export const setupSocketHandlers = (io) => {
     socket.on('send-player', ({ auctionId, player }) => {
       // if (socket.user.role === 'admin') {
         io.to(auctionId).emit('player-sent', { player });
-        console.log(`Admin ${socket.user.email} sent player ${player.playerName} in auction ${auctionId}`);
         // Emit enable-placebid-button event to enable the placebid button
         io.to(auctionId).emit('enable-placebid-button');
       // }

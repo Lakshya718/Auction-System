@@ -36,7 +36,6 @@ const getAllowedOrigins = () => {
 
 const allowedOrigins = getAllowedOrigins();
 
-console.log('Allowed CORS origins:', allowedOrigins);
 
 const io = new Server(httpServer, {
   cors: {
@@ -56,7 +55,6 @@ app.set("io", io);
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log('CORS request from origin:', origin);
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       

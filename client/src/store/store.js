@@ -24,7 +24,6 @@ const logout = async () => {
 };
 
 const token = localStorage.getItem('token');
-console.log('Token from localStorage:', token);
 if (token) {
   try {
     const base64Url = token.split('.')[1];
@@ -36,7 +35,6 @@ if (token) {
         .join('')
     );
     const userData = JSON.parse(jsonPayload);
-    console.log('Decoded userData from token:', userData);
 
     // Get stored user data
     const storedUserData = localStorage.getItem('user');
@@ -52,7 +50,6 @@ if (token) {
     // Make sure we properly set the role - prioritize what's in userInfo first
     const role = userInfo.role || storedRole || userData.role || null;
 
-    console.log('Using role:', role);
     store.dispatch(setUser({ user: userInfo, role: role, team }));
 
     // Calculate token expiration time in milliseconds

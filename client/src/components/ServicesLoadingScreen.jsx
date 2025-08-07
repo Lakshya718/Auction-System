@@ -17,9 +17,6 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
   // Use effect to check when both services are connected
   useEffect(() => {
     if (redisConnected && kafkaConnected) {
-      console.log(
-        'Both Redis and Kafka are confirmed connected, triggering completion...'
-      );
       // Short delay to ensure UI updates before calling onComplete
       setTimeout(() => {
         if (onComplete) onComplete();
@@ -57,10 +54,7 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
       const newAttemptCount = connectionAttempts + 1;
       setConnectionAttempts(newAttemptCount);
 
-      // Call the API to start services
-      console.log(
-        `Attempting to connect ${step.id} service (attempt ${newAttemptCount})...`
-      );
+
       const response = await API.post(
         '/auctions/start-services',
         {},
@@ -69,10 +63,7 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
         }
       );
 
-      console.log(
-        `Service connection response for ${step.id} (attempt ${newAttemptCount}):`,
-        response.data
-      );
+    
 
       // Check if connection was successful
       if (response.data.success) {
@@ -80,15 +71,12 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
 
         // Check Redis status
         if (stepIndex === 0) {
-          console.log(`Redis status: ${serviceStatus.redis}`);
           const isConnected = serviceStatus.redis === 'connected';
 
           // Update Redis connection status
           if (isConnected) {
-            console.log('Redis connection confirmed successful');
             setRedisConnected(true);
           } else {
-            console.log('Redis connection failed');
             setRedisConnected(false);
           }
 
@@ -97,15 +85,12 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
 
         // Check Kafka status
         if (stepIndex === 1) {
-          console.log(`Kafka status: ${serviceStatus.kafka}`);
           const isConnected = serviceStatus.kafka === 'connected';
 
           // Update Kafka connection status
           if (isConnected) {
-            console.log('Kafka connection confirmed successful');
             setKafkaConnected(true);
           } else {
-            console.log('Kafka connection failed');
             setKafkaConnected(false);
           }
 
@@ -123,13 +108,11 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
           const serviceStatus = response.data.services;
 
           if (stepIndex === 0 && serviceStatus.redis === 'connected') {
-            console.log('Redis connected despite overall failure');
             setRedisConnected(true);
             return true;
           }
 
           if (stepIndex === 1 && serviceStatus.kafka === 'connected') {
-            console.log('Kafka connected despite overall failure');
             setKafkaConnected(true);
             return true;
           }
