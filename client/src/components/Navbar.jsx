@@ -88,7 +88,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
             <>
               <Link
                 to="/register"
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors duration-300"
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 rounded-md transition-all duration-300 shadow-md"
               >
                 <FaUserPlus />
                 <span>Register</span>
@@ -166,7 +166,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
               <>
                 <Link
                   to="/register"
-                  className="flex items-center space-x-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors duration-300 w-full"
+                  className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 rounded-md transition-all duration-300 shadow-md w-full"
                   onClick={closeMobileMenu}
                 >
                   <FaUserPlus />
