@@ -20,13 +20,18 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+
+// Define allowed origins
+const allowedOrigins = [
+  "http://localhost:5173",          // Local development client
+  "http://localhost:5000",          // Local development server
+  "https://auction-system-lakshya.vercel.app",  // Production client
+  "https://auction-server.onrender.com",        // Production server
+];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || [
-      "http://localhost:5173",
-      "https://auction-system-lakshya.vercel.app",
-      "https://auction-server.onrender.com",
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -38,18 +43,10 @@ setupSocketHandlers(io);
 // Attach io to app for controller access
 app.set("io", io);
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// CORS configuration
+// CORS configuration - must be before other middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://auction-system-lakshya.vercel.app",
-      "https://auction-server.onrender.com",
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
@@ -58,8 +55,14 @@ app.use(
       "Access-Control-Allow-Origin",
     ],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
   })
 );
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Debug middleware
 app.use((req, res, next) => {
