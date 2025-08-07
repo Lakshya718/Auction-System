@@ -4,7 +4,9 @@ import {
   FaFootballBall,
   FaBasketballBall,
   FaVolleyballBall,
+  FaUser,
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const PlayerCard = ({
   player,
@@ -18,6 +20,8 @@ const PlayerCard = ({
   currentBid,
   currentTeam,
 }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="player-card bg-white/10 backdrop-blur-lg rounded-2xl shadow-lg overflow-hidden border border-gray-200/20 transition-all duration-300 hover:shadow-2xl hover:scale-105">
       <div className="flex flex-col md:flex-row items-center p-6 gap-6">
@@ -38,7 +42,6 @@ const PlayerCard = ({
         {/* Player Info */}
         <div className="flex-1 text-center md:text-left">
           <h3 className="text-3xl font-bold text-white tracking-wide flex items-center gap-2 justify-center md:justify-start">
-
             {player.sport === 'football' && (
               <FaFootballBall className="text-2xl" />
             )}
@@ -72,6 +75,15 @@ const PlayerCard = ({
 
         {/* Action Buttons */}
         <div className="flex flex-col items-center justify-center gap-4">
+          {/* View Profile Button - Always visible */}
+          <button
+            className="flex items-center gap-2 text-white bg-blue-500 px-6 py-3 rounded-lg hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-lg"
+            onClick={() => navigate(`/player/${player._id}`)}
+          >
+            <FaUser />
+            <span>View Profile</span>
+          </button>
+
           {isAdminView && (
             <button
               className="flex items-center gap-2 text-white bg-green-500 px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-300 transform hover:scale-110 shadow-lg"
