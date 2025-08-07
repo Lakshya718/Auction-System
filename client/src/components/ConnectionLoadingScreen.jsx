@@ -58,6 +58,7 @@ const ConnectionLoadingScreen = ({
       try {
         await processStep(i);
       } catch (error) {
+        console.error(`Error processing step ${i}:`, error);
         return; // Stop on first error
       }
     }

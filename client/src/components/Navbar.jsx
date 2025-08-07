@@ -19,8 +19,6 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
 
   // For debugging - can be removed later
   useEffect(() => {
-    console.log('Current user in Navbar:', user);
-    console.log('Current role in Navbar:', role);
   }, [user, role]);
 
   const handleProfileClick = () => {

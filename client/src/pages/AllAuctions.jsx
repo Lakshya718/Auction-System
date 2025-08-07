@@ -270,9 +270,6 @@ const AllAuctions = () => {
         <ServicesLoadingScreen
           onComplete={async () => {
             try {
-              console.log(
-                'Services connected successfully, updating auction status...'
-              );
               // Update auction status to active
               const statusResponse = await API.patch(
                 `/auctions/${selectedAuctionId}/status`,
@@ -280,9 +277,6 @@ const AllAuctions = () => {
               );
 
               if (statusResponse.data.success) {
-                console.log(
-                  'Auction status updated to active, redirecting to bid page'
-                );
                 // Clear any previous errors
                 setRedisError('');
 
@@ -291,10 +285,7 @@ const AllAuctions = () => {
                   // Hide the loading screen first
                   setShowServicesLoadingScreen(false);
 
-                  // Then redirect to the auction bid page
-                  console.log(
-                    `Redirecting to auction bid page: /auction-bid-page/${selectedAuctionId}`
-                  );
+                  
                   navigate(`/auction-bid-page/${selectedAuctionId}`);
                 }, 1500);
               } else {
@@ -333,10 +324,7 @@ const AllAuctions = () => {
               // Hide the loading screen first
               setShowResumeLoadingScreen(false);
 
-              // Then redirect to the auction bid page
-              console.log(
-                `Redirecting to auction bid page: /auction-bid-page/${selectedAuctionId}`
-              );
+              
               navigate(`/auction-bid-page/${selectedAuctionId}`);
             }, 1500);
           }}

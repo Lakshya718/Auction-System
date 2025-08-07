@@ -27,7 +27,6 @@ const Status = {
  */
 const AnimatedServiceConnector = ({
   steps: initialSteps,
-  onComplete,
   onError,
   connectService,
   title = 'Connecting Services',
@@ -45,18 +44,13 @@ const AnimatedServiceConnector = ({
       try {
         // Start the connection process
         const result = await processSteps();
-        console.log('Process steps result:', result);
 
         if (result.allConnected) {
           setOverallStatus('complete');
-          console.log('All services connected successfully');
           // Let ServicesLoadingScreen handle this with its useEffect
         } else if (result.connectedCount > 0) {
           // At least one service connected, we consider this a success
           setOverallStatus('complete');
-          console.log(
-            `Partial success: ${result.connectedCount}/${result.totalSteps} services connected`
-          );
           // Let ServicesLoadingScreen handle this with its useEffect
         } else {
           // No services connected at all
@@ -94,8 +88,6 @@ const AnimatedServiceConnector = ({
       }
     }
 
-    // Log connection status
-    console.log(`Connected ${connectedCount}/${totalSteps} services`);
 
     // Return detailed result object
     return {
@@ -136,17 +128,13 @@ const AnimatedServiceConnector = ({
               idx === stepIndex ? { ...step, status: Status.CONNECTED } : step
             )
           );
-          console.log(
-            `Service ${steps[stepIndex].name} connected successfully`
-          );
+          
           break;
         } else {
           // If failed but we have retries left
           currentRetry++;
           if (currentRetry < maxRetries) {
-            console.log(
-              `Retry ${currentRetry}/${maxRetries} for ${steps[stepIndex].name}...`
-            );
+            
             // Wait before retrying
             await new Promise((resolve) => setTimeout(resolve, 1000));
           } else {
@@ -167,9 +155,6 @@ const AnimatedServiceConnector = ({
 
         // If we have retries left
         if (currentRetry < maxRetries) {
-          console.log(
-            `Retry ${currentRetry}/${maxRetries} for ${steps[stepIndex].name} after error...`
-          );
           // Wait before retrying
           await new Promise((resolve) => setTimeout(resolve, 1000));
         } else {

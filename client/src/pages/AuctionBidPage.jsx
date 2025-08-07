@@ -33,7 +33,6 @@ const AuctionBidPage = () => {
   const isPageReloading = useRef(false);
   useEffect(() => {
     if (team && team._id) {
-      console.log('Setting loggedInTeamId from Redux store:', team._id);
       setLoggedInTeamId(team._id);
     } else {
       // Fallback: fetch team from backend if not in Redux store and role is team_owner
@@ -46,7 +45,7 @@ const AuctionBidPage = () => {
               },
             });
             if (response.data && response.data._id) {
-              console.log('Fetched team from backend:', response.data._id);
+              
               setLoggedInTeamId(response.data._id);
             }
           } catch (error) {
@@ -144,16 +143,6 @@ const AuctionBidPage = () => {
     };
   }, [role]);
 
-  // Handle custom navigation with confirmation
-  const handleNavigation = (path) => {
-    if (role === 'admin') {
-      setShowLeaveConfirmModal(true);
-      setPendingNavigation(path);
-    } else {
-      navigate(path);
-    }
-  };
-
   useEffect(() => {
     if (!auctionId || !token) return;
 
@@ -235,14 +224,11 @@ const AuctionBidPage = () => {
 
     // Listen for refresh-player-data event to fetch fresh player data from Redis
     newSocket.on('refresh-player-data', async ({ playerId }) => {
-      console.log('Received refresh-player-data event for playerId:', playerId);
       if (!playerId || !token) {
-        console.log('Missing playerId or token, skipping fetch');
         return;
       }
       try {
         const url = `/players/redis/player/${playerId}`;
-        console.log('Fetching fresh player data from:', url);
         const response = await API.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -252,10 +238,8 @@ const AuctionBidPage = () => {
             ...msgs,
             `Player data refreshed for playerId: ${playerId}`,
           ]);
-          console.log('Player data updated in state for playerId:', playerId);
-        } else {
-          console.log('Failed to fetch player data or no player data returned');
-        }
+          
+        } 
       } catch (error) {
         setMessages((msgs) => [
           ...msgs,
@@ -278,7 +262,6 @@ const AuctionBidPage = () => {
 
     // Listen for player-sold event to refresh admin player list
     newSocket.on('player-sold', async (data) => {
-      console.log('player-sold event received:', data);
       if (roleRef.current === 'admin') {
         try {
           const response = await API.get(`/auctions/${auctionId}`);
@@ -299,7 +282,7 @@ const AuctionBidPage = () => {
           ]);
         }
       }
-      console.log('Disabling Placebid button');
+      
       setPlaceBidDisabled(true);
     });
 
@@ -351,8 +334,7 @@ const AuctionBidPage = () => {
           setPlayerId(null);
         }
       }
-      // Disable placeBid button after player marked unsold
-      console.log('Disabling Placebid button');
+      
       setPlaceBidDisabled(true);
     };
 
@@ -404,7 +386,7 @@ const AuctionBidPage = () => {
           const response = await API.get(url, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          console.log('after request get ', url);
+          
           if (response.data.success && response.data.player) {
             setTeamOwnerPlayer(response.data.player);
           }
@@ -476,7 +458,6 @@ const AuctionBidPage = () => {
           `Player sent: ${data.player.playerName}`,
         ]);
       }
-      console.log('Enabling Placebid button');
       setPlaceBidDisabled(false);
     };
 
@@ -491,12 +472,7 @@ const AuctionBidPage = () => {
     if (!socket) return;
 
     const handlePlayerCacheCleared = (data) => {
-      console.log(
-        'player-cache-cleared event received for role:',
-        role,
-        'with playerId:',
-        data.playerId
-      );
+    
       setMessages((msgs) => [
         ...msgs,
         `Player cache cleared for id: ${data.playerId}`,
@@ -524,7 +500,6 @@ const AuctionBidPage = () => {
         const response = await API.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('after request get ', url);
         if (response.data.success && response.data.player) {
           setTeamOwnerPlayer(response.data.player);
         }
@@ -764,11 +739,6 @@ const AuctionBidPage = () => {
                                 }
                               );
 
-                              console.log(
-                                'Bid response received:',
-                                response.data
-                              );
-
                               if (response.data.success) {
                                 setMessages((msgs) => [
                                   ...msgs,
@@ -917,11 +887,6 @@ const AuctionBidPage = () => {
                 <button
                   className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center justify-center transition-colors duration-300"
                   onClick={async () => {
-                    console.log('Sold button clicked with:', {
-                      auctionId,
-                      playerId,
-                      teamId,
-                    });
                     if (!auctionId || !playerId || !teamId) {
                       setMessages((msgs) => [
                         ...msgs,
