@@ -23,7 +23,7 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || ["http://localhost:5173", "https://auction-system-deploy.onrender.com"],
+    origin: process.env.CORS_ORIGIN || ["http://localhost:5173", "https://auction-system-deploy.onrender.com", "https://auction-system-lakshya.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -38,7 +38,7 @@ app.set("io", io);
 // CORS configuration - must be before other middleware
 app.use(
   cors({
-     origin: process.env.CORS_ORIGIN || ["http://localhost:5173","https://auction-system-deploy.onrender.com"],
+     origin: process.env.CORS_ORIGIN || ["http://localhost:5173","https://auction-system-deploy.onrender.com", "https://auction-system-lakshya.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
@@ -57,6 +57,9 @@ app.use(
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Define allowed origins for manual CORS control
+const allowedOrigins = ["http://localhost:5173", "https://auction-system-deploy.onrender.com", "https://auction-system-lakshya.vercel.app"];
 
 // Additional preflight handler for manual CORS control
 app.options("*", (req, res) => {
