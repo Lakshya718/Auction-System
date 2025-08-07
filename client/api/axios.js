@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://auction-system-deploy.onrender.com/api',
+  baseURL: 'https://auction-system-deploy.onrender.com/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
