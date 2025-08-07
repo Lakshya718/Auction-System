@@ -23,16 +23,22 @@ const httpServer = createServer(app);
 
 // Define allowed origins
 const allowedOrigins = [
-  "http://localhost:5173",          // Local development client
-  "http://localhost:5000",          // Local development server
-  "https://auction-system-lakshya.vercel.app",  // Production client
-  "https://auction-server.onrender.com",        // Production server
+  "http://localhost:5173", // Local development client
+  "http://localhost:5000", // Local development server
+  "https://auction-system-lakshya.vercel.app", // Production client
+  "https://auction-server.onrender.com", // Production server
 ];
 
 const io = new Server(httpServer, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Accept",
+      "Access-Control-Allow-Origin",
+    ],
     credentials: true,
   },
 });
