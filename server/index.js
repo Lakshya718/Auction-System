@@ -50,6 +50,7 @@ app.use(
       "Content-Type",
       "Authorization",
       "Accept",
+      "Access-Control-Allow-Origin",
     ],
     credentials: true,
     preflightContinue: false,
