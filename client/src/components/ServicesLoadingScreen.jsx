@@ -47,23 +47,37 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
     try {
       // Add a small delay between connection attempts
       if (stepIndex > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       // Increment connection attempts
       const newAttemptCount = connectionAttempts + 1;
       setConnectionAttempts(newAttemptCount);
 
-
-      const response = await API.post(
-        '/auctions/start-services',
-        {},
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
+      // Get token for authentication
+      const token = localStorage.getItem('token');
+      console.log(
+        'Token for service connection:',
+        token ? 'Present' : 'Missing'
       );
 
-    
+      // Set timeout for API call (increased to account for full service check)
+      const response = await Promise.race([
+        API.post(
+          '/auctions/start-services',
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 8000, // Increased to 8 second timeout
+          }
+        ),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Service connection timeout')),
+            8000
+          )
+        ),
+      ]);
 
       // Check if connection was successful
       if (response.data.success) {
@@ -72,28 +86,14 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
         // Check Redis status
         if (stepIndex === 0) {
           const isConnected = serviceStatus.redis === 'connected';
-
-          // Update Redis connection status
-          if (isConnected) {
-            setRedisConnected(true);
-          } else {
-            setRedisConnected(false);
-          }
-
+          setRedisConnected(isConnected);
           return isConnected;
         }
 
         // Check Kafka status
         if (stepIndex === 1) {
           const isConnected = serviceStatus.kafka === 'connected';
-
-          // Update Kafka connection status
-          if (isConnected) {
-            setKafkaConnected(true);
-          } else {
-            setKafkaConnected(false);
-          }
-
+          setKafkaConnected(isConnected);
           return isConnected;
         }
       } else {
@@ -104,7 +104,6 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
 
         // Check if we have any partial success
         if (response.data.services) {
-          // Even if the overall success is false, check individual service statuses
           const serviceStatus = response.data.services;
 
           if (stepIndex === 0 && serviceStatus.redis === 'connected') {
@@ -123,7 +122,38 @@ const ServicesLoadingScreen = ({ onComplete, onError }) => {
 
       return false;
     } catch (error) {
-      console.error(`Connection error for ${step.id}:`, error);
+      console.error(`Connection error for ${step.id}:`, error.message);
+
+      // Check for authentication errors
+      if (error.response && error.response.status === 401) {
+        console.error(
+          'Authentication failed - token may be invalid or missing'
+        );
+        if (onError) {
+          onError('Authentication required. Please login again.');
+          return false;
+        }
+      }
+
+      // Check for server errors
+      if (error.response && error.response.status === 500) {
+        console.error('Server error:', error.response.data);
+      }
+
+      // If it's a timeout or network error, we might want to retry (but only once for speed)
+      if (
+        connectionAttempts < 2 &&
+        (error.message.includes('timeout') ||
+          error.message.includes('Network Error') ||
+          error.code === 'ECONNABORTED')
+      ) {
+        console.log(
+          `Retrying ${step.id} connection (attempt ${connectionAttempts + 1})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return await connectService(step, stepIndex);
+      }
+
       return false;
     }
   };

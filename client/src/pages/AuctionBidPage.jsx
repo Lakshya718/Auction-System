@@ -3,172 +3,371 @@ import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import API from '../../api/axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 import LeaveConfirmModal from '../components/LeaveConfirmModal';
+import PlayerWonAnimation from '../components/PlayerWonAnimation';
 
 const AuctionBidPage = () => {
   const { auctionId } = useParams();
   const navigate = useNavigate();
+
+  // Core states
   const [socket, setSocket] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Auction data
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [minBidIncrement, setMinBidIncrement] = useState(500000);
-  // Removed unused bidAmounts and setBidAmounts to fix eslint error
-  const [messages, setMessages] = useState([]);
-  const [connected, setConnected] = useState(false);
-  const [teamId, setTeamId] = useState('');
-  const [loggedInTeamId, setLoggedInTeamId] = useState('');
+  const [currentAuctionPlayer, setCurrentAuctionPlayer] = useState(null);
+
+  // User data
   const [token, setToken] = useState('');
-  const team = useSelector((state) => state.user.team);
+  const [loggedInTeamId, setLoggedInTeamId] = useState('');
+  const [teamId, setTeamId] = useState('');
 
-  const [teamOwnerPlayer, setTeamOwnerPlayer] = useState(null);
-  const [playerId, setPlayerId] = useState(null);
-  const [isSelling, setIsSelling] = useState(false);
-  const role = useSelector((state) => state.user.role);
-  const initialized = useSelector((state) => state.user.initialized);
-
-  const [loading, setLoading] = useState(true);
-  const [placeBidDisabled, setPlaceBidDisabled] = useState(false);
+  // UI states
+  const [placeBidDisabled, setPlaceBidDisabled] = useState(true);
   const [showLeaveConfirmModal, setShowLeaveConfirmModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
+
+  // Animation states
+  const [showWinAnimation, setShowWinAnimation] = useState(false);
+  const [winAnimationData, setWinAnimationData] = useState(null);
+
+  // Access control states
+  const [isAuctionAccessible, setIsAuctionAccessible] = useState(false);
+  const [accessDeniedReason, setAccessDeniedReason] = useState('');
+  const [isEstablishingConnection, setIsEstablishingConnection] =
+    useState(false);
+  const [connectionCheckCompleted, setConnectionCheckCompleted] =
+    useState(false);
+
+  // Redux states
+  const role = useSelector((state) => state.user.role);
+  const team = useSelector((state) => state.user.team);
+  const initialized = useSelector((state) => state.user.initialized);
+
+  // Refs
   const isPageReloading = useRef(false);
+  const socketRef = useRef(null);
+  const currentAuctionPlayerRef = useRef(null);
+  const teamsRef = useRef([]);
+  const loggedInTeamIdRef = useRef('');
+  const hasConnectionBeenEstablished = useRef(false);
+
+  // Update refs when values change
   useEffect(() => {
-    if (team && team._id) {
-      setLoggedInTeamId(team._id);
-    } else {
-      // Fallback: fetch team from backend if not in Redux store and role is team_owner
-      if (role === 'team_owner') {
-        const fetchMyTeam = async () => {
-          try {
-            const response = await API.get('/teams/my-team', {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
-            });
-            if (response.data && response.data._id) {
-              
-              setLoggedInTeamId(response.data._id);
-            }
-          } catch (error) {
-            console.error('Error fetching my team:', error);
-          }
-        };
-        fetchMyTeam();
-      }
-    }
-  }, [team, role]);
+    currentAuctionPlayerRef.current = currentAuctionPlayer;
+  }, [currentAuctionPlayer]);
 
   useEffect(() => {
-    if (role && token && initialized) {
-      setLoading(false);
-    }
-  }, [role, token, initialized]);
-
-  const playersRef = useRef(players);
-  playersRef.current = players;
-
-  const teamOwnerPlayerRef = useRef(teamOwnerPlayer);
-  useEffect(() => {
-    teamOwnerPlayerRef.current = teamOwnerPlayer;
-  }, [teamOwnerPlayer]);
+    teamsRef.current = teams;
+  }, [teams]);
 
   useEffect(() => {
-    // Get token from localStorage
+    loggedInTeamIdRef.current = loggedInTeamId;
+  }, [loggedInTeamId]);
+  // Initialize states
+  useEffect(() => {
     const storedToken = localStorage.getItem('token');
     setToken(storedToken);
   }, []);
 
-  // New useEffect to read playerId from localStorage on mount
+  // Set up logged in team ID
   useEffect(() => {
-    const storedPlayerId = localStorage.getItem('playerId');
-    if (storedPlayerId) {
-      setPlayerId(storedPlayerId);
+    if (team && team._id) {
+      setLoggedInTeamId(team._id);
+    } else if (role === 'team_owner') {
+      const fetchMyTeam = async () => {
+        try {
+          const response = await API.get('/teams/my-team', {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+          if (response.data && response.data._id) {
+            setLoggedInTeamId(response.data._id);
+          }
+        } catch (error) {
+          console.error('Error fetching my team:', error);
+        }
+      };
+      fetchMyTeam();
     }
-  }, []);
+  }, [team, role]);
 
-  // Add confirmation before leaving the page
+  // Set loading state
   useEffect(() => {
-    // Only add the confirmation for admins
-    if (role !== 'admin') return;
+    if (role && token && initialized) {
+      setLoading(false);
 
-    // Handler for keydown to detect page reload shortcuts (F5, Ctrl+R)
+      // Initialize access control states based on role
+      if (role === 'admin') {
+        setIsAuctionAccessible(true);
+        setConnectionCheckCompleted(true);
+        setIsEstablishingConnection(false);
+      } else if (role === 'team_owner') {
+        // Check if team owner was previously connected successfully
+        const wasConnected = localStorage.getItem(
+          `auction-${auctionId}-team-connected`
+        );
+        if (wasConnected === 'true') {
+          setIsAuctionAccessible(true);
+          setConnectionCheckCompleted(true);
+          setIsEstablishingConnection(false);
+          hasConnectionBeenEstablished.current = true;
+        } else {
+          setIsEstablishingConnection(false);
+        }
+      }
+    }
+  }, [role, token, initialized, auctionId]);
+
+  // Fetch auction data
+  useEffect(() => {
+    const fetchAuction = async () => {
+      try {
+        const response = await API.get(`/auctions/${auctionId}`);
+        const auction = response.data.auction;
+
+        const filteredPlayers = (auction.players || []).filter(
+          (player) => player.status === 'available'
+        );
+        setPlayers(filteredPlayers);
+        setTeams(auction.teams || []);
+        setMinBidIncrement(auction.minBidIncrement || 500000);
+
+        if (auction.teams && auction.teams.length > 0) {
+          setTeamId(auction.teams[0]._id || auction.teams[0]);
+        }
+
+        // Check auction access for team owners
+        if (role === 'team_owner') {
+          // Check if team owner was already successfully connected
+          const wasConnected = localStorage.getItem(
+            `auction-${auctionId}-team-connected`
+          );
+          if (wasConnected === 'true') {
+            setIsAuctionAccessible(true);
+            setConnectionCheckCompleted(true);
+            setIsEstablishingConnection(false);
+            return;
+          }
+
+          // Check if auction is running/active
+          if (auction.status !== 'active' && auction.status !== 'running') {
+            setIsAuctionAccessible(false);
+            setAccessDeniedReason(
+              'The auction is not currently running. Please wait until it starts.'
+            );
+            setConnectionCheckCompleted(true);
+            return;
+          }
+
+          // For now, allow access to all team owners when auction is active
+          // TODO: Implement proper teamOwners authorization when backend is ready
+          setIsAuctionAccessible(true);
+          setConnectionCheckCompleted(true);
+          setIsEstablishingConnection(false);
+        }
+        // Admin states are already set in the loading useEffect
+      } catch (error) {
+        toast.error(`Error fetching auction data: ${error.message}`);
+      }
+    };
+    fetchAuction();
+  }, [auctionId, role, token]);
+
+  // Fetch current auction player from Redis
+  useEffect(() => {
+    const fetchCurrentPlayer = async () => {
+      const playerId = localStorage.getItem('playerId');
+      if (playerId && token) {
+        try {
+          const response = await API.get(`/players/redis/player/${playerId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.data.success && response.data.player) {
+            setCurrentAuctionPlayer(response.data.player);
+
+            // Check if this user is the current highest bidder
+            if (
+              role === 'team_owner' &&
+              response.data.player.currentHighestBidder === loggedInTeamId
+            ) {
+              console.log(
+                'User is current highest bidder, waiting for other team'
+              );
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching current player:', error);
+          toast.error(`Error fetching current player: ${error.message}`);
+        }
+      }
+    };
+    fetchCurrentPlayer();
+  }, [token, loggedInTeamId, role]);
+
+  // Enable/disable bidding based on current auction player and role
+  useEffect(() => {
+    if (role === 'team_owner' && currentAuctionPlayer) {
+      setPlaceBidDisabled(false);
+    } else {
+      setPlaceBidDisabled(true);
+    }
+  }, [currentAuctionPlayer, role]);
+
+  // Handle page refresh/navigation warnings and cleanup
+  useEffect(() => {
     const handleKeyDown = (e) => {
-      // F5 key or Ctrl+R
-      if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+      if (
+        (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) &&
+        role === 'admin'
+      ) {
         isPageReloading.current = true;
-        // Reset after a short delay to handle cases where reload is canceled
         setTimeout(() => {
           isPageReloading.current = false;
         }, 1000);
       }
     };
 
-    // Handle beforeunload event (closing tab or page)
     const handleBeforeUnload = (e) => {
-      // Don't show confirmation if reloading the page
-      if (isPageReloading.current) {
-        isPageReloading.current = false;
-        return;
-      }
+      // Clear team owner connection flag when leaving the page
+      localStorage.removeItem(`auction-${auctionId}-team-connected`);
 
-      const message =
-        "You may miss many valuable players, don't leave. Wait till finish of auction.";
-      e.preventDefault();
-      e.returnValue = message; // Required for Chrome
-      return message; // For older browsers
+      if (role === 'admin') {
+        if (isPageReloading.current) {
+          isPageReloading.current = false;
+          return;
+        }
+        const message =
+          "You may miss many valuable players, don't leave. Wait till finish of auction.";
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      }
     };
 
-    // Handle navigation attempts with back button
     const handlePopState = (e) => {
-      // Show the custom modal and store the intended navigation
+      // Clear team owner connection flag when navigating away
+      localStorage.removeItem(`auction-${auctionId}-team-connected`);
+
       if (role === 'admin') {
         e.preventDefault();
         setShowLeaveConfirmModal(true);
-        setPendingNavigation('/'); // Default to home, will be handled by the modal confirm action
+        setPendingNavigation('/');
       }
     };
 
-    // Add event listeners
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('keydown', handleKeyDown);
-
-    // Push a new entry to the history stack to enable detecting the back button
     window.history.pushState(null, null, window.location.pathname);
 
-    // Clean up function
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [role]);
+  }, [role, auctionId]);
 
+  // WebSocket Setup - Simplified approach
   useEffect(() => {
-    if (!auctionId || !token) return;
+    if (!auctionId || !token || !role) return;
+
+    // For team owners, check if they're allowed to connect
+    const canTeamOwnerConnect =
+      role === 'team_owner' &&
+      (isEstablishingConnection || isAuctionAccessible);
+
+    const shouldConnect = role === 'admin' || canTeamOwnerConnect;
+
+    if (role === 'team_owner') {
+      console.log('Team owner socket connection check:', {
+        isEstablishingConnection,
+        isAuctionAccessible,
+        canTeamOwnerConnect,
+        shouldConnect,
+      });
+    }
+
+    if (!shouldConnect) {
+      return;
+    }
+
+    // Prevent multiple connections - especially for team owners who change states
+    if (socketRef.current && socketRef.current.connected) {
+      return;
+    }
+
+    // For team owners, prevent reconnection if they already had a successful connection
+    if (role === 'team_owner' && hasConnectionBeenEstablished.current) {
+      return;
+    }
+
+    // Clean up any existing disconnected socket
+    if (socketRef.current) {
+      console.log('Cleaning up existing socket');
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      setSocket(null);
+    }
+
+    console.log('Creating new socket connection for role:', role, {
+      isEstablishingConnection,
+      isAuctionAccessible,
+      hasConnectionBeenEstablished: hasConnectionBeenEstablished.current,
+    });
 
     const backendUrl = 'http://localhost:5000';
-
     const newSocket = io(backendUrl, {
       auth: { token },
       transports: ['websocket'],
     });
 
     setSocket(newSocket);
+    socketRef.current = newSocket;
 
+    // Connection handlers
     newSocket.on('connect', () => {
       setConnected(true);
+      console.log(
+        `[${role}] Socket connected, joining auction room:`,
+        auctionId
+      );
       newSocket.emit('join-auction', { auctionId });
+      toast.success('Connected to auction room');
     });
 
-    newSocket.on('joined-auction', (data) => {
-      setMessages((msgs) => [...msgs, `Joined auction: ${data.message}`]);
+    newSocket.on('joined-auction', () => {
+      toast.success('Successfully joined the auction');
+
+      // Mark that connection has been established for team owners
+      if (role === 'team_owner') {
+        hasConnectionBeenEstablished.current = true;
+        // Persist connection state across remounts
+        localStorage.setItem(`auction-${auctionId}-team-connected`, 'true');
+      }
+
+      // Connection check is complete for all roles
+      setConnectionCheckCompleted(true);
     });
 
+    newSocket.on('disconnect', () => {
+      setConnected(false);
+      toast.error('Disconnected from auction room');
+    });
+
+    // Real-time bidding events
     newSocket.on('bid-placed', (bid) => {
-      setMessages((msgs) => [
-        ...msgs,
-        `Bid placed: ${bid.teamName} bid ${bid.amount} for ${bid.playerName}`,
-      ]);
+      toast.success(
+        `Bid placed: ${bid.teamName} bid ₹${bid.amount?.toLocaleString()} for ${bid.playerName}`
+      );
+
+      // Update player list with new bid info
       setPlayers((prevPlayers) => {
         return prevPlayers.map((player) => {
           if (player.player._id === bid.playerId) {
@@ -184,10 +383,30 @@ const AuctionBidPage = () => {
           return player;
         });
       });
+
+      // Update current auction player if it matches the bid
+      if (
+        currentAuctionPlayerRef.current &&
+        currentAuctionPlayerRef.current._id === bid.playerId
+      ) {
+        setCurrentAuctionPlayer((prev) => ({
+          ...prev,
+          currentBid: bid.amount,
+          currentTeam: bid.teamName,
+          currentHighestBidder: bid.teamId,
+        }));
+      }
     });
 
-    // Listen for bidUpdate event to update current bid in real-time
+    // Real-time bid updates from Kafka
     newSocket.on('bidUpdate', (update) => {
+      console.log(`[${role}] Received bidUpdate:`, update);
+
+      // Find team name from team ID
+      const teamName =
+        teams.find((team) => team._id === update.currentTeam)?.teamName ||
+        update.currentTeam;
+
       setPlayers((prevPlayers) => {
         return prevPlayers.map((player) => {
           if (player.player._id === update.playerId) {
@@ -200,108 +419,111 @@ const AuctionBidPage = () => {
           return player;
         });
       });
-      // If the updated player is the teamOwnerPlayer, update its currentBid as well
+
+      // Update current auction player if it matches
       if (
-        teamOwnerPlayerRef.current &&
-        teamOwnerPlayerRef.current._id === update.playerId
+        currentAuctionPlayerRef.current &&
+        currentAuctionPlayerRef.current._id === update.playerId
       ) {
-        setTeamOwnerPlayer((prev) => ({
+        console.log(`[${role}] Updating current auction player:`, {
+          oldBid: currentAuctionPlayerRef.current.currentBid,
+          newBid: update.currentBid,
+          oldTeam: currentAuctionPlayerRef.current.currentTeam,
+          newTeam: teamName,
+        });
+
+        setCurrentAuctionPlayer((prev) => ({
           ...prev,
           currentBid: update.currentBid,
-          currentTeam: update.currentTeam,
+          currentTeam: teamName, // Use resolved team name
+          currentHighestBidder: update.currentTeam, // Store team ID
         }));
+      } else {
+        console.log(
+          `[${role}] No current auction player to update or player ID mismatch:`,
+          {
+            currentPlayerRef: currentAuctionPlayerRef.current?._id,
+            updatePlayerId: update.playerId,
+          }
+        );
       }
     });
 
-    newSocket.on('error', (error) => {
-      setMessages((msgs) => [...msgs, `Error: ${error.message || error}`]);
+    // Player management events
+    newSocket.on('player-sent', (data) => {
+      // Update current auction player for all users
+      setCurrentAuctionPlayer(data.player);
+      localStorage.setItem('playerId', data.player._id);
+
+      // Show toast for all users, not just team owners
+      toast(`🏏 ${data.player.playerName} is now up for auction!`, {
+        icon: '🎯',
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
+      });
+
+      // Enable bidding for team owners
+      if (role === 'team_owner') {
+        setPlaceBidDisabled(false);
+      }
     });
 
-    newSocket.on('disconnect', () => {
-      setConnected(false);
-      setMessages((msgs) => [...msgs, 'Disconnected from server']);
-    });
-
-    // Listen for refresh-player-data event to fetch fresh player data from Redis
     newSocket.on('refresh-player-data', async ({ playerId }) => {
-      if (!playerId || !token) {
-        return;
-      }
+      if (!playerId || !token) return;
+
       try {
-        const url = `/players/redis/player/${playerId}`;
-        const response = await API.get(url, {
+        const response = await API.get(`/players/redis/player/${playerId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (response.data.success && response.data.player) {
-          setTeamOwnerPlayer(response.data.player);
-          setMessages((msgs) => [
-            ...msgs,
-            `Player data refreshed for playerId: ${playerId}`,
-          ]);
-          
-        } 
-      } catch (error) {
-        setMessages((msgs) => [
-          ...msgs,
-          `Error refreshing player data: ${error.message}`,
-        ]);
-        console.error('Error fetching fresh player data:', error);
-      }
-    });
+          console.log(`[${role}] Player data refreshed:`, response.data.player);
+          setCurrentAuctionPlayer(response.data.player);
 
-    // Listen for user-joined event to show when a team_owner joins
-    const roleRef = { current: role };
-    newSocket.on('user-joined', (data) => {
-      if (roleRef.current === 'admin') {
-        setMessages((msgs) => [
-          ...msgs,
-          `Team owner joined with email: ${data.email}`,
-        ]);
-      }
-    });
-
-    // Listen for player-sold event to refresh admin player list
-    newSocket.on('player-sold', async (data) => {
-      if (roleRef.current === 'admin') {
-        try {
-          const response = await API.get(`/auctions/${auctionId}`);
-          if (response.data.auction) {
-            const filteredPlayers = (
-              response.data.auction.players || []
-            ).filter((player) => player.status === 'available');
-            setPlayers(filteredPlayers);
-            setMessages((msgs) => [
-              ...msgs,
-              `Player sold: ${data.playerId} refreshed player list`,
-            ]);
+          // Only show toast for team owners, not admin (to reduce noise)
+          if (role === 'team_owner') {
+            toast.success(
+              `Player data updated: ${response.data.player.playerName}`
+            );
           }
-        } catch (error) {
-          setMessages((msgs) => [
-            ...msgs,
-            `Error refreshing player list after sale: ${error.message}`,
-          ]);
         }
+      } catch (error) {
+        console.error(`[${role}] Error refreshing player data:`, error);
+        toast.error(`Error refreshing player data: ${error.message}`);
       }
-      
-      setPlaceBidDisabled(true);
     });
 
-    return () => {
-      newSocket.disconnect();
-    };
-  }, [auctionId, token, role]); // Removed teamOwnerPlayer to prevent socket reconnect on player state change
+    // Player sold/unsold events
+    newSocket.on('player-sold', async (data) => {
+      // Check if current team won the player (for team owners)
+      if (
+        role === 'team_owner' &&
+        data.teamId === loggedInTeamIdRef.current &&
+        currentAuctionPlayerRef.current
+      ) {
+        // Get team name for the animation
+        const winningTeam = teamsRef.current.find(
+          (team) => team._id === data.teamId
+        );
+        const teamName = winningTeam ? winningTeam.name : 'Your Team';
 
-  useEffect(() => {
-    if (!socket) return;
+        // Set animation data
+        setWinAnimationData({
+          playerName:
+            currentAuctionPlayerRef.current.playerName ||
+            currentAuctionPlayerRef.current.name,
+          teamName: teamName,
+          soldPrice:
+            data.soldPrice || currentAuctionPlayerRef.current.currentBid,
+        });
 
-    const handlePlayerUnsold = async ({
-      auctionId: eventAuctionId,
-      playerId,
-    }) => {
-      if (eventAuctionId !== auctionId) return;
-      setMessages((msgs) => [...msgs, `Player marked as unsold: ${playerId}`]);
+        // Show animation
+        setShowWinAnimation(true);
+      }
 
-      // Refetch all players for admin to re-render the list
       if (role === 'admin') {
         try {
           const response = await API.get(`/auctions/${auctionId}`);
@@ -310,101 +532,124 @@ const AuctionBidPage = () => {
               response.data.auction.players || []
             ).filter((player) => player.status === 'available');
             setPlayers(filteredPlayers);
+            toast.success(
+              `Player sold: ${data.playerId} - refreshed player list`
+            );
           }
         } catch (error) {
-          setMessages((msgs) => [
-            ...msgs,
-            `Error fetching auction data: ${error.message}`,
-          ]);
-        }
-      } else {
-        setPlayers((prevPlayers) =>
-          prevPlayers.map((player) =>
-            player.player._id === playerId
-              ? { ...player, status: 'unsold' }
-              : player
-          )
-        );
-        if (
-          teamOwnerPlayerRef.current &&
-          teamOwnerPlayerRef.current._id === playerId
-        ) {
-          setTeamOwnerPlayer(null);
-          localStorage.removeItem('playerId');
-          setPlayerId(null);
+          toast.error(`Error fetching auction data: ${error.message}`);
         }
       }
-      
       setPlaceBidDisabled(true);
-    };
+    });
 
-    socket.on('player-unsold', handlePlayerUnsold);
+    newSocket.on(
+      'player-unsold',
+      async ({ auctionId: eventAuctionId, playerId }) => {
+        if (eventAuctionId !== auctionId) return;
+
+        toast(`Player marked as unsold: ${playerId}`, {
+          icon: 'ℹ️',
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+
+        if (role === 'admin') {
+          try {
+            const response = await API.get(`/auctions/${auctionId}`);
+            if (response.data.auction) {
+              const filteredPlayers = (
+                response.data.auction.players || []
+              ).filter((player) => player.status === 'available');
+              setPlayers(filteredPlayers);
+            }
+          } catch (error) {
+            toast.error(`Error fetching auction data: ${error.message}`);
+          }
+        }
+
+        if (
+          currentAuctionPlayerRef.current &&
+          currentAuctionPlayerRef.current._id === playerId
+        ) {
+          setCurrentAuctionPlayer(null);
+          localStorage.removeItem('playerId');
+        }
+
+        setPlaceBidDisabled(true);
+      }
+    );
+
+    newSocket.on('player-cache-cleared', (data) => {
+      if (role === 'admin') {
+        toast(`Player cache cleared for id: ${data.playerId}`, {
+          icon: 'ℹ️',
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+      }
+      localStorage.removeItem('playerId');
+      setCurrentAuctionPlayer(null);
+    });
+
+    // User activity - show for admin only
+    newSocket.on('user-joined', (data) => {
+      if (role === 'admin') {
+        toast(`Team owner joined: ${data.email}`, {
+          icon: 'ℹ️',
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+      }
+    });
+
+    newSocket.on('error', (error) => {
+      toast.error(`Error: ${error.message || error}`);
+    });
 
     return () => {
-      socket.off('player-unsold', handlePlayerUnsold);
-    };
-  }, [socket, auctionId, teamOwnerPlayer, role]);
-
-  // Fetch auction data from backend API
-  useEffect(() => {
-    const fetchAuction = async () => {
-      try {
-        const response = await API.get(`/auctions/${auctionId}`);
-        // auction data is in data.auction
-        const filteredPlayers = (response.data.auction.players || []).filter(
-          (player) => player.status === 'available'
-        );
-        setPlayers(filteredPlayers);
-        setTeams(response.data.auction.teams || []);
-        setMinBidIncrement(response.data.auction.minBidIncrement || 500000);
-        // Set default teamId to first team if available
-        if (
-          response.data.auction.teams &&
-          response.data.auction.teams.length > 0
-        ) {
-          setTeamId(
-            response.data.auction.teams[0]._id || response.data.auction.teams[0]
-          );
-        }
-      } catch (error) {
-        setMessages((msgs) => [
-          ...msgs,
-          `Error fetching auction data: ${error.message}`,
-        ]);
+      console.log('useEffect cleanup triggered for role:', role);
+      // Don't disconnect if team owner just got access
+      if (role === 'team_owner' && isAuctionAccessible) {
+        console.log('Skipping socket disconnect - team owner has access');
+        return;
       }
+      if (newSocket && newSocket.connected) {
+        console.log('Disconnecting socket in cleanup');
+        newSocket.disconnect();
+      }
+      // Don't set socketRef to null here as it might be used by other parts
     };
-    fetchAuction();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auctionId, token, role, isAuctionAccessible]);
+
+  // Cleanup socket on component unmount
+  useEffect(() => {
+    return () => {
+      console.log('Component unmounting, cleaning up socket');
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        setSocket(null);
+      }
+      // Reset connection flag
+      hasConnectionBeenEstablished.current = false;
+      // Don't clear localStorage here - let beforeunload handle it
+    };
   }, [auctionId]);
 
-  // On mount, fetch current player from Redis for team_owner to persist view on reload
-  useEffect(() => {
-    const fetchCurrentPlayer = async () => {
-      const playerId = localStorage.getItem('playerId');
-      if (playerId && token) {
-        try {
-          const url = `/players/redis/player/${playerId}`;
-          const response = await API.get(url, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          
-          if (response.data.success && response.data.player) {
-            setTeamOwnerPlayer(response.data.player);
-          }
-        } catch (error) {
-          setMessages((msgs) => [
-            ...msgs,
-            `Error fetching current player: ${error.message}`,
-          ]);
-        }
-      }
-    };
-    fetchCurrentPlayer();
-  }, [role, token, playerId]);
-
-  // Handler to send player details to Redis and update team owner view
+  // Handler to send player to auction (Admin only)
   const handleSendPlayer = async (player) => {
     try {
-      // Include auctionId in the request body
       const playerWithAuction = { ...player, auctionId };
       const response = await API.post(
         '/players/redis/player',
@@ -413,105 +658,170 @@ const AuctionBidPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       if (response.data.success) {
-        setMessages((msgs) => [
-          ...msgs,
-          `Player sent ${player.playerName} and stored in Redis`,
-        ]);
-        // Store playerId in localStorage
+        toast.success(`Player ${player.playerName} ready for auction`);
         localStorage.setItem('playerId', player._id);
-        // Emit socket event to notify other clients
-        // Fetch player from Redis to update team owner view
+
+        // Fetch fresh player data from Redis
         const fetchResponse = await API.get(
           `/players/redis/player/${player._id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+
         if (fetchResponse.data.success) {
-          setTeamOwnerPlayer(fetchResponse.data.player);
-          setPlayerId(player._id);
+          setCurrentAuctionPlayer(fetchResponse.data.player);
         }
+
+        // Notify all clients
         if (socket) {
           socket.emit('send-player', { auctionId, player });
         }
       }
     } catch (error) {
-      setMessages((msgs) => [
-        ...msgs,
-        `Error sending player: ${error.message}`,
-      ]);
+      toast.error(`Error sending player: ${error.message}`);
     }
   };
 
-  // Listen for player-sent event to update team owner view
-  useEffect(() => {
-    if (!socket) return;
+  // Handler to place bid (Team Owner only)
+  const handlePlaceBid = async () => {
+    if (!currentAuctionPlayer || placeBidDisabled) return;
 
-    const handlePlayerSent = (data) => {
-      if (role === 'team_owner') {
-        setPlayerId(data.player._id);
-        // Store playerId in localStorage
-        localStorage.setItem('playerId', data.player._id);
-        setMessages((msgs) => [
-          ...msgs,
-          `Player sent: ${data.player.playerName}`,
-        ]);
-      }
-      setPlaceBidDisabled(false);
-    };
+    try {
+      // Debug logging
+      console.log('Place bid debug:', {
+        currentAuctionPlayer,
+        currentBid: currentAuctionPlayer.currentBid,
+        currentTeam: currentAuctionPlayer.currentTeam,
+        currentHighestBidder: currentAuctionPlayer.currentHighestBidder,
+        minBidIncrement,
+        loggedInTeamId,
+        auctionId,
+      });
 
-    socket.on('player-sent', handlePlayerSent);
+      const currentBid =
+        currentAuctionPlayer.currentBid || currentAuctionPlayer.basePrice || 0;
+      const bidAmount = currentBid + minBidIncrement;
+      const teamBudgetObj = teams.find((team) => team._id === loggedInTeamId);
+      const remainingBudget = teamBudgetObj ? teamBudgetObj.remainingBudget : 0;
 
-    return () => {
-      socket.off('player-sent', handlePlayerSent);
-    };
-  }, [socket, role]);
+      console.log('Bid calculation:', {
+        currentBid,
+        minBidIncrement,
+        bidAmount,
+        remainingBudget,
+        currentHighestBidder: currentAuctionPlayer.currentHighestBidder,
+        loggedInTeamId,
+      });
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handlePlayerCacheCleared = (data) => {
-    
-      setMessages((msgs) => [
-        ...msgs,
-        `Player cache cleared for id: ${data.playerId}`,
-      ]);
-      localStorage.removeItem('playerId');
-      setPlayerId(null);
-      setTeamOwnerPlayer(null);
-    };
-
-    socket.on('player-cache-cleared', handlePlayerCacheCleared);
-
-    return () => {
-      socket.off('player-cache-cleared', handlePlayerCacheCleared);
-    };
-  }, [socket, role]);
-
-  useEffect(() => {
-    const fetchCurrentPlayer = async () => {
-      if (!playerId || !token) {
-        setTeamOwnerPlayer(null);
+      if (remainingBudget < bidAmount) {
+        toast.error(
+          `Insufficient budget to place bid of ₹${bidAmount?.toLocaleString()}`
+        );
         return;
       }
-      try {
-        const url = `/players/redis/player/${playerId}`;
-        const response = await API.get(url, {
+
+      const response = await API.post(
+        '/auctions/bid',
+        {
+          auctionId,
+          playerId: currentAuctionPlayer._id,
+          teamId: loggedInTeamId,
+          amount: bidAmount,
+        },
+        {
           headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.data.success && response.data.player) {
-          setTeamOwnerPlayer(response.data.player);
         }
-      } catch (error) {
-        setMessages((msgs) => [
-          ...msgs,
-          `Error fetching current player: ${error.message}`,
-        ]);
+      );
+
+      if (response.data.success) {
+        // Optimistically update the current auction player immediately
+        const teamName =
+          teams.find((team) => team._id === loggedInTeamId)?.teamName ||
+          'Your Team';
+        setCurrentAuctionPlayer((prev) => ({
+          ...prev,
+          currentBid: bidAmount,
+          currentTeam: teamName,
+          currentHighestBidder: loggedInTeamId,
+        }));
+
+        toast.success(
+          `Bid placed successfully: ₹${bidAmount?.toLocaleString()}${
+            response.data.kafkaAvailable === false ? ' (direct processing)' : ''
+          }`
+        );
+      } else {
+        toast.error(`Failed to place bid: ${response.data.error}`);
       }
-    };
-    fetchCurrentPlayer();
-  }, [token, playerId]);
+    } catch (error) {
+      let errorMessage = error.response?.data?.error || error.message;
+      console.error('Bid error details:', error.response?.data);
+      toast.error(`Error placing bid: ${errorMessage}`);
+    }
+  };
+
+  // Handler to mark player as unsold (Admin only)
+  const handleMarkUnsold = async () => {
+    if (!currentAuctionPlayer) return;
+
+    try {
+      const response = await API.patch(
+        `/players/mark-unsold/${auctionId}/${currentAuctionPlayer._id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        toast.success('Player marked as unsold successfully');
+        setCurrentAuctionPlayer(null);
+        localStorage.removeItem('playerId');
+      } else {
+        toast.error(`Failed to mark player unsold: ${response.data.error}`);
+      }
+    } catch (error) {
+      toast.error(`Error marking player unsold: ${error.message}`);
+    }
+  };
+
+  // Handler to sell player (Admin only)
+  const handleSellPlayer = async () => {
+    if (!currentAuctionPlayer || !teamId) return;
+
+    try {
+      const response = await API.post(
+        '/auctions/sell-player',
+        {
+          auctionId,
+          playerId: currentAuctionPlayer._id,
+          teamId,
+          currentBid: currentAuctionPlayer.currentBid,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success('Player sold successfully');
+        setCurrentAuctionPlayer(null);
+
+        // Clear Redis cache
+        try {
+          await API.delete(`/players/redis/player/${currentAuctionPlayer._id}`);
+          localStorage.removeItem('playerId');
+        } catch (err) {
+          toast.error(`Error removing player from Redis: ${err.message}`);
+        }
+      } else {
+        toast.error(`Failed to sell player: ${response.data.error}`);
+      }
+    } catch (error) {
+      toast.error(`Error selling player: ${error.message}`);
+    }
+  };
 
   if (loading) {
     return (
@@ -524,9 +834,79 @@ const AuctionBidPage = () => {
     );
   }
 
+  // Show establishing connection for team owners during connection check
+  if (role === 'team_owner' && !connectionCheckCompleted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center p-6">
+        <div className="max-w-md mx-auto text-center bg-gray-800 rounded-lg p-8 shadow-2xl border border-blue-500">
+          <div className="text-6xl mb-4">🔄</div>
+          <h2 className="text-2xl font-bold text-blue-400 mb-4">
+            Establishing Connection...
+          </h2>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-300 mb-2">Checking auction availability</p>
+          <p className="text-gray-400 text-sm">
+            Please wait while we verify the auction status
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Access denied for team owners
+  if (role === 'team_owner' && !isAuctionAccessible) {
+    const isDateIssue = accessDeniedReason.includes('auction has not started');
+    const isStatusIssue = accessDeniedReason.includes('not currently running');
+    const isAccessDenied = accessDeniedReason.includes('Access denied');
+
+    let title = 'Access Denied';
+    let icon = '⚠️';
+
+    if (isDateIssue) {
+      title = 'Auction Not Started';
+      icon = '⏰';
+    } else if (isStatusIssue) {
+      title = 'Auction Not Running';
+      icon = '⏸️';
+    } else if (isAccessDenied) {
+      title = 'Access Denied';
+      icon = '🚫';
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center p-6">
+        <div className="max-w-md mx-auto text-center bg-gray-800 rounded-lg p-8 shadow-2xl border border-red-500">
+          <div className="text-6xl mb-4">{icon}</div>
+          <h2 className="text-2xl font-bold text-red-400 mb-4">{title}</h2>
+          <p className="text-gray-300 mb-6">{accessDeniedReason}</p>
+          <button
+            onClick={() => navigate('/all-auctions')}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+          >
+            Back to Auctions
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
       <div className="h-[5vh]"></div>
+
+      {/* Player Won Animation */}
+      {showWinAnimation && winAnimationData && (
+        <PlayerWonAnimation
+          isVisible={showWinAnimation}
+          playerName={winAnimationData.playerName}
+          teamName={winAnimationData.teamName}
+          soldPrice={winAnimationData.soldPrice}
+          onAnimationEnd={() => {
+            setShowWinAnimation(false);
+            setWinAnimationData(null);
+          }}
+        />
+      )}
 
       {/* Header Section */}
       <div className="mb-8">
@@ -602,7 +982,7 @@ const AuctionBidPage = () => {
                               <li key={index} className="flex justify-between">
                                 <span>{bid.teamName || bid.team}</span>
                                 <span className="text-green-400">
-                                  ₹{bid.amount.toLocaleString()}
+                                  ₹{bid.amount?.toLocaleString()}
                                 </span>
                               </li>
                             ))}
@@ -637,21 +1017,21 @@ const AuctionBidPage = () => {
         </div>
       )}
 
-      {/* Current Auction Player Section */}
+      {/* Current Auction Player Section - Visible to both Admin and Team Owners */}
       <div className="bg-gray-800 rounded-xl shadow-xl p-6 mb-8 border border-gray-700">
         <h2 className="text-3xl font-bold mb-6 text-center text-purple-400">
           Current Auction
         </h2>
 
-        {teamOwnerPlayer ? (
+        {currentAuctionPlayer ? (
           <div className="bg-gray-700 rounded-xl overflow-hidden">
             <div className="p-6 bg-gradient-to-r from-indigo-800 to-purple-900">
               <div className="flex flex-col md:flex-row items-center">
                 <div className="md:w-1/3 flex justify-center mb-6 md:mb-0">
                   <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg">
                     <img
-                      src={teamOwnerPlayer.profilePhoto}
-                      alt={teamOwnerPlayer.playerName || 'Player'}
+                      src={currentAuctionPlayer.profilePhoto}
+                      alt={currentAuctionPlayer.playerName || 'Player'}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -659,216 +1039,111 @@ const AuctionBidPage = () => {
 
                 <div className="md:w-2/3 md:pl-8">
                   <h3 className="text-3xl font-bold mb-2">
-                    {teamOwnerPlayer.playerName || 'Unnamed Player'}
+                    {currentAuctionPlayer.playerName || 'Unnamed Player'}
                   </h3>
 
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
                       <p className="text-gray-400 text-sm">Role</p>
                       <p className="font-semibold text-lg">
-                        {teamOwnerPlayer.playerRole || 'Not Specified'}
+                        {currentAuctionPlayer.playerRole || 'Not Specified'}
                       </p>
                     </div>
                     <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
                       <p className="text-gray-400 text-sm">Base Price</p>
                       <p className="font-semibold text-lg text-green-400">
-                        ₹{teamOwnerPlayer.basePrice?.toLocaleString()}
+                        ₹{currentAuctionPlayer.basePrice?.toLocaleString()}
                       </p>
                     </div>
                     <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
                       <p className="text-gray-400 text-sm">Current Bid</p>
                       <p className="font-semibold text-lg text-green-400">
-                        ₹{teamOwnerPlayer.currentBid?.toLocaleString()}
+                        ₹{currentAuctionPlayer.currentBid?.toLocaleString()}
                       </p>
                     </div>
                     <div className="bg-gray-800 bg-opacity-50 p-3 rounded-lg">
                       <p className="text-gray-400 text-sm">Current Team</p>
                       <p className="font-semibold text-lg">
-                        {teamOwnerPlayer.currentTeam || 'None'}
+                        {currentAuctionPlayer.currentTeam || 'None'}
                       </p>
                     </div>
                   </div>
 
+                  {/* Team Owner Bid Button */}
                   {role === 'team_owner' && (
                     <div className="mt-6 flex justify-center">
-                      <button
-                        className={`px-8 py-3 rounded-full font-bold text-lg shadow-lg transform transition-all duration-300 hover:scale-105 flex items-center 
-                          ${
-                            isSelling || placeBidDisabled
-                              ? 'bg-gray-600 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700'
-                          }`}
-                        disabled={isSelling || placeBidDisabled}
-                        onClick={async () => {
-                          try {
-                            const bidAmount =
-                              teamOwnerPlayer.currentBid + minBidIncrement;
-                            const teamBudgetObj = teams.find(
-                              (team) => team._id === teamId
-                            );
-                            const remainingBudget = teamBudgetObj
-                              ? teamBudgetObj.remainingBudget
-                              : 0;
+                      {(() => {
+                        const isConsecutiveBid =
+                          currentAuctionPlayer.currentHighestBidder ===
+                          loggedInTeamId;
+                        const isBidDisabled =
+                          placeBidDisabled || isConsecutiveBid;
 
-                            if (remainingBudget <= bidAmount) {
-                              setMessages((msgs) => [
-                                ...msgs,
-                                `Insufficient budget to place bid of ${bidAmount}`,
-                              ]);
-                              return;
+                        return (
+                          <button
+                            className={`px-8 py-3 rounded-full font-bold text-lg shadow-lg transform transition-all duration-300 hover:scale-105 flex items-center 
+                              ${
+                                isBidDisabled
+                                  ? 'bg-gray-600 cursor-not-allowed'
+                                  : 'bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700'
+                              }`}
+                            disabled={isBidDisabled}
+                            onClick={handlePlaceBid}
+                            title={
+                              isConsecutiveBid
+                                ? 'You cannot bid twice in a row'
+                                : ''
                             }
-
-                            console.log('Sending bid request:', {
-                              auctionId,
-                              playerId,
-                              teamId: loggedInTeamId,
-                              amount: bidAmount,
-                            });
-
-                            try {
-                              const response = await API.post(
-                                '/auctions/bid',
-                                {
-                                  auctionId,
-                                  playerId: playerId,
-                                  teamId: loggedInTeamId,
-                                  amount: bidAmount,
-                                },
-                                {
-                                  headers: { Authorization: `Bearer ${token}` },
-                                }
-                              );
-
-                              if (response.data.success) {
-                                setMessages((msgs) => [
-                                  ...msgs,
-                                  `Bid placed successfully: ${bidAmount}${response.data.kafkaAvailable === false ? ' (direct processing)' : ''}`,
-                                ]);
-                              } else {
-                                const errorMsg =
-                                  response.data.error || 'Unknown error';
-                                setMessages((msgs) => [
-                                  ...msgs,
-                                  `Failed to place bid: ${errorMsg}`,
-                                ]);
-                              }
-                            } catch (error) {
-                              console.error('Error in bid submission:', error);
-                              let errorMessage = error.message;
-
-                              // Try to extract more detailed error message if available
-                              if (error.response && error.response.data) {
-                                if (error.response.data.error) {
-                                  errorMessage = error.response.data.error;
-                                } else if (error.response.data.message) {
-                                  errorMessage = error.response.data.message;
-                                }
-                              }
-
-                              setMessages((msgs) => [
-                                ...msgs,
-                                `Error placing bid: ${errorMessage}`,
-                              ]);
-
-                              // Attempt to send a notification via socket even if the API call failed
-                              try {
-                                socket.emit('manual-bid-error', {
-                                  auctionId,
-                                  playerId,
-                                  teamId: loggedInTeamId,
-                                  error: errorMessage,
-                                });
-                              } catch (socketError) {
-                                console.error(
-                                  'Failed to emit socket error event:',
-                                  socketError
-                                );
-                              }
-                            }
-                          } catch (outerError) {
-                            console.error('Unexpected error:', outerError);
-                            setMessages((msgs) => [
-                              ...msgs,
-                              `Unexpected error: ${outerError.message}`,
-                            ]);
-                          }
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                          />
-                        </svg>
-                        Place Bid (₹
-                        {(
-                          teamOwnerPlayer.currentBid + minBidIncrement
-                        )?.toLocaleString()}
-                        )
-                      </button>
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-6 w-6 mr-2"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                              />
+                            </svg>
+                            {isConsecutiveBid
+                              ? 'Wait for Other Team'
+                              : `Place Bid (₹${(
+                                  (currentAuctionPlayer.currentBid ||
+                                    currentAuctionPlayer.basePrice ||
+                                    0) + minBidIncrement
+                                )?.toLocaleString()})`}
+                          </button>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* Admin Controls */}
             {role === 'admin' && (
               <div className="p-4 bg-gray-800 flex flex-col sm:flex-row justify-center gap-4">
+                <select
+                  value={teamId}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500"
+                >
+                  <option value="">Select Team to Sell</option>
+                  {teams.map((team) => (
+                    <option key={team._id} value={team._id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+
                 <button
                   className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors duration-300"
-                  onClick={async () => {
-                    const playerId = localStorage.getItem('playerId');
-                    if (!auctionId || !playerId) {
-                      setMessages((msgs) => [
-                        ...msgs,
-                        'Missing auctionId or playerId for marking unsold',
-                      ]);
-                      return;
-                    }
-                    try {
-                      const response = await API.patch(
-                        `/players/mark-unsold/${auctionId}/${playerId}`,
-                        {},
-                        {
-                          headers: { Authorization: `Bearer ${token}` },
-                        }
-                      );
-                      if (response.data.success) {
-                        setMessages((msgs) => [
-                          ...msgs,
-                          'Player marked as unsold successfully',
-                        ]);
-                        setPlayers((prevPlayers) =>
-                          prevPlayers.map((player) =>
-                            player.player._id === playerId
-                              ? { ...player, status: 'unsold' }
-                              : player
-                          )
-                        );
-                        setTeamOwnerPlayer(null);
-                        localStorage.removeItem('playerId');
-                        setPlayerId(null);
-                      } else {
-                        setMessages((msgs) => [
-                          ...msgs,
-                          `Failed to mark player unsold: ${response.data.error}`,
-                        ]);
-                      }
-                    } catch (error) {
-                      setMessages((msgs) => [
-                        ...msgs,
-                        `Error marking player unsold: ${error.message}`,
-                      ]);
-                    }
-                  }}
+                  onClick={handleMarkUnsold}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -884,77 +1159,11 @@ const AuctionBidPage = () => {
                   </svg>
                   Mark Unsold
                 </button>
+
                 <button
-                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center justify-center transition-colors duration-300"
-                  onClick={async () => {
-                    if (!auctionId || !playerId || !teamId) {
-                      setMessages((msgs) => [
-                        ...msgs,
-                        'Missing auctionId, playerId, or teamId for selling player',
-                      ]);
-                      return;
-                    }
-                    try {
-                      const playerResponse = await API.get(
-                        `/players/redis/player/${playerId}`
-                      );
-                      const currentBid = playerResponse.data.player.currentBid;
-                      console.log('Selling player with data:', {
-                        auctionId,
-                        playerId,
-                        teamId,
-                        currentBid,
-                      });
-                      const response = await API.post(
-                        '/auctions/sell-player',
-                        {
-                          auctionId,
-                          playerId,
-                          teamId,
-                          currentBid,
-                        },
-                        {
-                          headers: { Authorization: `Bearer ${token}` },
-                        }
-                      );
-                      if (response.data.success) {
-                        setMessages((msgs) => [
-                          ...msgs,
-                          `Player sold successfully`,
-                        ]);
-                        setTeamOwnerPlayer(null);
-                        setIsSelling(false);
-                        try {
-                          await API.delete(`/players/redis/player/${playerId}`);
-                          setMessages((msgs) => [
-                            ...msgs,
-                            `Player removed from Redis cache`,
-                          ]);
-                          localStorage.removeItem('playerId');
-                          setPlayerId(null);
-                        } catch (err) {
-                          setMessages((msgs) => [
-                            ...msgs,
-                            `Error removing player from Redis: ${err.message}`,
-                          ]);
-                        }
-                      } else {
-                        setMessages((msgs) => [
-                          ...msgs,
-                          `Failed to sell player: ${
-                            response.data.error || 'Unknown error'
-                          }`,
-                        ]);
-                        setIsSelling(false);
-                      }
-                    } catch (error) {
-                      setMessages((msgs) => [
-                        ...msgs,
-                        `Error selling player: ${error.message}`,
-                      ]);
-                      setIsSelling(false);
-                    }
-                  }}
+                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center justify-center transition-colors duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                  onClick={handleSellPlayer}
+                  disabled={!teamId}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -968,7 +1177,7 @@ const AuctionBidPage = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  Sold
+                  Sold to Selected Team
                 </button>
               </div>
             )}
@@ -993,73 +1202,13 @@ const AuctionBidPage = () => {
               No player is currently available in the auction
             </p>
             <p className="text-gray-400 mt-2">
-              Please wait for the admin to send a player
+              {role === 'admin'
+                ? 'Send a player to start the auction'
+                : 'Please wait for the admin to send a player'}
             </p>
           </div>
         )}
       </div>
-
-      {/* Messages Section (Admin Only) */}
-      {role === 'admin' && (
-        <div className="bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-purple-400 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-              </svg>
-              Activity Log
-            </h3>
-            <button
-              onClick={() => {
-                // Set reload flag to true before refreshing
-                isPageReloading.current = true;
-                window.location.reload();
-              }}
-              className="flex items-center gap-1 bg-indigo-600 text-white px-3 py-1 text-sm rounded hover:bg-indigo-700 transition-colors shadow-sm"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Refresh
-            </button>
-          </div>
-          <div className="bg-gray-900 rounded-lg p-4 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-gray-800 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
-            {messages.length === 0 ? (
-              <p className="text-gray-400 text-center italic">
-                No activity yet
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {messages.map((msg, idx) => (
-                  <li
-                    key={idx}
-                    className="text-gray-300 py-1 px-2 rounded even:bg-gray-800"
-                  >
-                    {msg}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Leave confirmation modal */}
       <LeaveConfirmModal
@@ -1072,8 +1221,34 @@ const AuctionBidPage = () => {
         }}
         onCancel={() => {
           setShowLeaveConfirmModal(false);
-          // Push state again to reset the history navigation
           window.history.pushState(null, null, window.location.pathname);
+        }}
+      />
+
+      {/* Toast notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1f2937',
+            color: '#f3f4f6',
+            border: '1px solid #374151',
+            borderRadius: '8px',
+            fontSize: '14px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#ffffff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#ffffff',
+            },
+          },
         }}
       />
     </div>

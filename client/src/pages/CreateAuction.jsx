@@ -588,11 +588,11 @@ const CreateAuction = () => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded shadow hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+            className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded shadow hover:from-purple-700 hover:to-pink-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm h-10 min-h-[2.5rem] max-h-[2.5rem]"
           >
             {loading ? (
               <div className="flex items-center justify-center">
-                <LoadingSpinner size="sm" />
+                <LoadingSpinner inButton />
                 <span className="ml-2">Creating...</span>
               </div>
             ) : (
@@ -606,7 +606,7 @@ const CreateAuction = () => {
           {success && (
             <button
               type="button"
-              onClick={() => navigate('/auctions')}
+              onClick={() => navigate('/all-auctions')}
               className="mt-4 bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-2 rounded shadow hover:from-green-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center text-sm"
             >
               <FaGavel className="mr-1 text-xs" />

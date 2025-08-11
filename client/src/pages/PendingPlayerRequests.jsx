@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
@@ -8,6 +9,7 @@ import {
   FaUserClock,
   FaSync,
   FaFilter,
+  FaPlus,
 } from 'react-icons/fa';
 
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -33,6 +35,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
 );
 
 const PendingPlayerRequests = () => {
+  const navigate = useNavigate();
   const [pendingPlayers, setPendingPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -183,6 +186,7 @@ const PendingPlayerRequests = () => {
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white">
+      <div className="h-[5vh]"></div>
       <h2 className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
         <FaUserClock className="inline-block mr-3" />
         Pending Player Requests
@@ -207,12 +211,21 @@ const PendingPlayerRequests = () => {
           </select>
         </div>
 
-        <button
-          onClick={fetchPendingPlayers}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <FaSync /> Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/add-player')}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <FaPlus /> Add More Players
+          </button>
+
+          <button
+            onClick={fetchPendingPlayers}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <FaSync /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto bg-gray-800 rounded-2xl shadow-xl p-6">
