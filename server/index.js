@@ -11,6 +11,7 @@ import teamRoutes from "./src/routes/team.route.js";
 import playerRoutes from "./src/routes/player.route.js";
 import auctionRoutes from "./src/routes/auction.route.js";
 import matchRoutes from "./src/routes/match.route.js";
+import liveMatchRoutes from "./src/routes/liveMatch.route.js";
 
 // Utils
 import { errorHandler } from "./src/middleware/errorHandler.js";
@@ -23,19 +24,20 @@ const httpServer = createServer(app);
 
 // Define allowed origins
 const defaultOrigins = [
-  "http://localhost:5173", 
-  "https://auction-system-deploy.onrender.com", 
-  "https://auction-system-lakshya.vercel.app"
+  "http://localhost:5173",
+  "https://auction-system-deploy.onrender.com",
+  "https://auction-system-lakshya.vercel.app",
 ];
 
 // Combine environment origins with default origins
 const getAllowedOrigins = () => {
-  const envOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
+  const envOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",")
+    : [];
   return [...new Set([...defaultOrigins, ...envOrigins])];
 };
 
 const allowedOrigins = getAllowedOrigins();
-
 
 const io = new Server(httpServer, {
   cors: {
@@ -57,13 +59,13 @@ app.use(
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        console.log('Origin not allowed by CORS:', origin);
-        console.log('Allowed origins:', allowedOrigins);
-        callback(new Error('Not allowed by CORS'));
+        console.log("Origin not allowed by CORS:", origin);
+        console.log("Allowed origins:", allowedOrigins);
+        callback(new Error("Not allowed by CORS"));
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -119,6 +121,7 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/players", playerRoutes);
 app.use("/api/auctions", auctionRoutes);
 app.use("/api/matches", matchRoutes);
+app.use("/api/live-matches", liveMatchRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
