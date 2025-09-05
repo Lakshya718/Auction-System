@@ -25,6 +25,13 @@ import AuctionBidPage from './pages/AuctionBidPage.jsx';
 import Homescreen from './pages/Homescreen.jsx';
 import News from './pages/News.jsx';
 import Sidebar from './components/Sidebar.jsx';
+
+// Live Match Components
+import CreateLiveMatch from './pages/CreateLiveMatch.jsx';
+import LiveMatchSetup from './pages/LiveMatchSetup.jsx';
+import LiveMatchScoring from './pages/LiveMatchScoring.jsx';
+import LiveScorecard from './pages/LiveScorecard.jsx';
+import AllLiveMatches from './pages/AllLiveMatches.jsx';
 import { useState } from 'react';
 
 const App = () => {
@@ -192,6 +199,34 @@ const App = () => {
             </PrivateRoute>
           }
         />
+
+        {/* Live Match Routes */}
+        <Route path="/live-matches" element={<AllLiveMatches />} />
+        <Route
+          path="/create-live-match"
+          element={
+            <PrivateRoute>
+              <CreateLiveMatch />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/live-match/:matchId/setup"
+          element={
+            <PrivateRoute>
+              <LiveMatchSetup />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/live-match/:matchId/scoring"
+          element={
+            <PrivateRoute>
+              <LiveMatchScoring />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/live-scorecard/:matchId" element={<LiveScorecard />} />
       </Routes>
     </Router>
   );

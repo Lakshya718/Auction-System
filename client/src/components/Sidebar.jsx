@@ -11,13 +11,17 @@ import {
   FaBars,
   FaTimes,
   FaTachometerAlt,
+  FaPlayCircle,
+  FaPlus,
+  FaChartLine,
+  FaBroadcastTower,
+  FaTv,
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ role, isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
-
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,6 +99,12 @@ const Sidebar = ({ role, isOpen, setIsOpen }) => {
       label: 'All Matches',
       path: '/all-matches',
       roles: ['admin', 'team_owner'],
+    },
+    {
+      icon: <FaTv />,
+      label: 'Live Matches',
+      path: '/live-matches',
+      roles: ['admin', 'team_owner', 'viewer'],
     },
   ];
 

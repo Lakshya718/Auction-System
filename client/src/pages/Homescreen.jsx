@@ -77,38 +77,6 @@ const Homescreen = () => {
               </>
             )}
           </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              {
-                icon: FaTrophy,
-                title: '2500+ Auctions',
-                subtitle: 'Successfully Completed',
-              },
-              {
-                icon: FaUsers,
-                title: '125K+ Players',
-                subtitle: 'Active Community',
-              },
-              {
-                icon: FaGlobe,
-                title: '45+ Countries',
-                subtitle: 'Global Reach',
-              },
-            ].map((stat, index) => (
-              <div
-                key={index}
-                className="group bg-white/50 backdrop-blur-md border border-black/10 rounded-xl p-6 hover:border-black/20 hover:bg-white/70 hover:shadow-lg transition-all duration-300 cursor-pointer text-center"
-              >
-                <stat.icon className="text-3xl text-black mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
-                <div className="text-xl font-bold text-black mb-1">
-                  {stat.title}
-                </div>
-                <div className="text-gray-600 text-sm">{stat.subtitle}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -177,9 +145,9 @@ const Homescreen = () => {
       </section>
 
       {/* About Us Section */}
-      <section className="h-[12vh] min-h-[80px] bg-gradient-to-br from-gray-800 via-gray-900 to-black relative overflow-hidden flex items-center">
+      <section className="h-[7vh] bg-gradient-to-br from-gray-800/30 via-gray-900/30 to-black/30 relative overflow-hidden flex items-center">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-30">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-sky-500/20 to-yellow-500/20"></div>
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div>
