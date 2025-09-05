@@ -8,7 +8,6 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 import React, { useState, useEffect } from 'react';
-import sidebarLogo from '../assets/sidebar.png';
 
 const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
   const user = useSelector((state) => state.user.user);
@@ -18,8 +17,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // For debugging - can be removed later
-  useEffect(() => {
-  }, [user, role]);
+  useEffect(() => {}, [user, role]);
 
   const handleProfileClick = () => {
     navigate('/profile');
@@ -32,6 +30,14 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+    closeMobileMenu();
   };
 
   useEffect(() => {
@@ -53,7 +59,9 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${
-        scrolled ? 'bg-gray-800 shadow-lg' : 'bg-transparent'
+        scrolled
+          ? 'bg-gray-800/30 backdrop-blur-sm shadow-lg'
+          : 'bg-transparent'
       }`}
     >
       <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -61,25 +69,30 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
           {user && (
             <button
               onClick={toggleSidebar}
-              className={`p-2 rounded-full text-white focus:outline-none transition-all duration-300 ${isSidebarOpen ? 'invisible' : 'visible'}`}
+              className={`p-2 rounded-full focus:outline-none transition-all duration-300 ${isSidebarOpen ? 'invisible' : 'visible'} ${
+                scrolled
+                  ? 'text-black hover:text-gray-700'
+                  : 'text-blue-400 hover:text-blue-300'
+              }`}
               aria-label="Open sidebar"
             >
-              <img
-                src={sidebarLogo}
-                alt="AuctionSphere"
-                className="h-7 w-7 object-contain transition-transform duration-300 group-hover:scale-110"
-              />
+              <FaBars className="h-6 w-6 transition-transform duration-300 hover:scale-110" />
             </button>
           )}
-          <Link
-            to="/"
-            className="flex items-center space-x-3 group"
-            onClick={closeMobileMenu}
+          <button
+            onClick={scrollToTop}
+            className="flex items-center space-x-3 group cursor-pointer"
           >
-            <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 hover:from-pink-600 hover:to-purple-400 transition-all duration-300">
+            <span
+              className={`text-2xl font-bold transition-all duration-300 ${
+                scrolled
+                  ? 'text-black'
+                  : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-yellow-400 hover:from-yellow-400 hover:to-blue-400'
+              }`}
+            >
               AuctionSphere
             </span>
-          </Link>
+          </button>
         </div>
 
         {/* Desktop Navigation */}
@@ -104,13 +117,25 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
           ) : (
             <div className="flex items-center space-x-6">
               <Link to="/all-auctions" className="group relative px-4 py-2">
-                <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                <span
+                  className={`relative z-10 text-sm font-medium transition-colors duration-300 ${
+                    scrolled
+                      ? 'text-black group-hover:text-gray-700'
+                      : 'text-gray-300 group-hover:text-white'
+                  }`}
+                >
                   All Auctions
                 </span>
                 <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
               </Link>
               <Link to="/all-matches" className="group relative px-4 py-2">
-                <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                <span
+                  className={`relative z-10 text-sm font-medium transition-colors duration-300 ${
+                    scrolled
+                      ? 'text-black group-hover:text-gray-700'
+                      : 'text-gray-300 group-hover:text-white'
+                  }`}
+                >
                   All Matches
                 </span>
                 <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
@@ -120,7 +145,13 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
                   to="/pending-players"
                   className="group relative px-4 py-2"
                 >
-                  <span className="relative z-10 text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">
+                  <span
+                    className={`relative z-10 text-sm font-medium transition-colors duration-300 ${
+                      scrolled
+                        ? 'text-black group-hover:text-gray-700'
+                        : 'text-gray-300 group-hover:text-white'
+                    }`}
+                  >
                     Pending Players
                   </span>
                   <div className="absolute inset-0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left bg-gradient-to-r from-purple-500/20 to-transparent rounded-lg"></div>
@@ -150,7 +181,11 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
         <div className="md:hidden">
           <button
             onClick={toggleMobileMenu}
-            className="text-white hover:text-gray-300 focus:outline-none"
+            className={`focus:outline-none transition-colors duration-300 ${
+              scrolled
+                ? 'text-black hover:text-gray-700'
+                : 'text-white hover:text-gray-300'
+            }`}
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}

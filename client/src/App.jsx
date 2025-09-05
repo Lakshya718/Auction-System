@@ -24,7 +24,6 @@ import MatchResult from './pages/MatchResult.jsx';
 import AuctionBidPage from './pages/AuctionBidPage.jsx';
 import Homescreen from './pages/Homescreen.jsx';
 import News from './pages/News.jsx';
-import ImageSlider from './components/ImageSlider.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import { useState } from 'react';
 
@@ -52,14 +51,6 @@ const App = () => {
           element={
             <PublicRoute>
               <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/welcome"
-          element={
-            <PublicRoute>
-              <ImageSlider />
             </PublicRoute>
           }
         />
