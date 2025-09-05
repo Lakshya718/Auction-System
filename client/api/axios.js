@@ -1,7 +1,9 @@
 import axios from 'axios';
+const devURL = 'http://localhost:5000/api';
+const prodURL = 'https://auction-system-deploy.onrender.com/api';
 
 const API = axios.create({
-  baseURL: 'https://auction-system-deploy.onrender.com/api',
+  baseURL: prodURL || devURL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
